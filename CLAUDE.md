@@ -1,7 +1,7 @@
 # LandlordGuru — Project Instructions
 
 ## What this is
-A web app for tracking rental property income and expenses across a portfolio of apartments.
+A web app for tracking rental property income and expenses across a portfolio of properties.
 Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 
 ## Infrastructure
@@ -12,9 +12,8 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 ## Deployment
 - `.\scripts\publish.ps1 "message"` — commits, pushes to GitHub, deploys frontend/ to NAS
 - `.\scripts\deploy.ps1` — deploys only, no git
-- Always provide the full publish command with a suggested commit message when telling the user to run the publish script
+- Always provide the full deploy command when telling the user to run the deploy script
 - config.js is excluded from deploy (lives on NAS only, never in repo)
-- key.php lives on NAS only, never in repo
 
 ## Security rules
 - No credentials ever in git
@@ -30,7 +29,15 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 - Tweaking existing features = increment z (x.y.z); new major feature = increment y
 - Never suggest incrementing x — the user will prompt for that explicitly
 
+## Documentation hygiene
+- After any task that adds a feature, renames something, or changes how a system works,
+  check whether any of the following need updating before committing:
+  - `docs/ARCHITECTURE.md` — file tree, sheet tab list, constraints
+  - `docs/data-model.md`   — field names, new sheets/tables, schema notes
+  - `docs/SETUP.md`        — setup steps, file structure, troubleshooting
+- Include doc updates in the same commit as the feature, not a separate one
+
 ## Reference docs
-- @docs/setup.md — infrastructure details, credentials locations, Google Sheets config
-- @docs/data-model.md — apartment portfolio, rental types, income/expense model
-- @docs/architecture.md — key decisions, auth design, future migration plan
+- @docs/SETUP.md — infrastructure details, credentials locations, Google Sheets config
+- @docs/data-model.md — property portfolio, rental types, income/expense model
+- @docs/ARCHITECTURE.md — key decisions, auth design, future migration plan
