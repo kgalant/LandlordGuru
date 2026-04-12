@@ -5,7 +5,7 @@ It serves as the spec for the future database schema.
 
 ---
 
-## Apartments
+## Properties
 
 | Field        | Type    | Description |
 |--------------|---------|-------------|
@@ -20,7 +20,7 @@ It serves as the spec for the future database schema.
 | `tenant`     | string  | Tenant name (long-term) |
 | `lease_start`| date    | ISO 8601 date |
 | `notes`      | string  | Free text |
-| `active`     | boolean | Whether the apartment is currently in use |
+| `active`     | boolean | Whether the property is currently in use |
 
 ---
 
@@ -30,7 +30,7 @@ It serves as the spec for the future database schema.
 |-------------------|---------|-------------|
 | `id`              | string  | Unique identifier, e.g. `tx_1234567890_ab3f` |
 | `date`            | date    | ISO 8601 date of the transaction |
-| `apartment_id`    | string  | FK → apartments.id |
+| `property_id`     | string  | FK → properties.id |
 | `type`            | string  | Top-level type: `income`, `expense`, `deposit`, `transfer` |
 | `category`        | string  | Subcategory (see taxonomy below) |
 | `amount`          | number  | Absolute value in local currency (always positive) |
@@ -102,9 +102,25 @@ Auto-categorisation rules applied at CSV import time.
 | `bank_profile` | string | Applies only to this bank profile, or empty for any |
 | `keyword`      | string | Case-insensitive substring match against transaction description |
 | `category`     | string | Category to assign on match |
-| `apartment_id` | string | Apartment to assign on match, or empty if not deterministic |
+| `property_id`  | string | Property to assign on match, or empty if not deterministic |
 
 Rules are evaluated in order; first match wins.
+
+---
+
+## Strings
+
+UI string overrides — allows per-language and per-user customisation without code changes.
+Hardcoded English strings in `js/strings.js` are the fallback; rows in this sheet layer on top.
+
+| Field     | Type   | Description |
+|-----------|--------|-------------|
+| `key`     | string | Dot-notation key matching the `STRINGS` object in strings.js, e.g. `nav.properties` |
+| `lang`    | string | ISO 639-1 language code, e.g. `en`, `da` |
+| `user_id` | string | Optional — restricts override to a specific user; empty = applies to all |
+| `value`   | string | The replacement string. Supports `{variable}` interpolation. |
+
+Resolution order per key: user-specific sheet row → global sheet row → hardcoded default → English fallback → key itself.
 
 ---
 
@@ -122,11 +138,35 @@ Snapshot of exchange rates for audit purposes. Not used for bookkeeping.
 
 ---
 
+## Column mappings (client-side only)
+
+Named CSV column mappings are stored in `localStorage` under the key `lg_col_mappings_v1`.
+They are never persisted to the sheet — they are per-browser/device. Structure:
+
+```json
+{
+  "Jyske Bank — main account": {
+    "delimiter": ";",
+    "skip_rows": 1,
+    "date_col": 0,
+    "description_col": 2,
+    "amount_col": 3,
+    "date_format": "DD.MM.YYYY",
+    "amount_decimal": ",",
+    "currency": "DKK"
+  }
+}
+```
+
+---
+
 ## Future database schema notes
 
 When migrating to PostgreSQL:
-- `apartments` and `transactions` map cleanly to tables of the same name
+- `properties` and `transactions` map cleanly to tables of the same name
 - `type` and `category` on transactions should be `VARCHAR` with CHECK constraints, not enums, to allow adding categories without a migration
 - `amount` should be `NUMERIC(12,2)` — never `FLOAT` for currency
 - `import_batch` warrants its own table in v2 to store metadata (import date, file name, row count, who imported)
 - `rules` could stay as a config table or move to application code once the category set stabilises
+- `strings` maps to a table with a composite unique index on `(key, lang, user_id)`
+- Column mappings can remain in localStorage in v2 (they are a UI concern, not a data concern)

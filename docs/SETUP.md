@@ -1,29 +1,30 @@
-# Rental Portfolio — Setup Guide
+# LandlordGuru — Setup Guide
 
 ## What you are setting up
 
 ```
 Browser (you or your wife, anywhere)
     ↕  HTTPS
-Synology NAS  (serves index.html)
+Synology NAS  (serves index.html + key.php)
     ↕  Google Sheets API (HTTPS)
 Google Sheet  (stores all data)
 ```
 
 The app is one folder on your NAS. It reads and writes directly to a Google Sheet.
-No server-side code. No database to manage.
+The private key never touches the browser — it is served on-demand by `key.php` from
+outside the web root, so it cannot be downloaded directly.
 
 ---
 
 ## Step 1 — Create the Google Sheet
 
 1. Go to https://sheets.google.com and create a new blank spreadsheet.
-2. Name it something like **Rental Portfolio**.
+2. Name it something like **LandlordGuru**.
 3. Copy the spreadsheet ID from the URL bar:
    `https://docs.google.com/spreadsheets/d/THIS_PART_HERE/edit`
-4. Keep this tab open — you'll need the ID in Step 3.
+4. Keep this tab open — you'll need the ID in Step 4.
 
-The app will create all the required tabs (apartments, transactions, rules, fx_log)
+The app will create all required tabs (properties, transactions, rules, fx_log, strings)
 automatically the first time it loads. You don't need to create them manually.
 
 ---
@@ -33,29 +34,17 @@ automatically the first time it loads. You don't need to create them manually.
 This gives the app permission to read/write the sheet without needing a browser login flow.
 
 1. Go to https://console.cloud.google.com
-2. Create a new project (or use an existing one). Name it e.g. **rental-portfolio**.
+2. Create a new project (or use an existing one). Name it e.g. **landlord-guru**.
 3. In the left menu go to **APIs & Services → Library**.
 4. Search for **Google Sheets API** and click **Enable**.
 5. Go to **APIs & Services → Credentials**.
 6. Click **+ Create Credentials → Service account**.
-7. Fill in:
-   - Service account name: `rental-portfolio`
-   - Click **Create and continue** → **Done**
+7. Fill in a service account name (e.g. `landlord-guru`) → **Create and continue** → **Done**.
 8. Click on the newly created service account in the list.
 9. Go to the **Keys** tab → **Add Key → Create new key → JSON**.
 10. A `.json` file will download. **Keep this file safe — it is a credential.**
 
-The JSON file looks like this:
-```json
-{
-  "type": "service_account",
-  "project_id": "...",
-  "private_key_id": "...",
-  "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
-  "client_email": "rental-portfolio@your-project.iam.gserviceaccount.com",
-  ...
-}
-```
+The JSON file contains a `client_email` and a `private_key`. You'll use both below.
 
 ---
 
@@ -63,140 +52,175 @@ The JSON file looks like this:
 
 1. Open your Google Sheet.
 2. Click **Share** (top right).
-3. Paste the `client_email` value from the JSON file (looks like `rental-portfolio@...iam.gserviceaccount.com`).
+3. Paste the `client_email` from the JSON file (looks like `landlord-guru@...iam.gserviceaccount.com`).
 4. Set permission to **Editor**.
-5. Click **Send** (ignore the "this is a service account" warning).
+5. Click **Send**.
 
 ---
 
-## Step 4 — Edit config.js
+## Step 4 — Place the private key on the NAS (outside the web root)
 
-Open `config.js` in a text editor and fill in:
+The private key must **not** be inside the web-served folder. It lives one level up.
+
+1. SSH into your NAS:
+   ```bash
+   ssh -p 1022 kim@nas.galant.info
+   ```
+2. Create a directory outside the web root:
+   ```bash
+   mkdir -p /volume1/homes/Kim/private
+   ```
+3. Create the key file:
+   ```bash
+   nano /volume1/homes/Kim/private/landlord-guru.pem
+   ```
+4. Paste the `private_key` value from the JSON file exactly as-is, including the
+   `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` lines.
+   Save and exit (`Ctrl+O`, `Ctrl+X`).
+5. Set permissions so the web server user can read it:
+   ```bash
+   chmod o+x /volume1/homes/Kim
+   chmod o+x /volume1/homes/Kim/private
+   chmod o+r /volume1/homes/Kim/private/landlord-guru.pem
+   ```
+
+---
+
+## Step 5 — Edit config.js
+
+Copy `config.example.js` to `config.js` and fill in your values:
 
 ```javascript
-SPREADSHEET_ID: 'paste-your-spreadsheet-id-here',
+const CONFIG = {
+  SPREADSHEET_ID:        'paste-your-spreadsheet-id-here',
+  SERVICE_ACCOUNT_EMAIL: 'paste-client_email-from-json-here',
+  KEY_FETCHER_URL:       'key.php',   // do not change
 
-SERVICE_ACCOUNT: {
-  client_email: 'paste-client_email-from-json-here',
-  private_key:  'paste-private_key-from-json-here',
-},
+  APP_NAME:      'LandlordGuru',
+  BASE_CURRENCY: 'DKK',
+
+  FX_RATES: {
+    DKK: 1,
+    PLN: 0.44,
+    EUR: 7.46,
+    USD: 6.89,
+  },
+
+  SHEETS: {
+    PROPERTIES:   'properties',
+    TRANSACTIONS: 'transactions',
+    RULES:        'rules',
+    FX_LOG:       'fx_log',
+    STRINGS:      'strings',
+  }
+};
 ```
 
-The `private_key` value is long and contains `\n` characters — paste it exactly as it
-appears in the JSON file, including the `-----BEGIN PRIVATE KEY-----` header and footer.
-
-**Security note:** `config.js` contains a credential. It lives on your NAS.
-Do not commit it to a public git repository or share it.
-The NAS should be the only device that serves these files.
+`config.js` contains your spreadsheet ID and service account email — not the private key.
+Do not commit it to a public git repository.
 
 ---
 
-## Step 5 — Deploy to Synology NAS
+## Step 6 — Deploy to Synology NAS
 
 ### Enable Web Station (if not already enabled)
 
 1. Open **Package Center** on your Synology DSM.
 2. Install **Web Station** if not installed.
-3. Open Web Station → **Web Service Portal** → the default `http://` service
-   should point to `/web` on your NAS's volume.
+3. Open Web Station → confirm the default HTTP service points to `/volume1/web`.
 
-### Copy the app files
+### Deploy using the publish script
 
-1. Open **File Station**.
-2. Navigate to `web/` (this is the default web root).
-3. Create a subfolder: `web/rental/`
-4. Upload the entire `rental-portfolio` folder contents into `web/rental/`:
-   ```
-   web/rental/
-     index.html
-     config.js
-     css/
-       style.css
-     js/
-       sheets.js
-       data.js
-       importer.js
-       reports.js
-   ```
+From a Windows terminal in the project root:
+
+```powershell
+.\scripts\deploy.ps1
+```
+
+This copies everything in `frontend/` to the NAS **except** `config.js` (which is already
+there and must not be overwritten). Files uploaded:
+
+```
+/volume1/web/landlordguru/
+  index.html
+  key.php
+  debug.inc.php
+  version.json
+  config.js          ← already on NAS; never overwritten by deploy
+  config.example.js
+  css/
+    style.css
+  js/
+    strings.js
+    sheets.js
+    data.js
+    importer.js
+    reports.js
+    debug.js
+```
 
 ### Test locally
 
 On a computer on your home network, open:
-`http://YOUR-NAS-LOCAL-IP/rental/`
-
-Example: `http://192.168.1.100/rental/`
+`http://YOUR-NAS-LOCAL-IP/landlordguru/`
 
 You can find your NAS IP in DSM → Control Panel → Network.
 
 ---
 
-## Step 6 — Access from anywhere (Synology QuickConnect)
+## Step 7 — Access from anywhere (Synology QuickConnect)
 
 1. In DSM go to **Control Panel → QuickConnect**.
-2. Enable QuickConnect and set an ID (e.g. `galant-rentals`).
+2. Enable QuickConnect and set an ID (e.g. `galant`).
 3. Your app will then also be accessible at:
-   `https://galant-rentals.quickconnect.to/rental/`
-
-This URL works from Singapore, Denmark, Poland — anywhere.
+   `https://galant.quickconnect.to/landlordguru/`
 
 ---
 
-## Step 7 — Optional: password-protect the app
+## Step 8 — Optional: password-protect the app
 
-Since `config.js` contains credentials, you should restrict who can access the folder.
+Since the app has access to your financial data, restrict who can reach the folder.
 
 **Option A — Synology reverse proxy + basic auth:**
 1. DSM → Control Panel → Application Portal → Reverse Proxy.
-2. Create a rule for the `/rental/` path with password protection.
+2. Create a rule for the `/landlordguru/` path with password protection.
 
 **Option B — `.htaccess` (if Apache is enabled in Web Station):**
-Create `web/rental/.htaccess`:
+Create `web/landlordguru/.htaccess`:
 ```
 AuthType Basic
-AuthName "Rental Portfolio"
-AuthUserFile /volume1/web/rental/.htpasswd
+AuthName "LandlordGuru"
+AuthUserFile /volume1/web/landlordguru/.htpasswd
 Require valid-user
 ```
-Then create `.htpasswd` using an online htpasswd generator.
+Then create `.htpasswd` using an htpasswd generator.
 
 ---
 
-## Step 8 — Initial apartment setup
+## Step 9 — Initial property setup
 
 1. Open the app in your browser.
-2. Go to **Apartments** → **+ Add apartment** and add your four units:
-   - VB77 1tv (Denmark, DKK, long-term, tenant: Richard & Grenny Sabumba)
-   - VB77 [second unit] (Denmark, DKK, long-term)
-   - PL Apartment 1 (Poland, PLN, short-term)
-   - PL Apartment 2 (Poland, PLN, short-term)
-3. Go to **Rules** → **Load default rules** to seed the auto-categorisation.
-   Then edit the apartment assignments to match your specific units.
-
----
-
-## File structure reference
-
-```
-rental-portfolio/
-├── index.html          Main app (all UI and app logic)
-├── config.js           Your credentials and settings  ← EDIT THIS
-├── css/
-│   └── style.css       Stylesheet
-└── js/
-    ├── sheets.js       Google Sheets API (auth + CRUD)
-    ├── data.js         Data layer (apartments, transactions, rules)
-    ├── importer.js     CSV parser for bank statements
-    └── reports.js      Filtering, aggregation, P&L
-```
+2. Go to **Properties** → **+ Add property** and add your units.
+3. Go to **Rules** and add auto-categorisation rules for recurring transactions
+   (e.g. tenant name → rent, insurance provider → insurance).
 
 ---
 
 ## Troubleshooting
 
-**"Auth failed" on first load**
-- Check that `client_email` and `private_key` in `config.js` are copied exactly from the JSON.
+**"Could not fetch key" or blank response from key.php**
+- Verify the `.pem` file exists at the path configured in `key.php`.
+- Check directory and file permissions (Step 4, step 5 — `o+x` on directories, `o+r` on file).
+- Open `?debug` on the app URL — the Key File section will show whether the file exists and is readable.
+
+**"key.php did not return a valid PEM key"**
+- The file content doesn't start with `-----BEGIN PRIVATE KEY-----`.
+- Re-paste the `private_key` value from the JSON file, making sure `\n` characters
+  are actual newlines (most text editors handle this automatically).
+
+**"Google auth failed"**
+- Check that `SERVICE_ACCOUNT_EMAIL` in `config.js` matches `client_email` in the JSON.
 - Check that the Google Sheets API is enabled in your Google Cloud project.
-- Check that the sheet is shared with the service account email as Editor.
 
 **"Sheets API error 403"**
 - The service account doesn't have permission. Re-share the sheet (Step 3).
@@ -204,14 +228,22 @@ rental-portfolio/
 **"Sheets API error 404"**
 - The `SPREADSHEET_ID` in `config.js` is wrong.
 
-**App loads but shows no data after first setup**
-- This is normal — the sheet is empty. Add an apartment first, then transactions.
+**"Unable to parse range: undefined"**
+- A sheet name in `CONFIG.SHEETS` doesn't match an actual tab in the spreadsheet.
+- Check that the tab names in the sheet match the values in `config.js`.
 
-**CSV import: rows skipped**
-- Check that you selected the correct bank profile.
-- Jyske Bank exports use `;` as delimiter and `,` as decimal separator.
-- mBank exports also use `;` delimiter.
-- If your bank isn't listed, use "Generic CSV" and ensure columns are: date, description, amount.
+**App loads but shows no data after first setup**
+- This is normal — the sheet is empty. Add a property first, then transactions.
+
+**CSV import: columns mapped to wrong fields**
+- Use the column mapping panel that appears after loading a file.
+- Assign the correct role (Date / Description / Amount / Ignore) to each column.
+- Set the correct date format and decimal separator for your bank.
+- Save the mapping with a name so it auto-applies next time.
+
+**CSV import: rows skipped with "Could not parse date" or "Could not parse amount"**
+- The date format or decimal separator in the mapping panel doesn't match the file.
+- Common formats: Jyske Bank uses `DD.MM.YYYY` and `,` decimal; mBank uses `YYYY-MM-DD` and `,` decimal.
 
 **QuickConnect not working**
 - QuickConnect routes through Synology's relay servers. If your DSM firewall blocks
