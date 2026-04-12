@@ -158,6 +158,72 @@
           </div>
         </div>
 
+        <!-- Column mapping panel (shown after CSV loaded) -->
+        <div id="import-mapping-section" style="display:none;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1rem;background:var(--bg2)">
+
+          <!-- Saved mappings row -->
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:1rem">
+            <label style="font-size:13px;font-weight:500;white-space:nowrap" data-i18n="import.mapping.savedLabel"></label>
+            <select id="mapping-saved-select" style="font-size:13px;flex:1" onchange="loadSavedMapping()">
+              <option value="" data-i18n="import.mapping.noSaved"></option>
+            </select>
+            <button class="btn btn-sm btn-danger" onclick="deleteSavedMapping()" data-i18n="import.mapping.deleteBtn"></button>
+          </div>
+
+          <!-- Column assignment table -->
+          <div class="table-wrap" style="margin-bottom:1rem">
+            <table style="font-size:13px">
+              <thead><tr>
+                <th data-i18n="import.mapping.colHeader"></th>
+                <th data-i18n="import.mapping.colSample"></th>
+                <th data-i18n="import.mapping.colRole"></th>
+              </tr></thead>
+              <tbody id="mapping-table-body"></tbody>
+            </table>
+          </div>
+
+          <!-- Format options -->
+          <div class="form-grid cols-4" style="margin-bottom:1rem">
+            <div class="form-group">
+              <label style="font-size:12px" data-i18n="import.mapping.skipRows"></label>
+              <input type="number" id="mapping-skip-rows" value="1" min="0" style="width:70px;font-size:13px">
+            </div>
+            <div class="form-group">
+              <label style="font-size:12px" data-i18n="import.mapping.dateFormat"></label>
+              <select id="mapping-date-format" style="font-size:13px">
+                <option value="DD.MM.YYYY">DD.MM.YYYY</option>
+                <option value="DD-MM-YYYY">DD-MM-YYYY</option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size:12px" data-i18n="import.mapping.decimal"></label>
+              <select id="mapping-decimal" style="font-size:13px">
+                <option value=",">, (comma)</option>
+                <option value=".">. (period)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size:12px" data-i18n="import.currency"></label>
+              <select id="mapping-currency-sel" style="font-size:13px">
+                <option value="DKK">DKK</option>
+                <option value="PLN">PLN</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Save mapping -->
+          <div style="display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);padding-top:0.75rem">
+            <input id="mapping-name-input" type="text" style="flex:1;font-size:13px"
+              data-i18n-placeholder="import.mapping.namePlaceholder">
+            <button class="btn btn-secondary btn-sm" onclick="saveCurrentMapping()" data-i18n="import.mapping.saveBtn"></button>
+          </div>
+        </div>
+
         <div class="btn-row">
           <button class="btn btn-primary" onclick="runImportPreview()" data-i18n="import.previewBtn"></button>
           <button class="btn btn-secondary btn-sm" onclick="clearImport()" data-i18n="import.clearBtn"></button>
@@ -799,16 +865,19 @@ function onProfileChange() {
 
 let _importCSVText = '';   // holds text loaded from a file
 
+function _setFileLoaded(text, name) {
+  _importCSVText = text;
+  document.getElementById('import-file-name').textContent = name;
+  document.getElementById('import-file-name').style.display = 'inline-block';
+  document.getElementById('import-zone').querySelector('strong').textContent = '✓ ' + name;
+  showMappingPanel(text, document.getElementById('import-profile').value);
+}
+
 function onImportFileChange(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    _importCSVText = e.target.result;
-    document.getElementById('import-file-name').textContent = file.name;
-    document.getElementById('import-file-name').style.display = 'inline-block';
-    document.getElementById('import-zone').querySelector('strong').textContent = '✓ ' + file.name;
-  };
+  reader.onload = e => _setFileLoaded(e.target.result, file.name);
   reader.readAsText(file);
 }
 
@@ -829,12 +898,7 @@ function onImportDrop(event) {
   const file = event.dataTransfer.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    _importCSVText = e.target.result;
-    document.getElementById('import-file-name').textContent = file.name;
-    document.getElementById('import-file-name').style.display = 'inline-block';
-    document.getElementById('import-zone').querySelector('strong').textContent = '✓ ' + file.name;
-  };
+  reader.onload = e => _setFileLoaded(e.target.result, file.name);
   reader.readAsText(file);
 }
 
@@ -852,7 +916,146 @@ function clearImport() {
   document.getElementById('import-file-name').style.display = 'none';
   document.getElementById('import-zone').querySelector('strong').textContent = t('import.dropZone');
   document.getElementById('import-csv').value = '';
+  document.getElementById('import-mapping-section').style.display = 'none';
   document.getElementById('import-preview-section').style.display = 'none';
+}
+
+// ── Column mapping ────────────────────────────────────────
+
+const MAPPING_STORAGE_KEY = 'lg_col_mappings_v1';
+
+function getSavedMappings() {
+  try { return JSON.parse(localStorage.getItem(MAPPING_STORAGE_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+
+function refreshSavedMappingsDropdown() {
+  const sel     = document.getElementById('mapping-saved-select');
+  const current = sel.value;
+  const names   = Object.keys(getSavedMappings());
+  sel.innerHTML = `<option value="">${t('import.mapping.noSaved')}</option>`
+    + names.map(n => `<option value="${n}"${n === current ? ' selected' : ''}>${n}</option>`).join('');
+}
+
+function _setSelectValue(el, val) {
+  for (const opt of el.options) {
+    if (opt.value === val) { opt.selected = true; return; }
+  }
+}
+
+function showMappingPanel(csvText, profileKey) {
+  const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 1) return;
+
+  const profile   = BANK_PROFILES[profileKey] || {};
+  const skipRows  = profile.skip_rows ?? 1;
+  const delimiter = Importer.detectDelimiter(lines[0]);
+  const headers   = Importer.splitCSVLine(lines[0], delimiter);
+  const sampleIdx = Math.min(skipRows, lines.length - 1);
+  const sample    = Importer.splitCSVLine(lines[sampleIdx] || '', delimiter);
+  const detected  = Importer.detectColumns(headers, profile);
+
+  // Seed format selects from profile
+  if (profile.date_format)    _setSelectValue(document.getElementById('mapping-date-format'), profile.date_format);
+  if (profile.amount_decimal) _setSelectValue(document.getElementById('mapping-decimal'),     profile.amount_decimal);
+  if (profile.currency)       _setSelectValue(document.getElementById('mapping-currency-sel'), profile.currency);
+  document.getElementById('mapping-skip-rows').value = skipRows;
+
+  // Render one row per CSV column
+  const roles = ['date', 'description', 'amount', 'ignore'];
+  document.getElementById('mapping-table-body').innerHTML = headers.map((h, i) => {
+    let autoRole = 'ignore';
+    if      (detected.date_col        === i) autoRole = 'date';
+    else if (detected.description_col === i) autoRole = 'description';
+    else if (detected.amount_col      === i) autoRole = 'amount';
+
+    const roleOpts  = roles.map(r =>
+      `<option value="${r}"${r === autoRole ? ' selected' : ''}>${t('import.mapping.roles.' + r)}</option>`
+    ).join('');
+    const sampleVal = (sample[i] || '').replace(/^"|"$/g, '').slice(0, 40);
+
+    return `<tr>
+      <td style="font-size:12px;font-weight:500;padding:4px 8px">${h.replace(/^"|"$/g, '')}</td>
+      <td style="font-size:11px;color:var(--text3);padding:4px 8px">${sampleVal}</td>
+      <td style="padding:4px 8px">
+        <select class="mapping-role-sel" data-col="${i}" style="font-size:12px;padding:3px 6px">
+          ${roleOpts}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+
+  refreshSavedMappingsDropdown();
+  document.getElementById('import-mapping-section').style.display = 'block';
+}
+
+function buildColumnMap() {
+  const csvText   = _importCSVText || document.getElementById('import-csv').value;
+  const firstLine = csvText.split(/\r?\n/).find(l => l.trim()) || '';
+  const map = {
+    date_col:        -1,
+    description_col: -1,
+    amount_col:      -1,
+    delimiter:       Importer.detectDelimiter(firstLine),
+    date_format:     document.getElementById('mapping-date-format').value,
+    amount_decimal:  document.getElementById('mapping-decimal').value,
+    currency:        document.getElementById('mapping-currency-sel').value,
+    skip_rows:       parseInt(document.getElementById('mapping-skip-rows').value, 10) || 1,
+  };
+  document.querySelectorAll('.mapping-role-sel').forEach(sel => {
+    const col  = parseInt(sel.dataset.col, 10);
+    const role = sel.value;
+    if      (role === 'date')        map.date_col        = col;
+    else if (role === 'description') map.description_col = col;
+    else if (role === 'amount')      map.amount_col      = col;
+  });
+  return map;
+}
+
+function applyMappingToUI(saved) {
+  _setSelectValue(document.getElementById('mapping-date-format'),  saved.date_format    || 'YYYY-MM-DD');
+  _setSelectValue(document.getElementById('mapping-decimal'),      saved.amount_decimal || '.');
+  _setSelectValue(document.getElementById('mapping-currency-sel'), saved.currency       || 'DKK');
+  if (saved.skip_rows !== undefined)
+    document.getElementById('mapping-skip-rows').value = saved.skip_rows;
+
+  document.querySelectorAll('.mapping-role-sel').forEach(sel => {
+    const col = parseInt(sel.dataset.col, 10);
+    let role = 'ignore';
+    if      (saved.date_col        === col) role = 'date';
+    else if (saved.description_col === col) role = 'description';
+    else if (saved.amount_col      === col) role = 'amount';
+    _setSelectValue(sel, role);
+  });
+}
+
+function loadSavedMapping() {
+  const name = document.getElementById('mapping-saved-select').value;
+  if (!name) return;
+  const saved = getSavedMappings()[name];
+  if (saved) applyMappingToUI(saved);
+}
+
+function saveCurrentMapping() {
+  const name = document.getElementById('mapping-name-input').value.trim();
+  if (!name) { toast(t('import.mapping.toast.noName'), 'error'); return; }
+  const mappings = getSavedMappings();
+  mappings[name] = buildColumnMap();
+  localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(mappings));
+  refreshSavedMappingsDropdown();
+  document.getElementById('mapping-saved-select').value = name;
+  document.getElementById('mapping-name-input').value   = '';
+  toast(t('import.mapping.toast.saved', { name }), 'success');
+}
+
+function deleteSavedMapping() {
+  const name = document.getElementById('mapping-saved-select').value;
+  if (!name) return;
+  const mappings = getSavedMappings();
+  delete mappings[name];
+  localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(mappings));
+  refreshSavedMappingsDropdown();
+  toast(t('import.mapping.toast.deleted', { name }), 'success');
 }
 
 function runImportPreview() {
@@ -863,14 +1066,18 @@ function runImportPreview() {
 
   if (!csv) { toast(t('import.toast.noData'), 'error'); return; }
 
-  const profile = BANK_PROFILES[profileKey];
-  if (!profile.currency) {
-    profile.currency = document.getElementById('import-currency')?.value || 'DKK';
+  // Show/refresh the mapping panel if not already visible
+  const mappingSection = document.getElementById('import-mapping-section');
+  if (mappingSection.style.display === 'none') {
+    showMappingPanel(csv, profileKey);
   }
+
+  // Build column map from the mapping panel
+  const colMap = buildColumnMap();
 
   let result;
   try {
-    result = Importer.parseCSV(csv, profileKey, propId, State.rules);
+    result = Importer.parseCSV(csv, profileKey, propId, State.rules, colMap);
   } catch(e) {
     toast(t('import.toast.parseError', { error: e.message }), 'error');
     return;
