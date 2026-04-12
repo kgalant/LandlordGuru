@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rental Portfolio</title>
+  <title>LandlordGuru</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div id="app">
 
   <header>
-    <span class="app-title">Rental Portfolio</span>
+    <span class="app-title" data-i18n="app.header"></span>
     <nav>
-      <button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
-      <button onclick="showPage('transactions',this)">Transactions</button>
-      <button onclick="showPage('import',this)">Import</button>
-      <button onclick="showPage('reports',this)">Reports</button>
-      <button onclick="showPage('apartments',this)">Apartments</button>
-      <button onclick="showPage('rules',this)">Rules</button>
+      <button class="active" onclick="showPage('dashboard',this)"    data-i18n="nav.dashboard"></button>
+      <button onclick="showPage('transactions',this)"                 data-i18n="nav.transactions"></button>
+      <button onclick="showPage('import',this)"                       data-i18n="nav.import"></button>
+      <button onclick="showPage('reports',this)"                      data-i18n="nav.reports"></button>
+      <button onclick="showPage('properties',this)"                   data-i18n="nav.properties"></button>
+      <button onclick="showPage('rules',this)"                        data-i18n="nav.rules"></button>
     </nav>
     <div class="header-right">
       <span id="sync-status">Loading…</span>
-      <button class="btn btn-sm btn-secondary" onclick="refreshAll()">↺ Refresh</button>
+      <button class="btn btn-sm btn-secondary" onclick="refreshAll()" data-i18n="common.refresh"></button>
     </div>
   </header>
 
@@ -33,12 +33,18 @@
       <div class="apt-grid"    id="dash-apt-cards"></div>
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Recent transactions</span>
-          <button class="btn btn-sm btn-secondary" onclick="showPage('transactions', document.querySelector('nav button:nth-child(2)'))">View all</button>
+          <span class="card-title" data-i18n="dashboard.recentTx"></span>
+          <button class="btn btn-sm btn-secondary"
+            onclick="showPage('transactions', document.querySelector('nav button:nth-child(2)'))"
+            data-i18n="dashboard.viewAll"></button>
         </div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th>Date</th><th>Apartment</th><th>Description</th><th>Category</th><th class="amount-cell">Amount</th>
+            <th data-i18n="tx.col.date"></th>
+            <th data-i18n="tx.col.property"></th>
+            <th data-i18n="tx.col.description"></th>
+            <th data-i18n="tx.col.category"></th>
+            <th class="amount-cell" data-i18n="tx.col.amount"></th>
           </tr></thead>
           <tbody id="dash-recent-tx"></tbody></table>
         </div>
@@ -49,47 +55,47 @@
     <div id="page-transactions" class="page">
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Transactions</span>
-          <button class="btn btn-sm btn-primary" onclick="openTxModal()">+ Add transaction</button>
+          <span class="card-title" data-i18n="tx.title"></span>
+          <button class="btn btn-sm btn-primary" onclick="openTxModal()" data-i18n="tx.addBtn"></button>
         </div>
 
         <div class="filter-bar">
           <select id="tx-filter-apt" onchange="renderTxTable()">
-            <option value="all">All apartments</option>
+            <option value="all" data-i18n="tx.filter.allProperties"></option>
           </select>
           <select id="tx-filter-type" onchange="updateCategoryFilter(); renderTxTable()">
-            <option value="all">All types</option>
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-            <option value="deposit">Deposit</option>
-            <option value="transfer">Transfer</option>
+            <option value="all"      data-i18n="tx.filter.allTypes"></option>
+            <option value="income"   data-i18n="categories.income"></option>
+            <option value="expense"  data-i18n="categories.expense"></option>
+            <option value="deposit"  data-i18n="categories.deposit"></option>
+            <option value="transfer" data-i18n="categories.transfer"></option>
           </select>
           <select id="tx-filter-cat" onchange="renderTxTable()">
-            <option value="all">All categories</option>
+            <option value="all" data-i18n="tx.filter.allCats"></option>
           </select>
-          <input type="date" id="tx-filter-from" onchange="renderTxTable()" title="From date">
-          <input type="date" id="tx-filter-to"   onchange="renderTxTable()" title="To date">
-          <input type="search" id="tx-filter-search" placeholder="Search…" oninput="renderTxTable()">
-          <button class="btn btn-sm btn-secondary" onclick="clearTxFilters()">Clear</button>
+          <input type="date"   id="tx-filter-from"   onchange="renderTxTable()" data-i18n-title="tx.col.date">
+          <input type="date"   id="tx-filter-to"     onchange="renderTxTable()" data-i18n-title="tx.col.date">
+          <input type="search" id="tx-filter-search" oninput="renderTxTable()"  data-i18n-placeholder="common.search">
+          <button class="btn btn-sm btn-secondary" onclick="clearTxFilters()" data-i18n="common.clear"></button>
         </div>
 
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>Date</th>
-              <th>Apartment</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Source</th>
-              <th class="amount-cell">Amount</th>
+              <th data-i18n="tx.col.date"></th>
+              <th data-i18n="tx.col.property"></th>
+              <th data-i18n="tx.col.description"></th>
+              <th data-i18n="tx.col.category"></th>
+              <th data-i18n="tx.col.source"></th>
+              <th class="amount-cell" data-i18n="tx.col.amount"></th>
               <th></th>
             </tr></thead>
             <tbody id="tx-table-body"></tbody>
           </table>
         </div>
         <div id="tx-empty" class="empty-state" style="display:none">
-          <strong>No transactions</strong>
-          Add one manually or import a bank statement.
+          <strong data-i18n="tx.noTx"></strong>
+          <span   data-i18n="tx.noTxSub"></span>
         </div>
         <div id="tx-footer" style="padding:10px 10px 0; font-size:12px; color:var(--text3)"></div>
       </div>
@@ -99,11 +105,11 @@
     <div id="page-import" class="page">
 
       <div class="card">
-        <div class="card-header"><span class="card-title">Import bank statement</span></div>
+        <div class="card-header"><span class="card-title" data-i18n="import.title"></span></div>
 
         <div class="form-grid cols-3" style="margin-bottom:1rem">
           <div class="form-group">
-            <label>Bank / profile</label>
+            <label data-i18n="import.bankProfile"></label>
             <select id="import-profile" onchange="onProfileChange()">
               <option value="jyske_bank">Jyske Bank (DK)</option>
               <option value="nordea_dk">Nordea (DK)</option>
@@ -112,13 +118,13 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Default apartment</label>
+            <label data-i18n="import.defaultProp"></label>
             <select id="import-apt">
-              <option value="">Auto-detect from rules</option>
+              <option value="" data-i18n="import.autoDetect"></option>
             </select>
           </div>
           <div class="form-group" id="import-currency-group" style="display:none">
-            <label>Currency</label>
+            <label data-i18n="import.currency"></label>
             <select id="import-currency">
               <option value="DKK">DKK</option>
               <option value="PLN">PLN</option>
@@ -128,13 +134,15 @@
         </div>
 
         <div class="form-group" style="margin-bottom:1rem">
-          <label>CSV data — paste your bank export here</label>
-          <textarea id="import-csv" rows="8" placeholder="Paste CSV content here. The first row should be headers.&#10;&#10;Example (Jyske Bank):&#10;Dato;Tekst;Betalingstype;Beloeb&#10;15.04.2025;RICHARD SABUMBA HUSLEJE;Kredit;16700,00"></textarea>
+          <label data-i18n="import.csvLabel"></label>
+          <textarea id="import-csv" rows="8" data-i18n-placeholder="import.csvPlaceholder"></textarea>
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="runImportPreview()">Preview import</button>
-          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-csv').value=''">Clear</button>
+          <button class="btn btn-primary" onclick="runImportPreview()" data-i18n="import.previewBtn"></button>
+          <button class="btn btn-secondary btn-sm"
+            onclick="document.getElementById('import-csv').value=''"
+            data-i18n="import.clearBtn"></button>
         </div>
       </div>
 
@@ -142,19 +150,24 @@
       <div id="import-preview-section" style="display:none">
         <div class="card">
           <div class="card-header">
-            <span class="card-title" id="import-preview-title">Preview</span>
+            <span class="card-title" id="import-preview-title"></span>
             <div class="btn-row">
-              <button class="btn btn-primary" onclick="confirmImport()">Import all</button>
-              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-preview-section').style.display='none'">Cancel</button>
+              <button class="btn btn-primary" onclick="confirmImport()" data-i18n="import.importAllBtn"></button>
+              <button class="btn btn-secondary btn-sm"
+                onclick="document.getElementById('import-preview-section').style.display='none'"
+                data-i18n="common.cancel"></button>
             </div>
           </div>
-          <p style="font-size:12px;color:var(--text3);margin-bottom:1rem">
-            Review categories and apartment assignments. Click any row to edit before importing.
-          </p>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="import.reviewNote"></p>
           <div class="table-wrap">
             <table>
               <thead><tr>
-                <th>Date</th><th>Description</th><th>Apartment</th><th>Category</th><th>Notes</th><th class="amount-cell">Amount</th>
+                <th data-i18n="import.col.date"></th>
+                <th data-i18n="import.col.description"></th>
+                <th data-i18n="import.col.property"></th>
+                <th data-i18n="import.col.category"></th>
+                <th data-i18n="import.col.notes"></th>
+                <th class="amount-cell" data-i18n="import.col.amount"></th>
               </tr></thead>
               <tbody id="import-preview-body"></tbody>
             </table>
@@ -169,48 +182,61 @@
 
       <div class="filter-bar" style="margin-bottom:1.25rem">
         <select id="rep-apt" onchange="renderReports()">
-          <option value="all">All apartments</option>
+          <option value="all" data-i18n="tx.filter.allProperties"></option>
         </select>
         <input type="date" id="rep-from" onchange="renderReports()">
         <input type="date" id="rep-to"   onchange="renderReports()">
-        <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('ytd')">YTD</button>
-        <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('lastyear')">Last year</button>
-        <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('all')">All time</button>
+        <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('ytd')"      data-i18n="reports.ytd"></button>
+        <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('lastyear')" data-i18n="reports.lastYear"></button>
+        <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('all')"      data-i18n="reports.allTime"></button>
       </div>
 
       <div class="metric-grid" id="rep-metrics"></div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
         <div class="card">
-          <div class="card-header"><span class="card-title">Income by category</span></div>
+          <div class="card-header"><span class="card-title" data-i18n="reports.incomeByCat"></span></div>
           <table>
-            <thead><tr><th>Category</th><th class="amount-cell">Amount</th><th class="amount-cell">Count</th></tr></thead>
+            <thead><tr>
+              <th data-i18n="reports.col.category"></th>
+              <th class="amount-cell" data-i18n="reports.col.amount"></th>
+              <th class="amount-cell" data-i18n="reports.col.count"></th>
+            </tr></thead>
             <tbody id="rep-income-cats"></tbody>
           </table>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">Expenses by category</span></div>
+          <div class="card-header"><span class="card-title" data-i18n="reports.expensesByCat"></span></div>
           <table>
-            <thead><tr><th>Category</th><th class="amount-cell">Amount</th><th class="amount-cell">Count</th></tr></thead>
+            <thead><tr>
+              <th data-i18n="reports.col.category"></th>
+              <th class="amount-cell" data-i18n="reports.col.amount"></th>
+              <th class="amount-cell" data-i18n="reports.col.count"></th>
+            </tr></thead>
             <tbody id="rep-expense-cats"></tbody>
           </table>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header"><span class="card-title">P&amp;L by apartment</span></div>
+        <div class="card-header"><span class="card-title" data-i18n="reports.pnlByProperty"></span></div>
         <table>
-          <thead><tr><th>Apartment</th><th class="amount-cell">Income</th><th class="amount-cell">Expenses</th><th class="amount-cell">Net</th></tr></thead>
+          <thead><tr>
+            <th data-i18n="reports.col.property"></th>
+            <th class="amount-cell" data-i18n="reports.col.income"></th>
+            <th class="amount-cell" data-i18n="reports.col.expenses"></th>
+            <th class="amount-cell" data-i18n="reports.col.net"></th>
+          </tr></thead>
           <tbody id="rep-pnl-apt"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- ── APARTMENTS ── -->
-    <div id="page-apartments" class="page">
+    <!-- ── PROPERTIES ── -->
+    <div id="page-properties" class="page">
       <div class="card-header" style="margin-bottom:1rem">
-        <span style="font-size:15px;font-weight:500">Apartments</span>
-        <button class="btn btn-primary btn-sm" onclick="openAptModal()">+ Add apartment</button>
+        <span style="font-size:15px;font-weight:500" data-i18n="property.title"></span>
+        <button class="btn btn-primary btn-sm" onclick="openPropertyModal()" data-i18n="property.addBtn"></button>
       </div>
       <div id="apt-list"></div>
     </div>
@@ -219,33 +245,35 @@
     <div id="page-rules" class="page">
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Auto-categorisation rules</span>
-          <button class="btn btn-primary btn-sm" onclick="openRuleModal()">+ Add rule</button>
+          <span class="card-title" data-i18n="rules.title"></span>
+          <button class="btn btn-primary btn-sm" onclick="openRuleModal()" data-i18n="rules.addBtn"></button>
         </div>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:1rem">
-          When importing, if a transaction description contains a keyword, it is automatically assigned the category and apartment below.
-          Rules are tested in order — first match wins.
-        </p>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="rules.description"></p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Bank profile</th><th>Keyword</th><th>Category</th><th>Apartment</th><th></th></tr></thead>
+            <thead><tr>
+              <th data-i18n="rules.col.bankProfile"></th>
+              <th data-i18n="rules.col.keyword"></th>
+              <th data-i18n="rules.col.category"></th>
+              <th data-i18n="rules.col.property"></th>
+              <th></th>
+            </tr></thead>
             <tbody id="rules-body"></tbody>
           </table>
         </div>
         <div id="rules-empty" class="empty-state" style="display:none">
-          <strong>No rules yet</strong>Add rules to auto-categorise imported transactions.
+          <strong data-i18n="rules.noRules"></strong>
+          <span   data-i18n="rules.noRulesSub"></span>
         </div>
         <div class="btn-row" style="margin-top:1rem">
-          <button class="btn btn-secondary btn-sm" onclick="saveRules()">Save rules order</button>
+          <button class="btn btn-secondary btn-sm" onclick="saveRules()" data-i18n="rules.saveOrder"></button>
         </div>
       </div>
 
       <div class="card" style="margin-top:1rem">
-        <div class="card-header"><span class="card-title">Default rules</span></div>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:1rem">
-          Click to load a set of sensible starting rules for your portfolio.
-        </p>
-        <button class="btn btn-secondary btn-sm" onclick="loadDefaultRules()">Load default rules</button>
+        <div class="card-header"><span class="card-title" data-i18n="rules.defaultTitle"></span></div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="rules.defaultDesc"></p>
+        <button class="btn btn-secondary btn-sm" onclick="loadDefaultRules()" data-i18n="rules.loadDefault"></button>
       </div>
     </div>
 
@@ -258,107 +286,106 @@
 <div id="modal-tx" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center">
   <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto">
     <div class="card-header">
-      <span class="card-title" id="tx-modal-title">Add transaction</span>
+      <span class="card-title" id="tx-modal-title"></span>
       <button class="btn btn-sm btn-secondary" onclick="closeTxModal()">✕</button>
     </div>
     <div class="form-grid">
       <div class="form-group">
-        <label>Date *</label>
+        <label data-i18n="tx.modal.date"></label>
         <input type="date" id="tx-m-date">
       </div>
       <div class="form-group">
-        <label>Apartment *</label>
-        <select id="tx-m-apt"><option value="">Select…</option></select>
+        <label data-i18n="tx.modal.property"></label>
+        <select id="tx-m-apt"><option value="" data-i18n="common.select"></option></select>
       </div>
       <div class="form-group">
-        <label>Category *</label>
+        <label data-i18n="tx.modal.category"></label>
         <select id="tx-m-cat" onchange="onCategoryChange()">
-          <option value="">Select…</option>
+          <option value="" data-i18n="common.select"></option>
         </select>
       </div>
       <div class="form-group">
-        <label>Amount *</label>
+        <label data-i18n="tx.modal.amount"></label>
         <input type="number" id="tx-m-amount" min="0" step="0.01" placeholder="0.00">
       </div>
       <div class="form-group span-2">
-        <label>Description</label>
-        <input type="text" id="tx-m-desc" placeholder="e.g. Rent June 2025">
+        <label data-i18n="tx.modal.description"></label>
+        <input type="text" id="tx-m-desc" data-i18n-placeholder="tx.modal.descPlaceholder">
       </div>
       <div class="form-group span-2">
-        <label id="tx-m-notes-label">Notes</label>
-        <textarea id="tx-m-notes" rows="2" placeholder="Optional note…"></textarea>
-        <span id="tx-m-notes-hint" class="note-hint" style="display:none">
-          ⚠ Please describe what this expense was for.
-        </span>
+        <label id="tx-m-notes-label" data-i18n="tx.modal.notes"></label>
+        <textarea id="tx-m-notes" rows="2" data-i18n-placeholder="tx.modal.notesPlaceholder"></textarea>
+        <span id="tx-m-notes-hint" class="note-hint" style="display:none" data-i18n="tx.modal.notesHint"></span>
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveTxModal()">Save transaction</button>
-      <button class="btn btn-secondary" onclick="closeTxModal()">Cancel</button>
-      <button class="btn btn-danger btn-sm" id="tx-m-delete-btn" style="display:none;margin-left:auto" onclick="deleteTxModal()">Delete</button>
+      <button class="btn btn-primary"   onclick="saveTxModal()"    data-i18n="tx.modal.saveBtn"></button>
+      <button class="btn btn-secondary" onclick="closeTxModal()"   data-i18n="common.cancel"></button>
+      <button class="btn btn-danger btn-sm" id="tx-m-delete-btn" style="display:none;margin-left:auto"
+        onclick="deleteTxModal()" data-i18n="tx.modal.deleteBtn"></button>
     </div>
   </div>
 </div>
 
-<!-- Apartment modal -->
+<!-- Property modal -->
 <div id="modal-apt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center">
   <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto">
     <div class="card-header">
-      <span class="card-title" id="apt-modal-title">Add apartment</span>
-      <button class="btn btn-sm btn-secondary" onclick="closeAptModal()">✕</button>
+      <span class="card-title" id="apt-modal-title"></span>
+      <button class="btn btn-sm btn-secondary" onclick="closePropertyModal()">✕</button>
     </div>
     <div class="form-grid">
       <div class="form-group">
-        <label>Name / unit *</label>
-        <input type="text" id="apt-m-name" placeholder="e.g. VB77 1tv">
+        <label data-i18n="property.modal.name"></label>
+        <input type="text" id="apt-m-name" data-i18n-placeholder="property.modal.namePlaceholder">
       </div>
       <div class="form-group">
-        <label>Country</label>
+        <label data-i18n="property.modal.country"></label>
         <select id="apt-m-country" onchange="onAptCountryChange()">
-          <option value="DK">Denmark</option>
-          <option value="PL">Poland</option>
-          <option value="OTHER">Other</option>
+          <option value="DK" data-i18n="country.DK"></option>
+          <option value="PL" data-i18n="country.PL"></option>
+          <option value="OTHER" data-i18n="country.OTHER"></option>
         </select>
       </div>
       <div class="form-group span-2">
-        <label>Address</label>
-        <input type="text" id="apt-m-addr" placeholder="Street, city, postcode">
+        <label data-i18n="property.modal.address"></label>
+        <input type="text" id="apt-m-addr" data-i18n-placeholder="property.modal.addrPlaceholder">
       </div>
       <div class="form-group">
-        <label>Currency</label>
-        <input type="text" id="apt-m-currency" placeholder="DKK" maxlength="3">
+        <label data-i18n="property.modal.currency"></label>
+        <input type="text" id="apt-m-currency" data-i18n-placeholder="property.modal.currPlaceholder" maxlength="3">
       </div>
       <div class="form-group">
-        <label>Rental model</label>
+        <label data-i18n="property.modal.model"></label>
         <select id="apt-m-model">
-          <option value="longterm">Long-term (fixed rent)</option>
-          <option value="airbnb">Short-term / Airbnb</option>
+          <option value="longterm" data-i18n="property.modal.longTerm"></option>
+          <option value="airbnb"   data-i18n="property.modal.shortTerm"></option>
         </select>
       </div>
       <div class="form-group">
-        <label>Monthly rent</label>
+        <label data-i18n="property.modal.monthlyRent"></label>
         <input type="number" id="apt-m-rent" min="0" step="1" placeholder="0">
       </div>
       <div class="form-group">
-        <label>A/C heating &amp; water</label>
+        <label data-i18n="property.modal.aconto"></label>
         <input type="number" id="apt-m-aconto" min="0" step="1" placeholder="0">
       </div>
       <div class="form-group">
-        <label>Tenant name</label>
-        <input type="text" id="apt-m-tenant" placeholder="Full name">
+        <label data-i18n="property.modal.tenantName"></label>
+        <input type="text" id="apt-m-tenant" data-i18n-placeholder="property.modal.tenantPlaceholder">
       </div>
       <div class="form-group">
-        <label>Lease start</label>
+        <label data-i18n="property.modal.leaseStart"></label>
         <input type="date" id="apt-m-lease">
       </div>
       <div class="form-group span-2">
-        <label>Notes</label>
-        <textarea id="apt-m-notes" rows="2" placeholder="Optional notes…"></textarea>
+        <label data-i18n="property.modal.notes"></label>
+        <textarea id="apt-m-notes" rows="2" data-i18n-placeholder="property.modal.notesPlaceholder"></textarea>
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveAptModal()">Save</button>
-      <button class="btn btn-secondary" onclick="closeAptModal()">Cancel</button>
+      <button class="btn btn-primary"   onclick="savePropertyModal()" data-i18n="property.modal.saveBtn"></button>
+      <button class="btn btn-secondary" onclick="closePropertyModal()" data-i18n="common.cancel"></button>
     </div>
   </div>
 </div>
@@ -367,14 +394,14 @@
 <div id="modal-rule" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center">
   <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:480px;max-width:95vw">
     <div class="card-header">
-      <span class="card-title">Add categorisation rule</span>
+      <span class="card-title" data-i18n="rules.modal.title"></span>
       <button class="btn btn-sm btn-secondary" onclick="closeRuleModal()">✕</button>
     </div>
     <div class="form-grid">
       <div class="form-group">
-        <label>Bank profile (optional)</label>
+        <label data-i18n="rules.modal.bankProfile"></label>
         <select id="rule-m-profile">
-          <option value="">Any bank</option>
+          <option value=""           data-i18n="rules.modal.anyBank"></option>
           <option value="jyske_bank">Jyske Bank (DK)</option>
           <option value="nordea_dk">Nordea (DK)</option>
           <option value="mbank_pl">mBank (PL)</option>
@@ -382,21 +409,21 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Keyword *</label>
-        <input type="text" id="rule-m-kw" placeholder="e.g. sabumba">
+        <label data-i18n="rules.modal.keyword"></label>
+        <input type="text" id="rule-m-kw" data-i18n-placeholder="rules.modal.kwPlaceholder">
       </div>
       <div class="form-group">
-        <label>Category *</label>
-        <select id="rule-m-cat"><option value="">Select…</option></select>
+        <label data-i18n="rules.modal.category"></label>
+        <select id="rule-m-cat"><option value="" data-i18n="common.select"></option></select>
       </div>
       <div class="form-group">
-        <label>Apartment (optional)</label>
-        <select id="rule-m-apt"><option value="">Any / not set</option></select>
+        <label data-i18n="rules.modal.property"></label>
+        <select id="rule-m-apt"><option value="" data-i18n="rules.modal.anyProperty"></option></select>
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveRuleModal()">Add rule</button>
-      <button class="btn btn-secondary" onclick="closeRuleModal()">Cancel</button>
+      <button class="btn btn-primary"   onclick="saveRuleModal()"  data-i18n="rules.modal.addBtn"></button>
+      <button class="btn btn-secondary" onclick="closeRuleModal()" data-i18n="common.cancel"></button>
     </div>
   </div>
 </div>
@@ -408,6 +435,7 @@
 <div id="loading"><span id="loading-msg">Loading…</span></div>
 
 <!-- Scripts — order matters -->
+<script src="js/strings.js"></script>
 <script src="config.js"></script>
 <script src="js/sheets.js"></script>
 <script src="js/data.js"></script>
@@ -422,47 +450,48 @@
 // ── Global state ──────────────────────────────────────────
 
 let State = {
-  apartments:    [],
-  transactions:  [],
-  rules:         [],
-  editingTxId:   null,
-  editingAptId:  null,
-  importRows:    [],   // pending import preview rows
+  properties:   [],
+  transactions: [],
+  rules:        [],
+  editingTxId:  null,
+  editingAptId: null,
+  importRows:   [],
 };
 
 // ── Boot ──────────────────────────────────────────────────
 
 async function boot() {
-  setLoading(true, 'Connecting to Google Sheets…');
+  setLoading(true, t('status.connecting'));
   try {
     await SheetsAPI.initSheets();
+    const stringRows = await DB.getStrings();
+    I18n.initStrings(stringRows);
     await refreshAll();
-    setStatus('Synced');
   } catch(e) {
-    setStatus('Error: ' + e.message);
-    toast('Connection failed: ' + e.message, 'error');
+    setStatus(t('status.error', { message: e.message }));
+    toast(t('status.connFailed', { error: e.message }), 'error');
     console.error(e);
   }
   setLoading(false);
 }
 
 async function refreshAll() {
-  setLoading(true, 'Loading data…');
+  setLoading(true, t('status.loadingData'));
   try {
-    const [apts, txs, rules] = await Promise.all([
-      DB.getApartments(),
+    const [props, txs, rules] = await Promise.all([
+      DB.getProperties(),
       DB.getTransactions(),
       DB.getRules(),
     ]);
-    State.apartments   = apts;
+    State.properties  = props;
     State.transactions = txs;
     State.rules        = rules;
     populateAllDropdowns();
     renderCurrentPage();
-    setStatus('Synced ' + new Date().toLocaleTimeString());
+    setStatus(t('status.synced', { time: new Date().toLocaleTimeString() }));
   } catch(e) {
-    setStatus('Sync error');
-    toast('Sync failed: ' + e.message, 'error');
+    setStatus(t('status.syncError'));
+    toast(t('status.connFailed', { error: e.message }), 'error');
     console.error(e);
   }
   setLoading(false);
@@ -485,35 +514,37 @@ function renderCurrentPage() {
   if (currentPage === 'dashboard')    renderDashboard();
   if (currentPage === 'transactions') renderTxTable();
   if (currentPage === 'reports')      renderReports();
-  if (currentPage === 'apartments')   renderAptList();
+  if (currentPage === 'properties')   renderPropertyList();
   if (currentPage === 'rules')        renderRules();
 }
 
 // ── Populate dropdowns ────────────────────────────────────
 
 function populateAllDropdowns() {
-  const aptOpts = State.apartments.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  const propOpts = State.properties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 
-  // Filter selects
   ['tx-filter-apt','rep-apt'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) { const v = el.value; el.innerHTML = `<option value="all">All apartments</option>${aptOpts}`; el.value = v || 'all'; }
+    if (el) { const v = el.value; el.innerHTML = `<option value="all">${t('tx.filter.allProperties')}</option>${propOpts}`; el.value = v || 'all'; }
   });
 
-  // Modal selects
   ['tx-m-apt','import-apt','rule-m-apt'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    const blank = id === 'rule-m-apt' ? '<option value="">Any / not set</option>' : '<option value="">Select…</option>';
-    el.innerHTML = blank + aptOpts;
+    let blank;
+    if (id === 'rule-m-apt')  blank = `<option value="">${t('rules.modal.anyProperty')}</option>`;
+    else if (id === 'import-apt') blank = `<option value="">${t('import.autoDetect')}</option>`;
+    else                      blank = `<option value="">${t('common.select')}</option>`;
+    el.innerHTML = blank + propOpts;
   });
 
-  // Category dropdowns
   const catOpts = Importer.buildCategoryOptions('');
   ['tx-m-cat','rule-m-cat','tx-filter-cat'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    const blank = id === 'tx-filter-cat' ? '<option value="all">All categories</option>' : '<option value="">Select…</option>';
+    const blank = id === 'tx-filter-cat'
+      ? `<option value="all">${t('tx.filter.allCats')}</option>`
+      : `<option value="">${t('common.select')}</option>`;
     el.innerHTML = blank + catOpts;
   });
 }
@@ -521,59 +552,76 @@ function populateAllDropdowns() {
 // ── Dashboard ─────────────────────────────────────────────
 
 function renderDashboard() {
-  const txs   = State.transactions;
-  const apts  = State.apartments;
-  const yr    = new Date().getFullYear();
-  const ytdTx = txs.filter(t => t.date.startsWith(yr) && t.type === 'income');
-  const ytd   = ytdTx.reduce((s,t) => s + t.amount * (CONFIG.FX_RATES[t.currency]||1), 0);
+  const txs  = State.transactions;
+  const props = State.properties;
+  const yr   = new Date().getFullYear();
+  const ytd  = txs
+    .filter(tx => tx.date.startsWith(yr) && tx.type === 'income')
+    .reduce((s, tx) => s + tx.amount * (CONFIG.FX_RATES[tx.currency] || 1), 0);
 
   document.getElementById('dash-metrics').innerHTML = `
-    <div class="metric"><div class="m-label">Active apartments</div><div class="m-value">${apts.filter(a=>a.active).length}</div><div class="m-sub">${apts.filter(a=>a.country==='DK').length} DK · ${apts.filter(a=>a.country==='PL').length} PL</div></div>
-    <div class="metric"><div class="m-label">YTD income</div><div class="m-value">${Reports.fmtDKK(ytd)}</div><div class="m-sub">Jan–${new Date().toLocaleString('en',{month:'short'})} ${yr} (DKK equiv.)</div></div>
-    <div class="metric"><div class="m-label">Total transactions</div><div class="m-value">${txs.length}</div><div class="m-sub">${txs.filter(t=>t.source==='manual').length} manual · ${txs.filter(t=>t.source!=='manual').length} imported</div></div>
-    <div class="metric"><div class="m-label">Unreconciled</div><div class="m-value">${txs.filter(t=>!t.reconciled).length}</div><div class="m-sub">transactions to review</div></div>
+    <div class="metric">
+      <div class="m-label">${t('dashboard.metrics.activeProperties')}</div>
+      <div class="m-value">${props.filter(p => p.active).length}</div>
+      <div class="m-sub">${props.filter(p => p.country==='DK').length} DK · ${props.filter(p => p.country==='PL').length} PL</div>
+    </div>
+    <div class="metric">
+      <div class="m-label">${t('dashboard.metrics.ytdIncome')}</div>
+      <div class="m-value">${Reports.fmtDKK(ytd)}</div>
+      <div class="m-sub">${t('dashboard.metrics.ytdSub', { month: new Date().toLocaleString('en',{month:'short'}), year: yr })}</div>
+    </div>
+    <div class="metric">
+      <div class="m-label">${t('dashboard.metrics.totalTx')}</div>
+      <div class="m-value">${txs.length}</div>
+      <div class="m-sub">${t('dashboard.metrics.txSub', { manual: txs.filter(tx=>tx.source==='manual').length, imported: txs.filter(tx=>tx.source!=='manual').length })}</div>
+    </div>
+    <div class="metric">
+      <div class="m-label">${t('dashboard.metrics.unreconciled')}</div>
+      <div class="m-value">${txs.filter(tx=>!tx.reconciled).length}</div>
+      <div class="m-sub">${t('dashboard.metrics.unreconciledSub')}</div>
+    </div>
   `;
 
-  document.getElementById('dash-apt-cards').innerHTML = apts.map(a => {
-    const atxs    = txs.filter(t => t.apartment_id === a.id);
-    const income  = atxs.filter(t => t.type === 'income').reduce((s,t) => s+t.amount, 0);
-    const monthly = a.rent + a.aconto;
+  document.getElementById('dash-apt-cards').innerHTML = props.map(p => {
+    const ptxs    = txs.filter(tx => tx.property_id === p.id);
+    const income  = ptxs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
+    const monthly = p.rent + p.aconto;
     return `<div class="apt-card">
-      <span class="badge badge-${a.country.toLowerCase()}">${a.country === 'DK' ? 'Denmark' : 'Poland'} · ${a.currency}</span>
-      <span class="badge badge-model" style="margin-left:6px">${a.model === 'airbnb' ? 'Short-term' : 'Long-term'}</span>
-      <div class="apt-name">${a.name}</div>
-      <div class="apt-addr">${a.address}</div>
+      <span class="badge badge-${p.country.toLowerCase()}">${t('country.' + p.country)} · ${p.currency}</span>
+      <span class="badge badge-model" style="margin-left:6px">${t('property.model.' + (p.model || 'longterm'))}</span>
+      <div class="apt-name">${p.name}</div>
+      <div class="apt-addr">${p.address}</div>
       <div class="apt-stats">
-        <div class="stat"><strong>${monthly ? Reports.fmt(monthly, a.currency) : '—'}</strong>monthly</div>
-        <div class="stat"><strong>${income  ? Reports.fmt(income,  a.currency) : '—'}</strong>total income</div>
-        <div class="stat"><strong>${a.tenant || '—'}</strong>tenant</div>
+        <div class="stat"><strong>${monthly ? Reports.fmt(monthly, p.currency) : '—'}</strong>${t('common.monthly')}</div>
+        <div class="stat"><strong>${income  ? Reports.fmt(income,  p.currency) : '—'}</strong>${t('common.totalIncome')}</div>
+        <div class="stat"><strong>${p.tenant || '—'}</strong>${t('property.metric.tenant')}</div>
       </div>
     </div>`;
   }).join('');
 
-  const recent = [...txs].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 8);
+  const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
   document.getElementById('dash-recent-tx').innerHTML = recent.length
-    ? recent.map(t => txRow(t, false)).join('')
-    : '<tr><td colspan="5" class="empty-state">No transactions yet</td></tr>';
+    ? recent.map(tx => txRow(tx, false)).join('')
+    : `<tr><td colspan="5" class="empty-state">${t('dashboard.noTx')}</td></tr>`;
 }
 
 // ── Transactions table ────────────────────────────────────
 
 function renderTxTable() {
   const opts = {
-    apartment_id: document.getElementById('tx-filter-apt')?.value,
-    type:         document.getElementById('tx-filter-type')?.value,
-    category:     document.getElementById('tx-filter-cat')?.value,
-    date_from:    document.getElementById('tx-filter-from')?.value,
-    date_to:      document.getElementById('tx-filter-to')?.value,
-    search:       document.getElementById('tx-filter-search')?.value,
+    property_id: document.getElementById('tx-filter-apt')?.value,
+    type:        document.getElementById('tx-filter-type')?.value,
+    category:    document.getElementById('tx-filter-cat')?.value,
+    date_from:   document.getElementById('tx-filter-from')?.value,
+    date_to:     document.getElementById('tx-filter-to')?.value,
+    search:      document.getElementById('tx-filter-search')?.value,
   };
   const filtered = Reports.filter(State.transactions, opts);
-  const sorted   = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
+  const sorted   = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
 
-  const body  = document.getElementById('tx-table-body');
-  const empty = document.getElementById('tx-empty');
-  const footer= document.getElementById('tx-footer');
+  const body   = document.getElementById('tx-table-body');
+  const empty  = document.getElementById('tx-empty');
+  const footer = document.getElementById('tx-footer');
 
   if (!sorted.length) {
     body.innerHTML = '';
@@ -582,39 +630,43 @@ function renderTxTable() {
     return;
   }
   empty.style.display = 'none';
-  body.innerHTML = sorted.map(t => txRow(t, true)).join('');
+  body.innerHTML = sorted.map(tx => txRow(tx, true)).join('');
 
-  const totalIncome  = sorted.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const totalExpense = sorted.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  footer.textContent = `${sorted.length} transactions shown · Income: ${totalIncome.toLocaleString()} · Expenses: ${totalExpense.toLocaleString()}`;
+  const totalIncome  = sorted.filter(tx => tx.type==='income').reduce((s,tx) => s+tx.amount, 0);
+  const totalExpense = sorted.filter(tx => tx.type==='expense').reduce((s,tx) => s+tx.amount, 0);
+  footer.textContent = t('tx.footer', {
+    count:    sorted.length,
+    income:   totalIncome.toLocaleString(),
+    expenses: totalExpense.toLocaleString(),
+  });
 }
 
-function txRow(t, showEditBtn) {
-  const apt    = State.apartments.find(a => a.id === t.apartment_id);
-  const catLbl = Reports.categoryLabel(t.category);
-  const srcLbl = t.source === 'manual' ? 'manual' : (BANK_PROFILES[t.source]?.label || t.source);
-  const amtCls = t.type === 'income' ? 'positive' : t.type === 'expense' ? 'negative' : '';
+function txRow(tx, showEditBtn) {
+  const prop   = State.properties.find(p => p.id === tx.property_id);
+  const catLbl = Reports.categoryLabel(tx.category);
+  const srcLbl = tx.source === 'manual' ? t('common.manual') : (BANK_PROFILES[tx.source]?.label || tx.source);
+  const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
   const editBtn = showEditBtn
-    ? `<button class="btn btn-sm btn-secondary" onclick="openTxModal('${t.id}')">Edit</button>`
+    ? `<button class="btn btn-sm btn-secondary" onclick="openTxModal('${tx.id}')">${t('common.edit')}</button>`
     : '';
   return `<tr>
-    <td>${t.date}</td>
-    <td>${apt ? apt.name : '<span class="muted">—</span>'}</td>
-    <td>${t.description}${t.notes ? `<div style="font-size:11px;color:var(--text3)">${t.notes}</div>` : ''}</td>
-    <td><span class="tag tag-${t.type}">${catLbl}</span></td>
+    <td>${tx.date}</td>
+    <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
+    <td>${tx.description}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
+    <td><span class="tag tag-${tx.type}">${catLbl}</span></td>
     ${showEditBtn ? `<td><span class="muted" style="font-size:11px">${srcLbl}</span></td>` : ''}
-    <td class="amount-cell ${amtCls}">${Reports.fmt(t.amount, apt?.currency || t.currency)}</td>
+    <td class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, prop?.currency || tx.currency)}</td>
     ${showEditBtn ? `<td>${editBtn}</td>` : ''}
   </tr>`;
 }
 
 function updateCategoryFilter() {
-  const type = document.getElementById('tx-filter-type').value;
+  const type  = document.getElementById('tx-filter-type').value;
   const catEl = document.getElementById('tx-filter-cat');
-  catEl.innerHTML = '<option value="all">All categories</option>';
+  catEl.innerHTML = `<option value="all">${t('tx.filter.allCats')}</option>`;
   if (type !== 'all' && CATEGORIES[type]) {
-    Object.entries(CATEGORIES[type].items).forEach(([k,v]) => {
-      catEl.innerHTML += `<option value="${k}">${v.label}</option>`;
+    Object.entries(CATEGORIES[type].items).forEach(([k]) => {
+      catEl.innerHTML += `<option value="${k}">${t('categories.items.' + k)}</option>`;
     });
   } else {
     catEl.innerHTML += Importer.buildCategoryOptions('');
@@ -622,7 +674,7 @@ function updateCategoryFilter() {
 }
 
 function clearTxFilters() {
-  ['tx-filter-apt','tx-filter-type','tx-filter-cat'].forEach(id => document.getElementById(id).value = 'all' );
+  ['tx-filter-apt','tx-filter-type','tx-filter-cat'].forEach(id => document.getElementById(id).value = 'all');
   ['tx-filter-from','tx-filter-to','tx-filter-search'].forEach(id => document.getElementById(id).value = '');
   updateCategoryFilter();
   renderTxTable();
@@ -632,24 +684,23 @@ function clearTxFilters() {
 
 function openTxModal(txId) {
   State.editingTxId = txId || null;
-  const modal = document.getElementById('modal-tx');
+  const modal  = document.getElementById('modal-tx');
   const delBtn = document.getElementById('tx-m-delete-btn');
-
   populateAllDropdowns();
 
   if (txId) {
-    const tx = State.transactions.find(t => t.id === txId);
+    const tx = State.transactions.find(tx => tx.id === txId);
     if (!tx) return;
-    document.getElementById('tx-modal-title').textContent = 'Edit transaction';
+    document.getElementById('tx-modal-title').textContent = t('tx.modal.editTitle');
     document.getElementById('tx-m-date').value   = tx.date;
-    document.getElementById('tx-m-apt').value    = tx.apartment_id;
+    document.getElementById('tx-m-apt').value    = tx.property_id;
     document.getElementById('tx-m-cat').value    = tx.category;
     document.getElementById('tx-m-amount').value = tx.amount;
     document.getElementById('tx-m-desc').value   = tx.description;
     document.getElementById('tx-m-notes').value  = tx.notes;
     delBtn.style.display = 'inline-block';
   } else {
-    document.getElementById('tx-modal-title').textContent = 'Add transaction';
+    document.getElementById('tx-modal-title').textContent = t('tx.modal.addTitle');
     document.getElementById('tx-m-date').value   = new Date().toISOString().slice(0,10);
     document.getElementById('tx-m-cat').value    = '';
     document.getElementById('tx-m-amount').value = '';
@@ -669,52 +720,51 @@ function onCategoryChange() {
   const lbl  = document.getElementById('tx-m-notes-label');
   const requiresNote = cat && CATEGORIES.expense?.items[cat]?.requiresNote;
   hint.style.display = requiresNote ? 'block' : 'none';
-  lbl.textContent    = requiresNote ? 'Notes *' : 'Notes';
+  lbl.textContent    = requiresNote ? t('tx.modal.notesReq') : t('tx.modal.notes');
 }
 
 async function saveTxModal() {
   const date   = document.getElementById('tx-m-date').value;
-  const aptId  = document.getElementById('tx-m-apt').value;
+  const propId = document.getElementById('tx-m-apt').value;
   const cat    = document.getElementById('tx-m-cat').value;
   const amount = parseFloat(document.getElementById('tx-m-amount').value);
   const desc   = document.getElementById('tx-m-desc').value.trim();
   const notes  = document.getElementById('tx-m-notes').value.trim();
 
-  if (!date || !aptId || !cat || !amount) { toast('Please fill in all required fields.', 'error'); return; }
-  if (CATEGORIES.expense?.items[cat]?.requiresNote && !notes) { toast('Please add a note for "other expense".', 'error'); return; }
+  if (!date || !propId || !cat || !amount) { toast(t('tx.toast.fillReq'), 'error'); return; }
+  if (CATEGORIES.expense?.items[cat]?.requiresNote && !notes) { toast(t('tx.toast.noteReq'), 'error'); return; }
 
-  const apt  = State.apartments.find(a => a.id === aptId);
+  const prop = State.properties.find(p => p.id === propId);
   const type = Importer.categoryToType(cat);
 
-  setLoading(true, 'Saving…');
+  setLoading(true, t('status.saving'));
   try {
     if (State.editingTxId) {
-      await DB.updateTransaction(State.editingTxId, { date, apartment_id: aptId, type, category: cat, amount, currency: apt?.currency || '', description: desc, notes });
-      toast('Transaction updated.', 'success');
+      await DB.updateTransaction(State.editingTxId, { date, property_id: propId, type, category: cat, amount, currency: prop?.currency || '', description: desc, notes });
+      toast(t('tx.toast.updated'), 'success');
     } else {
-      await DB.saveSingleTransaction({ date, apartment_id: aptId, type, category: cat, amount, currency: apt?.currency || '', description: desc, notes, source: 'manual', reconciled: false });
-      toast('Transaction saved.', 'success');
+      await DB.saveSingleTransaction({ date, property_id: propId, type, category: cat, amount, currency: prop?.currency || '', description: desc, notes, source: 'manual', reconciled: false });
+      toast(t('tx.toast.saved'), 'success');
     }
     await refreshAll();
     closeTxModal();
   } catch(e) {
-    toast('Save failed: ' + e.message, 'error');
+    toast(t('tx.toast.saveFailed', { error: e.message }), 'error');
   }
   setLoading(false);
 }
 
 async function deleteTxModal() {
-  if (!confirm('Delete this transaction? This cannot be undone.')) return;
-  // Mark as deleted by updating description prefix (soft delete)
-  setLoading(true, 'Deleting…');
+  if (!confirm(t('tx.confirmDelete'))) return;
+  setLoading(true, t('status.deleting'));
   try {
-    const tx = State.transactions.find(t => t.id === State.editingTxId);
+    const tx = State.transactions.find(tx => tx.id === State.editingTxId);
     await DB.updateTransaction(State.editingTxId, { description: '[DELETED] ' + tx.description, category: 'other_expense' });
     await refreshAll();
     closeTxModal();
-    toast('Transaction removed.', 'success');
+    toast(t('tx.toast.deleted'), 'success');
   } catch(e) {
-    toast('Delete failed: ' + e.message, 'error');
+    toast(t('tx.toast.delFailed', { error: e.message }), 'error');
   }
   setLoading(false);
 }
@@ -724,18 +774,16 @@ async function deleteTxModal() {
 function onProfileChange() {
   const profileKey = document.getElementById('import-profile').value;
   const profile    = BANK_PROFILES[profileKey];
-  const currGroup  = document.getElementById('import-currency-group');
-  currGroup.style.display = profile.currency ? 'none' : 'block';
+  document.getElementById('import-currency-group').style.display = profile.currency ? 'none' : 'block';
 }
 
 function runImportPreview() {
   const csv        = document.getElementById('import-csv').value.trim();
   const profileKey = document.getElementById('import-profile').value;
-  const aptId      = document.getElementById('import-apt').value;
+  const propId     = document.getElementById('import-apt').value;
 
-  if (!csv) { toast('Paste CSV data first.', 'error'); return; }
+  if (!csv) { toast(t('import.toast.noData'), 'error'); return; }
 
-  // Handle generic currency
   const profile = BANK_PROFILES[profileKey];
   if (!profile.currency) {
     profile.currency = document.getElementById('import-currency')?.value || 'DKK';
@@ -743,35 +791,31 @@ function runImportPreview() {
 
   let result;
   try {
-    result = Importer.parseCSV(csv, profileKey, aptId, State.rules);
+    result = Importer.parseCSV(csv, profileKey, propId, State.rules);
   } catch(e) {
-    toast('Parse error: ' + e.message, 'error');
+    toast(t('import.toast.parseError', { error: e.message }), 'error');
     return;
   }
 
   State.importRows = result.rows;
 
-  const preview = document.getElementById('import-preview-section');
-  const body    = document.getElementById('import-preview-body');
-
   document.getElementById('import-preview-title').textContent =
     `Preview — ${result.rows.length} rows from ${result.profileLabel}`;
 
-  body.innerHTML = result.rows.map((row, i) => {
-    const aptOpts = State.apartments.map(a => `<option value="${a.id}" ${a.id===row.apartment_id?'selected':''}>${a.name}</option>`).join('');
-    const catOpts = Importer.buildCategoryOptions(row.category);
-    const autoTag = row._autoMatched ? '<span class="tag tag-auto">auto</span> ' : '';
+  document.getElementById('import-preview-body').innerHTML = result.rows.map((row, i) => {
+    const propOpts = State.properties.map(p => `<option value="${p.id}" ${p.id===row.property_id?'selected':''}>${p.name}</option>`).join('');
+    const catOpts  = Importer.buildCategoryOptions(row.category);
+    const autoTag  = row._autoMatched ? '<span class="tag tag-auto">auto</span> ' : '';
     return `<tr class="${row._autoMatched ? 'preview-row-ok' : 'preview-row-warn'}">
       <td>${row.date}</td>
       <td style="max-width:180px;font-size:12px">${row.description}</td>
-      <td><select style="font-size:12px;padding:4px 6px" onchange="State.importRows[${i}].apartment_id=this.value"><option value="">—</option>${aptOpts}</select></td>
+      <td><select style="font-size:12px;padding:4px 6px" onchange="State.importRows[${i}].property_id=this.value"><option value="">—</option>${propOpts}</select></td>
       <td>${autoTag}<select style="font-size:12px;padding:4px 6px" onchange="State.importRows[${i}].category=this.value;State.importRows[${i}].type=Importer.categoryToType(this.value)">${catOpts}</select></td>
       <td><input style="font-size:12px;padding:4px 6px;width:140px" placeholder="notes…" value="${row.notes||''}" oninput="State.importRows[${i}].notes=this.value"></td>
       <td class="amount-cell">${row.amount.toLocaleString()} ${result.currency||''}</td>
     </tr>`;
   }).join('');
 
-  // Show errors
   const errDiv = document.getElementById('import-errors');
   if (result.errors.length) {
     errDiv.innerHTML = `<p style="font-size:12px;color:var(--amber)">⚠ ${result.errors.length} rows skipped:</p>`
@@ -780,26 +824,27 @@ function runImportPreview() {
     errDiv.innerHTML = '';
   }
 
+  const preview = document.getElementById('import-preview-section');
   preview.style.display = 'block';
   preview.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function confirmImport() {
   if (!State.importRows.length) return;
-  const missing = State.importRows.filter(r => !r.apartment_id);
+  const missing = State.importRows.filter(r => !r.property_id);
   if (missing.length) {
-    if (!confirm(`${missing.length} rows have no apartment assigned. Import anyway?`)) return;
+    if (!confirm(t('import.confirmMissing', { count: missing.length }))) return;
   }
-  setLoading(true, 'Importing…');
+  setLoading(true, t('status.importing'));
   try {
     const batchId = await DB.saveImportBatch(State.importRows);
-    toast(`Imported ${State.importRows.length} transactions (batch ${batchId}).`, 'success');
+    toast(t('import.toast.done', { count: State.importRows.length, batchId }), 'success');
     State.importRows = [];
     document.getElementById('import-preview-section').style.display = 'none';
     document.getElementById('import-csv').value = '';
     await refreshAll();
   } catch(e) {
-    toast('Import failed: ' + e.message, 'error');
+    toast(t('import.toast.failed', { error: e.message }), 'error');
   }
   setLoading(false);
 }
@@ -822,39 +867,33 @@ function setReportPeriod(preset) {
 }
 
 function renderReports() {
-  const aptId    = document.getElementById('rep-apt')?.value  || 'all';
+  const propId   = document.getElementById('rep-apt')?.value  || 'all';
   const dateFrom = document.getElementById('rep-from')?.value || '';
   const dateTo   = document.getElementById('rep-to')?.value   || '';
 
-  const filtered = Reports.filter(State.transactions, {
-    apartment_id: aptId, date_from: dateFrom, date_to: dateTo
-  });
+  const filtered = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
+  const summary  = Reports.pnl(filtered, State.properties);
 
-  const summary = Reports.pnl(filtered, State.apartments);
-
-  // Metrics
   document.getElementById('rep-metrics').innerHTML = `
-    <div class="metric"><div class="m-label">Total income</div><div class="m-value positive">${Reports.fmtDKK(summary.totals.income_dkk)}</div><div class="m-sub">DKK equivalent</div></div>
-    <div class="metric"><div class="m-label">Total expenses</div><div class="m-value negative">${Reports.fmtDKK(summary.totals.expenses_dkk)}</div><div class="m-sub">DKK equivalent</div></div>
-    <div class="metric"><div class="m-label">Net</div><div class="m-value ${summary.totals.net_dkk>=0?'positive':'negative'}">${Reports.fmtDKK(summary.totals.net_dkk)}</div><div class="m-sub">DKK equivalent</div></div>
-    <div class="metric"><div class="m-label">Transactions</div><div class="m-value">${filtered.length}</div><div class="m-sub">in period</div></div>
+    <div class="metric"><div class="m-label">${t('reports.metrics.totalIncome')}</div><div class="m-value positive">${Reports.fmtDKK(summary.totals.income_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
+    <div class="metric"><div class="m-label">${t('reports.metrics.totalExpenses')}</div><div class="m-value negative">${Reports.fmtDKK(summary.totals.expenses_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
+    <div class="metric"><div class="m-label">${t('reports.metrics.net')}</div><div class="m-value ${summary.totals.net_dkk>=0?'positive':'negative'}">${Reports.fmtDKK(summary.totals.net_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
+    <div class="metric"><div class="m-label">${t('reports.metrics.transactions')}</div><div class="m-value">${filtered.length}</div><div class="m-sub">${t('reports.metrics.inPeriod')}</div></div>
   `;
 
-  // Category breakdown
-  const cats = Reports.categoryBreakdown(filtered);
+  const cats    = Reports.categoryBreakdown(filtered);
   const incCats = cats.filter(c => c.type === 'income');
   const expCats = cats.filter(c => c.type === 'expense');
 
   document.getElementById('rep-income-cats').innerHTML = incCats.length
     ? incCats.map(c => `<tr><td>${Reports.categoryLabel(c.category)}</td><td class="amount-cell positive">${c.amount.toLocaleString()}</td><td class="amount-cell muted">${c.count}</td></tr>`).join('')
-    : '<tr><td colspan="3" class="muted">No income</td></tr>';
+    : `<tr><td colspan="3" class="muted">${t('reports.noIncome')}</td></tr>`;
 
   document.getElementById('rep-expense-cats').innerHTML = expCats.length
     ? expCats.map(c => `<tr><td>${Reports.categoryLabel(c.category)}</td><td class="amount-cell negative">${c.amount.toLocaleString()}</td><td class="amount-cell muted">${c.count}</td></tr>`).join('')
-    : '<tr><td colspan="3" class="muted">No expenses</td></tr>';
+    : `<tr><td colspan="3" class="muted">${t('reports.noExpenses')}</td></tr>`;
 
-  // P&L by apartment
-  document.getElementById('rep-pnl-apt').innerHTML = Object.entries(summary.byApartment).map(([id, data]) => `
+  document.getElementById('rep-pnl-apt').innerHTML = Object.entries(summary.byProperty).map(([, data]) => `
     <tr>
       <td>${data.name}</td>
       <td class="amount-cell positive">${Reports.fmt(data.income, data.currency)}</td>
@@ -864,57 +903,57 @@ function renderReports() {
   `).join('');
 }
 
-// ── Apartments ────────────────────────────────────────────
+// ── Properties ────────────────────────────────────────────
 
-function renderAptList() {
+function renderPropertyList() {
   const list = document.getElementById('apt-list');
-  if (!State.apartments.length) {
-    list.innerHTML = '<div class="empty-state"><strong>No apartments yet</strong>Add your first apartment.</div>';
+  if (!State.properties.length) {
+    list.innerHTML = `<div class="empty-state"><strong>${t('property.noProperties')}</strong>${t('property.noPropertiesSub')}</div>`;
     return;
   }
-  list.innerHTML = State.apartments.map(a => `
+  list.innerHTML = State.properties.map(p => `
     <div class="card">
       <div class="card-header">
         <div>
-          <span class="badge badge-${a.country.toLowerCase()}">${a.country === 'DK' ? 'Denmark' : 'Poland'} · ${a.currency}</span>
-          <span class="badge badge-model" style="margin-left:6px">${a.model === 'airbnb' ? 'Short-term' : 'Long-term'}</span>
-          <div class="apt-name" style="margin-top:4px">${a.name}</div>
-          <div style="font-size:12px;color:var(--text2)">${a.address}</div>
+          <span class="badge badge-${p.country.toLowerCase()}">${t('country.' + p.country)} · ${p.currency}</span>
+          <span class="badge badge-model" style="margin-left:6px">${t('property.model.' + (p.model || 'longterm'))}</span>
+          <div class="apt-name" style="margin-top:4px">${p.name}</div>
+          <div style="font-size:12px;color:var(--text2)">${p.address}</div>
         </div>
-        <button class="btn btn-sm btn-secondary" onclick="openAptModal('${a.id}')">Edit</button>
+        <button class="btn btn-sm btn-secondary" onclick="openPropertyModal('${p.id}')">${t('common.edit')}</button>
       </div>
       <div class="metric-grid" style="margin-top:1rem;margin-bottom:0">
-        <div class="metric"><div class="m-label">Rent</div><div class="m-value" style="font-size:16px">${a.rent ? Reports.fmt(a.rent, a.currency) : '—'}</div></div>
-        <div class="metric"><div class="m-label">A/C (heat+water)</div><div class="m-value" style="font-size:16px">${a.aconto ? Reports.fmt(a.aconto, a.currency) : '—'}</div></div>
-        <div class="metric"><div class="m-label">Total monthly</div><div class="m-value" style="font-size:16px">${(a.rent||a.aconto) ? Reports.fmt(a.rent+a.aconto, a.currency) : '—'}</div></div>
-        <div class="metric"><div class="m-label">Tenant</div><div class="m-value" style="font-size:13px;margin-top:4px">${a.tenant || '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.rent')}</div><div class="m-value" style="font-size:16px">${p.rent   ? Reports.fmt(p.rent, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.aconto')}</div><div class="m-value" style="font-size:16px">${p.aconto ? Reports.fmt(p.aconto, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.totalMonthly')}</div><div class="m-value" style="font-size:16px">${(p.rent||p.aconto) ? Reports.fmt(p.rent+p.aconto, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.tenant')}</div><div class="m-value" style="font-size:13px;margin-top:4px">${p.tenant || '—'}</div></div>
       </div>
     </div>
   `).join('');
 }
 
-function openAptModal(aptId) {
-  State.editingAptId = aptId || null;
+function openPropertyModal(propId) {
+  State.editingAptId = propId || null;
   populateAllDropdowns();
-  if (aptId) {
-    const a = State.apartments.find(x => x.id === aptId);
-    if (!a) return;
-    document.getElementById('apt-modal-title').textContent = 'Edit apartment';
-    document.getElementById('apt-m-name').value     = a.name;
-    document.getElementById('apt-m-country').value  = a.country;
-    document.getElementById('apt-m-addr').value     = a.address;
-    document.getElementById('apt-m-currency').value = a.currency;
-    document.getElementById('apt-m-model').value    = a.model || 'longterm';
-    document.getElementById('apt-m-rent').value     = a.rent;
-    document.getElementById('apt-m-aconto').value   = a.aconto;
-    document.getElementById('apt-m-tenant').value   = a.tenant;
-    document.getElementById('apt-m-lease').value    = a.lease_start;
-    document.getElementById('apt-m-notes').value    = a.notes;
+  if (propId) {
+    const p = State.properties.find(x => x.id === propId);
+    if (!p) return;
+    document.getElementById('apt-modal-title').textContent  = t('property.modal.editTitle');
+    document.getElementById('apt-m-name').value     = p.name;
+    document.getElementById('apt-m-country').value  = p.country;
+    document.getElementById('apt-m-addr').value     = p.address;
+    document.getElementById('apt-m-currency').value = p.currency;
+    document.getElementById('apt-m-model').value    = p.model || 'longterm';
+    document.getElementById('apt-m-rent').value     = p.rent;
+    document.getElementById('apt-m-aconto').value   = p.aconto;
+    document.getElementById('apt-m-tenant').value   = p.tenant;
+    document.getElementById('apt-m-lease').value    = p.lease_start;
+    document.getElementById('apt-m-notes').value    = p.notes;
   } else {
-    document.getElementById('apt-modal-title').textContent = 'Add apartment';
+    document.getElementById('apt-modal-title').textContent = t('property.modal.addTitle');
     ['apt-m-name','apt-m-addr','apt-m-currency','apt-m-rent','apt-m-aconto','apt-m-tenant','apt-m-lease','apt-m-notes']
       .forEach(id => document.getElementById(id).value = '');
-    document.getElementById('apt-m-country').value = 'DK';
+    document.getElementById('apt-m-country').value  = 'DK';
     document.getElementById('apt-m-currency').value = 'DKK';
   }
   document.getElementById('modal-apt').style.display = 'flex';
@@ -925,33 +964,33 @@ function onAptCountryChange() {
   document.getElementById('apt-m-currency').value = country === 'DK' ? 'DKK' : country === 'PL' ? 'PLN' : '';
 }
 
-function closeAptModal() { document.getElementById('modal-apt').style.display = 'none'; }
+function closePropertyModal() { document.getElementById('modal-apt').style.display = 'none'; }
 
-async function saveAptModal() {
+async function savePropertyModal() {
   const name = document.getElementById('apt-m-name').value.trim();
-  if (!name) { toast('Name is required.', 'error'); return; }
-  const apt = {
+  if (!name) { toast(t('property.toast.nameReq'), 'error'); return; }
+  const prop = {
     id:          State.editingAptId || '',
     name,
     address:     document.getElementById('apt-m-addr').value.trim(),
     country:     document.getElementById('apt-m-country').value,
     currency:    document.getElementById('apt-m-currency').value.trim().toUpperCase(),
     model:       document.getElementById('apt-m-model').value,
-    rent:        parseFloat(document.getElementById('apt-m-rent').value) || 0,
+    rent:        parseFloat(document.getElementById('apt-m-rent').value)   || 0,
     aconto:      parseFloat(document.getElementById('apt-m-aconto').value) || 0,
     tenant:      document.getElementById('apt-m-tenant').value.trim(),
     lease_start: document.getElementById('apt-m-lease').value,
     notes:       document.getElementById('apt-m-notes').value.trim(),
     active:      true,
   };
-  setLoading(true, 'Saving…');
+  setLoading(true, t('status.saving'));
   try {
-    await DB.saveApartment(apt);
+    await DB.saveProperty(prop);
     await refreshAll();
-    closeAptModal();
-    toast('Apartment saved.', 'success');
+    closePropertyModal();
+    toast(t('property.toast.saved'), 'success');
   } catch(e) {
-    toast('Save failed: ' + e.message, 'error');
+    toast(t('property.toast.saveFailed', { error: e.message }), 'error');
   }
   setLoading(false);
 }
@@ -968,13 +1007,13 @@ function renderRules() {
   }
   empty.style.display = 'none';
   body.innerHTML = State.rules.map((r, i) => {
-    const apt = State.apartments.find(a => a.id === r.apartment_id);
-    const profile = BANK_PROFILES[r.bank_profile]?.label || (r.bank_profile ? r.bank_profile : 'Any bank');
+    const prop    = State.properties.find(p => p.id === r.property_id);
+    const profile = BANK_PROFILES[r.bank_profile]?.label || (r.bank_profile ? r.bank_profile : t('rules.modal.anyBank'));
     return `<tr>
       <td style="font-size:12px">${profile}</td>
       <td><code style="font-size:12px;background:var(--bg3);padding:2px 6px;border-radius:4px">${r.keyword}</code></td>
       <td><span class="tag tag-${Importer.categoryToType(r.category)}">${Reports.categoryLabel(r.category)}</span></td>
-      <td style="font-size:12px">${apt ? apt.name : '—'}</td>
+      <td style="font-size:12px">${prop ? prop.name : '—'}</td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteRule(${i})">✕</button></td>
     </tr>`;
   }).join('');
@@ -996,46 +1035,45 @@ function closeRuleModal() { document.getElementById('modal-rule').style.display 
 async function saveRuleModal() {
   const kw  = document.getElementById('rule-m-kw').value.trim().toLowerCase();
   const cat = document.getElementById('rule-m-cat').value;
-  if (!kw || !cat) { toast('Keyword and category are required.', 'error'); return; }
+  if (!kw || !cat) { toast(t('rules.toast.kwCatReq'), 'error'); return; }
   State.rules.push({
     bank_profile: document.getElementById('rule-m-profile').value,
     keyword:      kw,
     category:     cat,
-    apartment_id: document.getElementById('rule-m-apt').value,
+    property_id:  document.getElementById('rule-m-apt').value,
   });
   renderRules();
   closeRuleModal();
-  // Auto-save
   await saveRules();
 }
 
 async function saveRules() {
-  setLoading(true, 'Saving rules…');
+  setLoading(true, t('status.savingRules'));
   try {
     await DB.saveRules(State.rules);
-    toast('Rules saved.', 'success');
+    toast(t('rules.toast.saved'), 'success');
   } catch(e) {
-    toast('Save failed: ' + e.message, 'error');
+    toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
   }
   setLoading(false);
 }
 
 function loadDefaultRules() {
   const defaults = [
-    { bank_profile: 'jyske_bank', keyword: 'sabumba',     category: 'rent',               apartment_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'husleje',     category: 'rent',               apartment_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'varmebidrag', category: 'heating_aconto',     apartment_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'vandafregn',  category: 'heating_settlement', apartment_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'ejendomsskat',category: 'property_tax',        apartment_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'forsikring',  category: 'insurance',           apartment_id: '' },
-    { bank_profile: 'mbank_pl',   keyword: 'czynsz',      category: 'rent',               apartment_id: '' },
-    { bank_profile: 'mbank_pl',   keyword: 'najem',       category: 'rent',               apartment_id: '' },
-    { bank_profile: '',           keyword: 'bank fee',    category: 'bank_charges',        apartment_id: '' },
-    { bank_profile: '',           keyword: 'gebyr',       category: 'bank_charges',        apartment_id: '' },
+    { bank_profile: 'jyske_bank', keyword: 'sabumba',      category: 'rent',               property_id: '' },
+    { bank_profile: 'jyske_bank', keyword: 'husleje',      category: 'rent',               property_id: '' },
+    { bank_profile: 'jyske_bank', keyword: 'varmebidrag',  category: 'heating_aconto',     property_id: '' },
+    { bank_profile: 'jyske_bank', keyword: 'vandafregn',   category: 'heating_settlement', property_id: '' },
+    { bank_profile: 'jyske_bank', keyword: 'ejendomsskat', category: 'property_tax',       property_id: '' },
+    { bank_profile: 'jyske_bank', keyword: 'forsikring',   category: 'insurance',          property_id: '' },
+    { bank_profile: 'mbank_pl',   keyword: 'czynsz',       category: 'rent',               property_id: '' },
+    { bank_profile: 'mbank_pl',   keyword: 'najem',        category: 'rent',               property_id: '' },
+    { bank_profile: '',           keyword: 'bank fee',     category: 'bank_charges',       property_id: '' },
+    { bank_profile: '',           keyword: 'gebyr',        category: 'bank_charges',       property_id: '' },
   ];
   State.rules = [...State.rules, ...defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword))];
   renderRules();
-  toast('Default rules loaded. Click "Save rules order" to persist.', 'info');
+  toast(t('rules.toast.defaultLoaded'), 'info');
 }
 
 // ── Toasts ────────────────────────────────────────────────
@@ -1052,7 +1090,7 @@ function toast(msg, type = 'info') {
 
 function setLoading(on, msg) {
   const el = document.getElementById('loading');
-  if (on) { document.getElementById('loading-msg').textContent = msg || 'Loading…'; el.classList.remove('hidden'); }
+  if (on) { document.getElementById('loading-msg').textContent = msg || t('common.loading'); el.classList.remove('hidden'); }
   else    { el.classList.add('hidden'); }
 }
 

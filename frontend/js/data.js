@@ -1,48 +1,49 @@
 // ============================================================
 //  DATA LAYER
 //  Converts between flat sheet rows and JS objects.
-//  Provides typed read/write for apartments and transactions.
+//  Provides typed read/write for properties, transactions,
+//  rules, and strings.
 // ============================================================
 
 const DB = (() => {
 
-  // ── Apartments ────────────────────────────────────────────
+  // ── Properties ────────────────────────────────────────────
 
-  const APT_COLS = ['id','name','address','country','currency','model','rent','aconto','tenant','lease_start','notes','active'];
+  const PROPERTY_COLS = ['id','name','address','country','currency','model','rent','aconto','tenant','lease_start','notes','active'];
 
-  function rowToApt(row) {
+  function rowToProperty(row) {
     const o = {};
-    APT_COLS.forEach((k, i) => o[k] = row[i] ?? '');
+    PROPERTY_COLS.forEach((k, i) => o[k] = row[i] ?? '');
     o.rent   = parseFloat(o.rent)   || 0;
     o.aconto = parseFloat(o.aconto) || 0;
     o.active = o.active !== 'false' && o.active !== '0';
     return o;
   }
 
-  function aptToRow(apt) {
-    return APT_COLS.map(k => apt[k] ?? '');
+  function propertyToRow(prop) {
+    return PROPERTY_COLS.map(k => prop[k] ?? '');
   }
 
-  async function getApartments() {
-    const rows = await SheetsAPI.getRows(CONFIG.SHEETS.APARTMENTS);
-    return rows.slice(1).map(rowToApt).filter(a => a.id);
+  async function getProperties() {
+    const rows = await SheetsAPI.getRows(CONFIG.SHEETS.PROPERTIES);
+    return rows.slice(1).map(rowToProperty).filter(p => p.id);
   }
 
-  async function saveApartment(apt) {
-    if (!apt.id) apt.id = 'apt_' + Date.now();
-    const rows = await SheetsAPI.getRows(CONFIG.SHEETS.APARTMENTS);
-    const idx  = rows.slice(1).findIndex(r => r[0] === apt.id);
+  async function saveProperty(prop) {
+    if (!prop.id) prop.id = 'apt_' + Date.now();
+    const rows = await SheetsAPI.getRows(CONFIG.SHEETS.PROPERTIES);
+    const idx  = rows.slice(1).findIndex(r => r[0] === prop.id);
     if (idx >= 0) {
-      await SheetsAPI.updateRow(CONFIG.SHEETS.APARTMENTS, idx + 2, aptToRow(apt));
+      await SheetsAPI.updateRow(CONFIG.SHEETS.PROPERTIES, idx + 2, propertyToRow(prop));
     } else {
-      await SheetsAPI.appendRows(CONFIG.SHEETS.APARTMENTS, [aptToRow(apt)]);
+      await SheetsAPI.appendRows(CONFIG.SHEETS.PROPERTIES, [propertyToRow(prop)]);
     }
-    return apt;
+    return prop;
   }
 
   // ── Transactions ──────────────────────────────────────────
 
-  const TX_COLS = ['id','date','apartment_id','type','category','amount','currency',
+  const TX_COLS = ['id','date','property_id','type','category','amount','currency',
                    'description','raw_description','source','import_batch','notes','reconciled','created_at'];
 
   function rowToTx(row) {
@@ -62,10 +63,9 @@ const DB = (() => {
 
   async function getTransactions() {
     const rows = await SheetsAPI.getRows(CONFIG.SHEETS.TRANSACTIONS);
-    return rows.slice(1).map(rowToTx).filter(t => t.id);
+    return rows.slice(1).map(rowToTx).filter(tx => tx.id);
   }
 
-  // Save a single manually-entered transaction
   async function saveSingleTransaction(tx) {
     if (!tx.id)         tx.id         = 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
     if (!tx.created_at) tx.created_at = new Date().toISOString();
@@ -74,7 +74,6 @@ const DB = (() => {
     return tx;
   }
 
-  // Save a batch of imported transactions
   async function saveImportBatch(txList) {
     const batchId = 'import_' + Date.now();
     const now     = new Date().toISOString();
@@ -88,7 +87,6 @@ const DB = (() => {
     return batchId;
   }
 
-  // Update a single field on an existing transaction (e.g. category, notes)
   async function updateTransaction(txId, updates) {
     const rows = await SheetsAPI.getRows(CONFIG.SHEETS.TRANSACTIONS);
     const idx  = rows.slice(1).findIndex(r => r[0] === txId);
@@ -101,7 +99,7 @@ const DB = (() => {
 
   // ── Rules ─────────────────────────────────────────────────
 
-  const RULE_COLS = ['bank_profile','keyword','category','apartment_id'];
+  const RULE_COLS = ['bank_profile','keyword','category','property_id'];
 
   function rowToRule(row) {
     const o = {};
@@ -120,21 +118,36 @@ const DB = (() => {
     await SheetsAPI.overwriteSheet(CONFIG.SHEETS.RULES, [...header, ...data]);
   }
 
-  // Apply rules to a description string, return { category, apartment_id } or null
   function applyRules(description, bankProfile, allRules) {
     const desc  = (description || '').toLowerCase();
     const rules = allRules.filter(r => !r.bank_profile || r.bank_profile === bankProfile || r.bank_profile === '');
     for (const rule of rules) {
       if (desc.includes(rule.keyword.toLowerCase())) {
-        return { category: rule.category, apartment_id: rule.apartment_id || null };
+        return { category: rule.category, property_id: rule.property_id || null };
       }
     }
     return null;
   }
 
+  // ── Strings ───────────────────────────────────────────────
+
+  const STRING_COLS = ['key','lang','user_id','value'];
+
+  function rowToString(row) {
+    const o = {};
+    STRING_COLS.forEach((k, i) => o[k] = row[i] ?? '');
+    return o;
+  }
+
+  async function getStrings() {
+    const rows = await SheetsAPI.getRows(CONFIG.SHEETS.STRINGS);
+    return rows.slice(1).map(rowToString).filter(s => s.key);
+  }
+
   return {
-    getApartments, saveApartment,
+    getProperties, saveProperty,
     getTransactions, saveSingleTransaction, saveImportBatch, updateTransaction,
     getRules, saveRules, applyRules,
+    getStrings,
   };
 })();
