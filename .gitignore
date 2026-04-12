@@ -1,0 +1,27 @@
+# Credentials — never commit
+frontend/config.js
+
+# Dependencies (for when backend is added)
+node_modules/
+backend/node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output (for future frontend build step)
+frontend/dist/
+frontend/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
