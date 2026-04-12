@@ -233,12 +233,16 @@
       <!-- Step 1: Edit Preview -->
       <div id="import-preview-section" style="display:none">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" id="import-preview-header">
             <span class="card-title" id="import-preview-title"></span>
             <div class="btn-row" style="align-items:center">
               <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
                 <input type="checkbox" id="bulk-update-toggle">
                 <span data-i18n="import.bulkUpdate"></span>
+              </label>
+              <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+                <input type="checkbox" id="select-same-desc-toggle">
+                <span data-i18n="import.selectSameDesc"></span>
               </label>
               <button class="btn btn-primary" onclick="goToStaticPreview()" data-i18n="import.nextReview"></button>
               <button class="btn btn-secondary btn-sm" onclick="clearImport()" data-i18n="common.cancel"></button>
@@ -950,7 +954,22 @@ function toggleSelectAll(headerCb) {
 }
 
 function onRowSelect(i) {
-  State.importRows[i]._selected = document.getElementById('row-sel-' + i).checked;
+  const checked = document.getElementById('row-sel-' + i).checked;
+  State.importRows[i]._selected = checked;
+
+  // If "select same description" is on and the row is being checked, auto-select all rows
+  // with exactly the same description
+  if (checked && document.getElementById('select-same-desc-toggle')?.checked) {
+    const desc = State.importRows[i].description;
+    State.importRows.forEach((row, j) => {
+      if (j !== i && row.description === desc) {
+        row._selected = true;
+        const cb = document.getElementById('row-sel-' + j);
+        if (cb) cb.checked = true;
+      }
+    });
+  }
+
   const all = State.importRows.length > 0 && State.importRows.every(r => r._selected);
   const hdr = document.getElementById('select-all-cb');
   if (hdr) hdr.checked = all;
@@ -1259,6 +1278,12 @@ function runImportPreview() {
   const preview = document.getElementById('import-preview-section');
   preview.style.display = 'block';
   preview.scrollIntoView({ behavior: 'smooth' });
+
+  // Set thead sticky offset to match the card header height
+  requestAnimationFrame(() => {
+    const h = document.getElementById('import-preview-header')?.offsetHeight;
+    if (h) document.documentElement.style.setProperty('--preview-thead-top', h + 'px');
+  });
 }
 
 // ── Step navigation ───────────────────────────────────────

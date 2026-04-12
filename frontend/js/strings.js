@@ -140,6 +140,7 @@ const I18n = (() => {
         clearBtn:       'Clear',
         reviewNote:     'Review and adjust categories, properties, and notes. Enable bulk-update to apply changes to all selected rows at once.',
         bulkUpdate:     'Update all selected with same value',
+        selectSameDesc: 'Select all with same description',
         nextReview:     'Next: Review →',
         mapping: {
           title:           'Column mapping',
