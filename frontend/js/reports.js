@@ -8,23 +8,15 @@ const Reports = (() => {
 
   // ── Filtering ─────────────────────────────────────────────
 
-  /**
-   * Filter transactions by any combination of criteria.
-   * All criteria are optional.
-   *
-   * @param {Array}  txs    Full transactions array
-   * @param {Object} opts   Filter options
-   * @returns {Array}       Filtered transactions
-   */
   function filter(txs, opts = {}) {
     return txs.filter(tx => {
-      if (opts.apartment_id && opts.apartment_id !== 'all' && tx.apartment_id !== opts.apartment_id) return false;
-      if (opts.type         && opts.type         !== 'all' && tx.type         !== opts.type)         return false;
-      if (opts.category     && opts.category     !== 'all' && tx.category     !== opts.category)     return false;
-      if (opts.source       && opts.source       !== 'all' && tx.source       !== opts.source)       return false;
-      if (opts.reconciled   !== undefined && tx.reconciled !== opts.reconciled)                      return false;
-      if (opts.date_from    && tx.date < opts.date_from)                                             return false;
-      if (opts.date_to      && tx.date > opts.date_to)                                               return false;
+      if (opts.property_id && opts.property_id !== 'all' && tx.property_id !== opts.property_id) return false;
+      if (opts.type        && opts.type        !== 'all' && tx.type        !== opts.type)        return false;
+      if (opts.category    && opts.category    !== 'all' && tx.category    !== opts.category)    return false;
+      if (opts.source      && opts.source      !== 'all' && tx.source      !== opts.source)      return false;
+      if (opts.reconciled  !== undefined && tx.reconciled !== opts.reconciled)                   return false;
+      if (opts.date_from   && tx.date < opts.date_from)                                          return false;
+      if (opts.date_to     && tx.date > opts.date_to)                                            return false;
       if (opts.search) {
         const q = opts.search.toLowerCase();
         if (!tx.description.toLowerCase().includes(q) &&
@@ -37,7 +29,6 @@ const Reports = (() => {
 
   // ── Aggregation ───────────────────────────────────────────
 
-  // Sum amounts, grouped by a key function.
   function groupSum(txs, keyFn) {
     const map = {};
     txs.forEach(tx => {
@@ -49,34 +40,21 @@ const Reports = (() => {
 
   // ── P&L ───────────────────────────────────────────────────
 
-  /**
-   * Build a P&L summary for a set of transactions.
-   * Currencies are kept separate; a combined DKK-equivalent column
-   * is added for cross-currency comparison using CONFIG.FX_RATES.
-   *
-   * Returns:
-   * {
-   *   byApartment: { aptId: { income, expenses, net, currency } },
-   *   byCategory:  { category: { amount, currency, type } },
-   *   totals:      { income_dkk, expenses_dkk, net_dkk }
-   * }
-   */
-  function pnl(txs, apartments) {
-    const aptMap = {};
-    apartments.forEach(a => {
-      aptMap[a.id] = { name: a.name, currency: a.currency, income: 0, expenses: 0 };
+  function pnl(txs, properties) {
+    const propMap = {};
+    properties.forEach(p => {
+      propMap[p.id] = { name: p.name, currency: p.currency, income: 0, expenses: 0 };
     });
 
     const catMap = {};
 
     txs.forEach(tx => {
-      // Skip deposits and transfers in P&L
       if (tx.type === 'deposit' || tx.type === 'transfer') return;
 
-      const apt = aptMap[tx.apartment_id];
-      if (apt) {
-        if (tx.type === 'income') apt.income   += tx.amount;
-        else                      apt.expenses += tx.amount;
+      const prop = propMap[tx.property_id];
+      if (prop) {
+        if (tx.type === 'income') prop.income   += tx.amount;
+        else                      prop.expenses += tx.amount;
       }
 
       const catKey  = tx.category || 'uncategorised';
@@ -86,35 +64,34 @@ const Reports = (() => {
       catMap[catKey] = catInfo;
     });
 
-    // Add net and DKK equivalents
     let totalIncomeDKK   = 0;
     let totalExpensesDKK = 0;
 
-    Object.values(aptMap).forEach(apt => {
-      apt.net = apt.income - apt.expenses;
-      const rate = CONFIG.FX_RATES[apt.currency] || 1;
-      totalIncomeDKK   += apt.income   * rate;
-      totalExpensesDKK += apt.expenses * rate;
+    Object.values(propMap).forEach(prop => {
+      prop.net = prop.income - prop.expenses;
+      const rate = CONFIG.FX_RATES[prop.currency] || 1;
+      totalIncomeDKK   += prop.income   * rate;
+      totalExpensesDKK += prop.expenses * rate;
     });
 
     return {
-      byApartment: aptMap,
-      byCategory:  catMap,
+      byProperty: propMap,
+      byCategory: catMap,
       totals: {
         income_dkk:   totalIncomeDKK,
         expenses_dkk: totalExpensesDKK,
-        net_dkk:       totalIncomeDKK - totalExpensesDKK,
-      }
+        net_dkk:      totalIncomeDKK - totalExpensesDKK,
+      },
     };
   }
 
   // ── Monthly income series ─────────────────────────────────
 
   function monthlyIncome(txs) {
-    const income = txs.filter(tx => tx.type === 'income');
+    const income  = txs.filter(tx => tx.type === 'income');
     const byMonth = {};
     income.forEach(tx => {
-      const ym = tx.date.slice(0, 7); // YYYY-MM
+      const ym = tx.date.slice(0, 7);
       byMonth[ym] = (byMonth[ym] || 0) + tx.amount;
     });
     return Object.entries(byMonth).sort((a, b) => a[0].localeCompare(b[0]));
@@ -144,6 +121,9 @@ const Reports = (() => {
   function fmtDKK(amount) { return fmt(amount, 'DKK'); }
 
   function categoryLabel(catKey) {
+    const s = t('categories.items.' + catKey);
+    if (s !== 'categories.items.' + catKey) return s;
+    // fallback to CATEGORIES object
     for (const group of Object.values(CATEGORIES)) {
       if (group.items[catKey]) return group.items[catKey].label;
     }
@@ -151,6 +131,8 @@ const Reports = (() => {
   }
 
   function typeLabel(typeKey) {
+    const s = t('categories.' + typeKey);
+    if (s !== 'categories.' + typeKey) return s;
     return CATEGORIES[typeKey]?.label || typeKey || '—';
   }
 
