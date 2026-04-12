@@ -162,24 +162,20 @@ const SheetsAPI = (() => {
 
     const required = [
       {
-        name: CONFIG.SHEETS.PROPERTIES,
+        name: CONFIG.SHEETS.APARTMENTS,
         headers: ['id','name','address','country','currency','model','rent','aconto','tenant','lease_start','notes','active']
       },
       {
         name: CONFIG.SHEETS.TRANSACTIONS,
-        headers: ['id','date','property_id','type','category','amount','currency','description','raw_description','source','import_batch','notes','reconciled','created_at']
+        headers: ['id','date','apartment_id','type','category','amount','currency','description','raw_description','source','import_batch','notes','reconciled','created_at']
       },
       {
         name: CONFIG.SHEETS.RULES,
-        headers: ['bank_profile','keyword','category','property_id']
+        headers: ['bank_profile','keyword','category','apartment_id']
       },
       {
         name: CONFIG.SHEETS.FX_LOG,
         headers: ['date','from_currency','to_currency','rate','source']
-      },
-      {
-        name: CONFIG.SHEETS.STRINGS,
-        headers: ['key','lang','user_id','value']
       },
     ];
 

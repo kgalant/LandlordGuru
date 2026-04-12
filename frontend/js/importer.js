@@ -10,6 +10,7 @@ const Importer = (() => {
 
   function parseDate(str, format) {
     str = (str || '').trim().replace(/"/g, '');
+    // Normalise separators
     const sep = str.includes('.') ? '.' : str.includes('/') ? '/' : '-';
     const parts = str.split(sep);
     const f     = format.toUpperCase();
@@ -21,10 +22,12 @@ const Importer = (() => {
     } else if (f.startsWith('MM')) {
       [m, d, y] = parts;
     } else {
+      // YYYY-MM-DD
       [y, m, d] = parts;
     }
 
     if (!y || !m || !d) return null;
+    // Zero-pad
     y = y.padStart(4, '20');
     m = m.padStart(2, '0');
     d = d.padStart(2, '0');
@@ -36,6 +39,7 @@ const Importer = (() => {
   function parseAmount(str, decimalChar) {
     if (!str) return null;
     str = str.replace(/"/g, '').trim();
+    // Remove thousands separator (the opposite of decimal char)
     if (decimalChar === ',') {
       str = str.replace(/\./g, '').replace(',', '.');
     } else {
@@ -71,17 +75,17 @@ const Importer = (() => {
   /**
    * Parse a CSV string using a named bank profile.
    *
-   * @param {string}   csvText     Raw CSV content
-   * @param {string}   profileKey  Key from BANK_PROFILES in config.js
-   * @param {string}   propertyId  Pre-selected property (can be overridden by rules)
-   * @param {Array}    rules       Auto-categorisation rules from DB.getRules()
-   * @returns {Object} { rows, errors, profileLabel, currency }
+   * @param {string}   csvText      Raw CSV content
+   * @param {string}   profileKey   Key from BANK_PROFILES in config.js
+   * @param {string}   apartmentId  Pre-selected apartment (can be overridden by rules)
+   * @param {Array}    rules        Auto-categorisation rules from DB.getRules()
+   * @returns {Object} { rows: [...], errors: [...], profileLabel }
    */
-  function parseCSV(csvText, profileKey, propertyId, rules) {
+  function parseCSV(csvText, profileKey, apartmentId, rules) {
     const profile = BANK_PROFILES[profileKey];
     if (!profile) throw new Error('Unknown bank profile: ' + profileKey);
 
-    const lines    = csvText.split(/\r?\n/).filter(l => l.trim());
+    const lines   = csvText.split(/\r?\n/).filter(l => l.trim());
     const dataRows = lines.slice(profile.skip_rows);
 
     const rows   = [];
@@ -107,21 +111,28 @@ const Importer = (() => {
         return;
       }
 
+      // Try to auto-categorise
       const match = DB.applyRules(rawDesc, profileKey, rules);
 
-      const absAmount    = Math.abs(amount);
-      let autoCategory   = match ? match.category    : '';
-      let autoPropId     = (match && match.property_id) ? match.property_id : propertyId;
+      // Determine sign semantics:
+      // Positive amount = money received (income / deposit)
+      // Negative amount = money paid out (expense)
+      // We store absolute value and derive type from sign + category
+      const absAmount = Math.abs(amount);
+      let autoCategory = match ? match.category : '';
+      let autoAptId    = (match && match.apartment_id) ? match.apartment_id : apartmentId;
 
+      // If no rule matched, guess from sign
       if (!autoCategory) {
         autoCategory = amount > 0 ? 'rent' : 'other_expense';
       }
 
+      // Derive top-level type from category
       const type = categoryToType(autoCategory);
 
       rows.push({
         date,
-        property_id:     autoPropId || '',
+        apartment_id:    autoAptId || '',
         type,
         category:        autoCategory,
         amount:          absAmount,
@@ -129,7 +140,7 @@ const Importer = (() => {
         description:     rawDesc.replace(/^"|"$/g, ''),
         raw_description: rawDesc.replace(/^"|"$/g, ''),
         source:          profileKey,
-        import_batch:    '',
+        import_batch:    '',   // set at save time
         notes:           '',
         reconciled:      false,
         // UI helpers (not saved)
@@ -139,7 +150,12 @@ const Importer = (() => {
       });
     });
 
-    return { rows, errors, profileLabel: profile.label, currency: profile.currency };
+    return {
+      rows,
+      errors,
+      profileLabel: profile.label,
+      currency: profile.currency,
+    };
   }
 
   // ── Helpers ───────────────────────────────────────────────
@@ -151,13 +167,14 @@ const Importer = (() => {
     return 'expense';
   }
 
+  // Build a flat list of all category options for a <select>
   function buildCategoryOptions(selectedCategory) {
     let html = '';
     for (const [typeKey, typeGroup] of Object.entries(CATEGORIES)) {
-      html += `<optgroup label="${t('categories.' + typeKey)}">`;
-      for (const [catKey] of Object.entries(typeGroup.items)) {
+      html += `<optgroup label="${typeGroup.label}">`;
+      for (const [catKey, cat] of Object.entries(typeGroup.items)) {
         const sel = catKey === selectedCategory ? ' selected' : '';
-        html += `<option value="${catKey}"${sel}>${t('categories.items.' + catKey)}</option>`;
+        html += `<option value="${catKey}"${sel}>${cat.label}</option>`;
       }
       html += `</optgroup>`;
     }

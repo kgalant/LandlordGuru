@@ -36,11 +36,10 @@ const CONFIG = {
 
   // Sheet tab names — change only if you rename tabs in Google Sheets
   SHEETS: {
-    PROPERTIES:   'properties',
+    APARTMENTS:   'apartments',
     TRANSACTIONS: 'transactions',
     RULES:        'rules',
     FX_LOG:       'fx_log',
-    STRINGS:      'strings',
   }
 };
 
