@@ -49,7 +49,9 @@ const SheetsAPI = (() => {
   // Fetch the private key from key.php (which reads it from outside the web root).
   async function fetchPrivateKey() {
     if (_keyCache) return _keyCache;
-    const resp = await fetch(CONFIG.KEY_FETCHER_URL);
+    const resp = await fetch(CONFIG.KEY_FETCHER_URL, {
+      headers: { 'X-LandlordGuru': 'key-request' }
+    });
     if (!resp.ok) throw new Error('Could not fetch key: ' + resp.status);
     const pem = await resp.text();
     if (!pem.includes('BEGIN PRIVATE KEY')) throw new Error('key.php did not return a valid PEM key');
