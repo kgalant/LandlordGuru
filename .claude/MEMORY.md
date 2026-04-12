@@ -2,7 +2,7 @@
 
 - [Always provide full publish command with commit message](feedback_publish_command.md) — include full powershell command + suggested commit message whenever telling user to run publish script
 - [No co-authored-by in commits](feedback_commit_coauthor.md) — never add Co-Authored-By or similar trailer lines to commits unless explicitly asked
-- [Bump version on new features](feedback_versioning.md) — update version.json (minor bump for features, patch for fixes) in the same commit as the change
+- [Bump version on new features](feedback_versioning.md) — update version.json (minor bump for features, patch for fixes) in the same commit as the change. Add an explicit line to commit message that version number was changed from x to y. With versions, assume that if we're tweaking main features that exist, we increment the 3rd number (z in x.y.z). If adding a new major feature, we increment the y. Never suggest incrementing the x - the user will explicitly prompt for that.
 
 # LandlordGuru — Project Memory
 
