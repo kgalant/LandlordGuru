@@ -31,10 +31,13 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 
 ## Documentation hygiene
 - After any task that adds a feature, renames something, or changes how a system works,
-  check whether any of the following need updating before committing:
+  check whether documentation needs updating or creating before committing:
   - `docs/ARCHITECTURE.md` — file tree, sheet tab list, constraints
   - `docs/data-model.md`   — field names, new sheets/tables, schema notes
   - `docs/SETUP.md`        — setup steps, file structure, troubleshooting
+  - If the change introduces a concept large enough to warrant its own doc
+    (e.g. a new subsystem, a non-obvious operational procedure), create a new
+    file in `docs/` rather than cramming it into an existing one
 - Include doc updates in the same commit as the feature, not a separate one
 
 ## Reference docs
