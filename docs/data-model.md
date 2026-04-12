@@ -138,6 +138,35 @@ Snapshot of exchange rates for audit purposes. Not used for bookkeeping.
 
 ---
 
+## Description mappings (client-side only)
+
+Named description-to-category mappings captured at import time. Stored in `localStorage`
+under the key `lg_desc_mappings_v1`. Structure is an array that maps directly to a future
+DB table. Composite unique key: `(bank_profile, user_id, keyword)` — upsert on save.
+
+```json
+[
+  {
+    "bank_profile": "jyske_bank",
+    "user_id":      "",
+    "keyword":      "RICHARD SABUMBA HUSLEJE",
+    "category":     "rent",
+    "updated_at":   "2026-04-12T10:00:00.000Z"
+  }
+]
+```
+
+`user_id` is empty string for now; will be populated once user auth is introduced.
+`bank_profile` can be empty to match any profile.
+
+Priority when applying at preview time:
+1. User-specific description mapping (`user_id` matches current user)
+2. Global description mapping (`user_id` is empty)
+3. Rules from the Rules sheet
+4. Default (rent if positive amount, other_expense if negative)
+
+---
+
 ## Column mappings (client-side only)
 
 Named CSV column mappings are stored in `localStorage` under the key `lg_col_mappings_v1`.

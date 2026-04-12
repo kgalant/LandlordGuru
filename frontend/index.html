@@ -230,33 +230,67 @@
         </div>
       </div>
 
-      <!-- Preview -->
+      <!-- Step 1: Edit Preview -->
       <div id="import-preview-section" style="display:none">
         <div class="card">
           <div class="card-header">
             <span class="card-title" id="import-preview-title"></span>
-            <div class="btn-row">
-              <button class="btn btn-primary" onclick="confirmImport()" data-i18n="import.importAllBtn"></button>
-              <button class="btn btn-secondary btn-sm"
-                onclick="document.getElementById('import-preview-section').style.display='none'"
-                data-i18n="common.cancel"></button>
+            <div class="btn-row" style="align-items:center">
+              <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+                <input type="checkbox" id="bulk-update-toggle">
+                <span data-i18n="import.bulkUpdate"></span>
+              </label>
+              <button class="btn btn-primary" onclick="goToStaticPreview()" data-i18n="import.nextReview"></button>
+              <button class="btn btn-secondary btn-sm" onclick="clearImport()" data-i18n="common.cancel"></button>
             </div>
           </div>
           <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="import.reviewNote"></p>
           <div class="table-wrap">
             <table>
               <thead><tr>
+                <th style="width:28px"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll(this)"></th>
                 <th data-i18n="import.col.date"></th>
                 <th data-i18n="import.col.description"></th>
                 <th data-i18n="import.col.property"></th>
                 <th data-i18n="import.col.category"></th>
                 <th data-i18n="import.col.notes"></th>
                 <th class="amount-cell" data-i18n="import.col.amount"></th>
+                <th style="text-align:center" data-i18n="import.col.ignore"></th>
+                <th style="text-align:center" data-i18n="import.col.storeMapping"></th>
               </tr></thead>
               <tbody id="import-preview-body"></tbody>
             </table>
           </div>
           <div id="import-errors" style="margin-top:1rem"></div>
+        </div>
+      </div>
+
+      <!-- Step 2: Static Preview -->
+      <div id="import-static-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="import.staticPreview.title"></span>
+            <div class="btn-row">
+              <button class="btn btn-secondary btn-sm" onclick="backToEditPreview()" data-i18n="import.staticPreview.back"></button>
+              <button class="btn btn-primary" id="static-next-btn" onclick="goToMappingConfirmOrImport()"></button>
+            </div>
+          </div>
+          <div id="import-static-body" style="padding:0.5rem 0"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Mapping Confirmation -->
+      <div id="import-mapping-confirm-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="import.mappingConfirm.title"></span>
+            <div class="btn-row">
+              <button class="btn btn-secondary btn-sm" onclick="backToStaticPreview()" data-i18n="import.mappingConfirm.back"></button>
+              <button class="btn btn-primary" onclick="doImport(true)" data-i18n="import.mappingConfirm.confirmBtn"></button>
+              <button class="btn btn-secondary btn-sm" onclick="doImport(false)" data-i18n="import.mappingConfirm.skipBtn"></button>
+            </div>
+          </div>
+          <div id="import-mapping-confirm-body" style="padding:0.5rem 0"></div>
         </div>
       </div>
     </div>
@@ -861,6 +895,103 @@ function onProfileChange() {
   document.getElementById('import-currency-group').style.display = profile.currency ? 'none' : 'block';
 }
 
+// ── Description mappings (localStorage) ──────────────────
+// Structure: [{ bank_profile, user_id, keyword, category, updated_at }]
+// Composite unique key: (bank_profile, user_id, keyword)
+
+const DESC_MAPPINGS_KEY = 'lg_desc_mappings_v1';
+
+function getDescMappings() {
+  try { return JSON.parse(localStorage.getItem(DESC_MAPPINGS_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+
+function applyDescMappings(rows, profileKey, userId = '') {
+  const mappings = getDescMappings();
+  if (!mappings.length) return;
+  rows.forEach(row => {
+    const desc = (row.raw_description || row.description || '').toLowerCase();
+    // User-specific first, then global (empty user_id)
+    const match =
+      mappings.find(m => m.user_id === userId && (m.bank_profile === profileKey || m.bank_profile === '') && desc.includes(m.keyword.toLowerCase())) ||
+      (userId !== '' ? mappings.find(m => m.user_id === '' && (m.bank_profile === profileKey || m.bank_profile === '') && desc.includes(m.keyword.toLowerCase())) : null);
+    if (match) {
+      row.category          = match.category;
+      row.type              = Importer.categoryToType(match.category);
+      row._descMappingMatched = true;
+      row._autoMatched      = false;
+    }
+  });
+}
+
+function saveDescMappingsForRows(rows, profileKey, userId = '') {
+  const mappings = getDescMappings();
+  rows.forEach(row => {
+    if (!row._storeMapping || row._ignored) return;
+    const keyword = (row.raw_description || row.description || '').trim();
+    if (!keyword) return;
+    const idx = mappings.findIndex(m => m.bank_profile === profileKey && m.user_id === userId && m.keyword === keyword);
+    const entry = { bank_profile: profileKey, user_id: userId, keyword, category: row.category, updated_at: new Date().toISOString() };
+    if (idx >= 0) mappings[idx] = entry;
+    else mappings.push(entry);
+  });
+  localStorage.setItem(DESC_MAPPINGS_KEY, JSON.stringify(mappings));
+}
+
+// ── Row selection ─────────────────────────────────────────
+
+function toggleSelectAll(headerCb) {
+  const checked = headerCb.checked;
+  State.importRows.forEach((row, i) => {
+    row._selected = checked;
+    const cb = document.getElementById('row-sel-' + i);
+    if (cb) cb.checked = checked;
+  });
+}
+
+function onRowSelect(i) {
+  State.importRows[i]._selected = document.getElementById('row-sel-' + i).checked;
+  const all = State.importRows.length > 0 && State.importRows.every(r => r._selected);
+  const hdr = document.getElementById('select-all-cb');
+  if (hdr) hdr.checked = all;
+}
+
+// ── Bulk field change ─────────────────────────────────────
+
+function onRowFieldChange(i, field, value) {
+  State.importRows[i][field] = value;
+  if (field === 'category') State.importRows[i].type = Importer.categoryToType(value);
+  _applyRowStyle(i);
+
+  const bulkOn = document.getElementById('bulk-update-toggle')?.checked;
+  if (bulkOn && State.importRows[i]._selected) {
+    State.importRows.forEach((row, j) => {
+      if (j === i || !row._selected) return;
+      row[field] = value;
+      if (field === 'category') row.type = Importer.categoryToType(value);
+      _syncRowDOM(j, field, value);
+      _applyRowStyle(j);
+    });
+  }
+}
+
+function _syncRowDOM(j, field, value) {
+  const map = { property_id: 'row-prop-', category: 'row-cat-', notes: 'row-notes-', _ignored: 'row-ign-', _storeMapping: 'row-map-' };
+  const prefix = map[field];
+  if (!prefix) return;
+  const el = document.getElementById(prefix + j);
+  if (!el) return;
+  if (el.type === 'checkbox') el.checked = value;
+  else el.value = value;
+}
+
+function _applyRowStyle(i) {
+  const tr = document.querySelector('tr[data-row="' + i + '"]');
+  if (!tr) return;
+  if (State.importRows[i]._ignored) tr.classList.add('preview-row-ignored');
+  else                               tr.classList.remove('preview-row-ignored');
+}
+
 // ── Import file / paste toggle ────────────────────────────
 
 let _importCSVText = '';   // holds text loaded from a file
@@ -918,6 +1049,8 @@ function clearImport() {
   document.getElementById('import-csv').value = '';
   document.getElementById('import-mapping-section').style.display = 'none';
   document.getElementById('import-preview-section').style.display = 'none';
+  document.getElementById('import-static-section').style.display = 'none';
+  document.getElementById('import-mapping-confirm-section').style.display = 'none';
 }
 
 // ── Column mapping ────────────────────────────────────────
@@ -1066,13 +1199,11 @@ function runImportPreview() {
 
   if (!csv) { toast(t('import.toast.noData'), 'error'); return; }
 
-  // Show/refresh the mapping panel if not already visible
-  const mappingSection = document.getElementById('import-mapping-section');
-  if (mappingSection.style.display === 'none') {
+  // Show/refresh mapping panel if not visible
+  if (document.getElementById('import-mapping-section').style.display === 'none') {
     showMappingPanel(csv, profileKey);
   }
 
-  // Build column map from the mapping panel
   const colMap = buildColumnMap();
 
   let result;
@@ -1083,22 +1214,34 @@ function runImportPreview() {
     return;
   }
 
-  State.importRows = result.rows;
+  // Apply description mappings (highest priority — overrides rule matches)
+  applyDescMappings(result.rows, profileKey);
+
+  // Initialise per-row UI flags
+  State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _storeMapping: false }));
 
   document.getElementById('import-preview-title').textContent =
     `Preview — ${result.rows.length} rows from ${result.profileLabel}`;
 
-  document.getElementById('import-preview-body').innerHTML = result.rows.map((row, i) => {
-    const propOpts = State.properties.map(p => `<option value="${p.id}" ${p.id===row.property_id?'selected':''}>${p.name}</option>`).join('');
-    const catOpts  = Importer.buildCategoryOptions(row.category);
-    const autoTag  = row._autoMatched ? '<span class="tag tag-auto">auto</span> ' : '';
-    return `<tr class="${row._autoMatched ? 'preview-row-ok' : 'preview-row-warn'}">
+  document.getElementById('import-preview-body').innerHTML = State.importRows.map((row, i) => {
+    const propOpts = State.properties.map(p =>
+      `<option value="${p.id}"${p.id === row.property_id ? ' selected' : ''}>${p.name}</option>`
+    ).join('');
+    const catOpts = Importer.buildCategoryOptions(row.category);
+    let matchTag = '';
+    if      (row._descMappingMatched) matchTag = '<span class="tag tag-mapping">mapped</span> ';
+    else if (row._autoMatched)        matchTag = '<span class="tag tag-auto">auto</span> ';
+    const warnClass = (!row._autoMatched && !row._descMappingMatched) ? 'preview-row-warn' : '';
+    return `<tr data-row="${i}" class="${warnClass}">
+      <td style="text-align:center"><input type="checkbox" id="row-sel-${i}" onchange="onRowSelect(${i})"></td>
       <td>${row.date}</td>
-      <td style="max-width:180px;font-size:12px">${row.description}</td>
-      <td><select style="font-size:12px;padding:4px 6px" onchange="State.importRows[${i}].property_id=this.value"><option value="">—</option>${propOpts}</select></td>
-      <td>${autoTag}<select style="font-size:12px;padding:4px 6px" onchange="State.importRows[${i}].category=this.value;State.importRows[${i}].type=Importer.categoryToType(this.value)">${catOpts}</select></td>
-      <td><input style="font-size:12px;padding:4px 6px;width:140px" placeholder="notes…" value="${row.notes||''}" oninput="State.importRows[${i}].notes=this.value"></td>
-      <td class="amount-cell">${row.amount.toLocaleString()} ${result.currency||''}</td>
+      <td style="max-width:160px;font-size:12px">${row.description}</td>
+      <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"><option value="">—</option>${propOpts}</select></td>
+      <td>${matchTag}<select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)">${catOpts}</select></td>
+      <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px" placeholder="notes…" value="${row.notes || ''}" oninput="onRowFieldChange(${i},'notes',this.value)"></td>
+      <td class="amount-cell">${row.amount.toLocaleString()} ${result.currency || ''}</td>
+      <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"></td>
+      <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"></td>
     </tr>`;
   }).join('');
 
@@ -1110,21 +1253,200 @@ function runImportPreview() {
     errDiv.innerHTML = '';
   }
 
+  document.getElementById('select-all-cb').checked = false;
+  document.getElementById('import-static-section').style.display = 'none';
+  document.getElementById('import-mapping-confirm-section').style.display = 'none';
   const preview = document.getElementById('import-preview-section');
   preview.style.display = 'block';
   preview.scrollIntoView({ behavior: 'smooth' });
 }
 
-async function confirmImport() {
-  if (!State.importRows.length) return;
-  const missing = State.importRows.filter(r => !r.property_id);
+// ── Step navigation ───────────────────────────────────────
+
+function goToStaticPreview() {
+  const activeRows = State.importRows.filter(r => !r._ignored);
+  if (!activeRows.length) { toast(t('import.toast.noActiveRows'), 'error'); return; }
+
+  const profileKey  = document.getElementById('import-profile').value;
+  const hasToStore  = activeRows.some(r => r._storeMapping);
+  document.getElementById('static-next-btn').textContent =
+    hasToStore ? t('import.staticPreview.nextBtn') : t('import.staticPreview.importBtn');
+
+  // Build two-level tree: type → category
+  const TYPE_ORDER = ['income', 'expense', 'deposit', 'transfer'];
+  const groups = {};
+  activeRows.forEach(row => {
+    const type = row.type || 'expense';
+    const cat  = row.category || 'other_expense';
+    if (!groups[type])      groups[type] = {};
+    if (!groups[type][cat]) groups[type][cat] = [];
+    groups[type][cat].push(row);
+  });
+
+  let html = '';
+  TYPE_ORDER.forEach(type => {
+    if (!groups[type]) return;
+    const allTypeRows = Object.values(groups[type]).flat();
+    const typeCount   = allTypeRows.length;
+    const currencies  = [...new Set(allTypeRows.map(r => r.currency))];
+    const typeMeta    = currencies.length === 1
+      ? `${typeCount} transactions · ${allTypeRows.reduce((s, r) => s + r.amount, 0).toLocaleString()} ${currencies[0]}`
+      : `${typeCount} transactions`;
+
+    html += `<div class="tree-group">
+      <div class="tree-group-header" onclick="toggleTree(this)">
+        <span class="tree-toggle">▼</span>
+        <strong>${t('categories.' + type)}</strong>
+        <span class="tree-meta">${typeMeta}</span>
+      </div>
+      <div class="tree-group-body">`;
+
+    Object.entries(groups[type]).forEach(([cat, rows]) => {
+      const catCount = rows.length;
+      const catCurs  = [...new Set(rows.map(r => r.currency))];
+      const catMeta  = catCurs.length === 1
+        ? `${catCount} rows · ${rows.reduce((s, r) => s + r.amount, 0).toLocaleString()} ${catCurs[0]}`
+        : `${catCount} rows`;
+
+      html += `<div class="tree-cat">
+        <div class="tree-cat-header" onclick="toggleTree(this)">
+          <span class="tree-toggle">▼</span>
+          <span>${Reports.categoryLabel(cat)}</span>
+          <span class="tree-meta">${catMeta}</span>
+        </div>
+        <div class="tree-cat-body">
+          <table class="tree-table">
+            <thead><tr>
+              <th>${t('import.col.date')}</th>
+              <th>${t('import.col.description')}</th>
+              <th>${t('import.col.property')}</th>
+              <th>${t('import.col.notes')}</th>
+              <th class="amount-cell">${t('import.col.amount')}</th>
+            </tr></thead>
+            <tbody>${rows.map(row => {
+              const prop = State.properties.find(p => p.id === row.property_id);
+              return `<tr>
+                <td>${row.date}</td>
+                <td style="font-size:12px;max-width:200px">${row.description}</td>
+                <td style="font-size:12px">${prop ? prop.name : '—'}</td>
+                <td style="font-size:12px">${row.notes || '—'}</td>
+                <td class="amount-cell">${row.amount.toLocaleString()} ${row.currency}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('import-static-body').innerHTML = html;
+  document.getElementById('import-preview-section').style.display = 'none';
+  document.getElementById('import-mapping-confirm-section').style.display = 'none';
+  const section = document.getElementById('import-static-section');
+  section.style.display = 'block';
+  section.scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleTree(header) {
+  const body    = header.nextElementSibling;
+  const toggle  = header.querySelector('.tree-toggle');
+  const isOpen  = body.style.display !== 'none';
+  body.style.display  = isOpen ? 'none' : '';
+  toggle.textContent  = isOpen ? '▶' : '▼';
+}
+
+function backToEditPreview() {
+  document.getElementById('import-static-section').style.display = 'none';
+  const s = document.getElementById('import-preview-section');
+  s.style.display = 'block';
+  s.scrollIntoView({ behavior: 'smooth' });
+}
+
+function goToMappingConfirmOrImport() {
+  const profileKey = document.getElementById('import-profile').value;
+  const activeRows = State.importRows.filter(r => !r._ignored);
+  const toStore    = activeRows.filter(r => r._storeMapping);
+
+  if (!toStore.length) { doImport(false); return; }
+
+  // Build mapping confirmation lists
+  const existing = getDescMappings();
+  const toAdd    = [];
+  const toUpdate = [];
+
+  toStore.forEach(row => {
+    const keyword = (row.raw_description || row.description || '').trim();
+    const found   = existing.find(m => m.bank_profile === profileKey && m.user_id === '' && m.keyword === keyword);
+    if (found) {
+      if (found.category !== row.category)
+        toUpdate.push({ keyword, oldCat: found.category, newCat: row.category });
+      // same category → no change, skip
+    } else {
+      toAdd.push({ keyword, category: row.category });
+    }
+  });
+
+  const th = s => `<th style="text-align:left;padding:3px 8px;font-size:11px">${s}</th>`;
+  const td = s => `<td style="padding:3px 8px;font-size:11px">${s}</td>`;
+  let html = '';
+
+  if (toAdd.length) {
+    html += `<p style="font-size:13px;font-weight:500;margin-bottom:0.4rem">${t('import.mappingConfirm.newLabel', { count: toAdd.length })}</p>
+      <div class="table-wrap" style="margin-bottom:1rem"><table><thead><tr>
+        ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colCat'))}
+      </tr></thead><tbody>
+        ${toAdd.map(m => `<tr>${td(m.keyword)}<td style="padding:3px 8px"><span class="tag">${Reports.categoryLabel(m.category)}</span></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
+  if (toUpdate.length) {
+    html += `<p style="font-size:13px;font-weight:500;margin-bottom:0.4rem">${t('import.mappingConfirm.updateLabel', { count: toUpdate.length })}</p>
+      <div class="table-wrap"><table><thead><tr>
+        ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colWas'))}${th(t('import.mappingConfirm.colNow'))}
+      </tr></thead><tbody>
+        ${toUpdate.map(m => `<tr>${td(m.keyword)}
+          <td style="padding:3px 8px"><span class="tag">${Reports.categoryLabel(m.oldCat)}</span></td>
+          <td style="padding:3px 8px"><span class="tag">${Reports.categoryLabel(m.newCat)}</span></td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
+  if (!toAdd.length && !toUpdate.length) {
+    html = `<p style="font-size:13px;color:var(--text3)">${t('import.mappingConfirm.noChanges')}</p>`;
+  }
+
+  document.getElementById('import-mapping-confirm-body').innerHTML = html;
+  document.getElementById('import-static-section').style.display = 'none';
+  const s = document.getElementById('import-mapping-confirm-section');
+  s.style.display = 'block';
+  s.scrollIntoView({ behavior: 'smooth' });
+}
+
+function backToStaticPreview() {
+  document.getElementById('import-mapping-confirm-section').style.display = 'none';
+  const s = document.getElementById('import-static-section');
+  s.style.display = 'block';
+  s.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function doImport(saveMappings) {
+  const profileKey = document.getElementById('import-profile').value;
+  const activeRows = State.importRows.filter(r => !r._ignored);
+  if (!activeRows.length) return;
+
+  const missing = activeRows.filter(r => !r.property_id);
   if (missing.length) {
     if (!confirm(t('import.confirmMissing', { count: missing.length }))) return;
   }
+
+  if (saveMappings) saveDescMappingsForRows(activeRows, profileKey);
+
   setLoading(true, t('status.importing'));
   try {
-    const batchId = await DB.saveImportBatch(State.importRows);
-    toast(t('import.toast.done', { count: State.importRows.length, batchId }), 'success');
+    const batchId = await DB.saveImportBatch(activeRows);
+    toast(t('import.toast.done', { count: activeRows.length, batchId }), 'success');
     State.importRows = [];
     clearImport();
     await refreshAll();

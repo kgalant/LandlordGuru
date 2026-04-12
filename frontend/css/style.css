@@ -304,9 +304,26 @@ textarea { resize: vertical; min-height: 70px; }
 
 /* ── Preview table (import) ───────────────────────────────── */
 
-.preview-row-ok  { }
-.preview-row-warn td:first-child { border-left: 3px solid var(--amber); }
-.preview-row-err td { color: var(--text3); font-style: italic; }
+.preview-row-ok   { }
+.preview-row-warn td:nth-child(2) { border-left: 3px solid var(--amber); }
+.preview-row-err  td { color: var(--text3); font-style: italic; }
+.preview-row-ignored { opacity: 0.35; }
+.preview-row-ignored td { text-decoration: line-through; }
+.tag-mapping { background: var(--accent-bg); color: var(--accent); font-size: 10px; }
+
+/* ── Foldable tree (static preview) ──────────────────────── */
+
+.tree-group { margin-bottom: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.tree-group-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: var(--bg2); cursor: pointer; user-select: none; font-size: 14px; font-weight: 600; }
+.tree-group-header:hover { background: var(--bg3); }
+.tree-cat { border-top: 1px solid var(--border); }
+.tree-cat-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1rem 0.45rem 2rem; cursor: pointer; user-select: none; font-size: 13px; background: var(--bg); }
+.tree-cat-header:hover { background: var(--bg2); }
+.tree-cat-body { padding: 0 0 0.5rem 0; }
+.tree-toggle { font-size: 10px; color: var(--text3); width: 12px; flex-shrink: 0; }
+.tree-meta { margin-left: auto; font-size: 12px; color: var(--text3); font-weight: normal; }
+.tree-table { width: 100%; font-size: 12px; }
+.tree-table th { font-size: 11px; }
 
 /* ── Empty state ──────────────────────────────────────────── */
 
