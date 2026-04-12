@@ -133,16 +133,34 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom:1rem">
-          <label data-i18n="import.csvLabel"></label>
-          <textarea id="import-csv" rows="8" data-i18n-placeholder="import.csvPlaceholder"></textarea>
+        <!-- File drop zone (primary) -->
+        <div id="import-zone" class="import-zone"
+          onclick="document.getElementById('import-file').click()"
+          ondragover="onImportDragOver(event)"
+          ondragleave="onImportDragLeave(event)"
+          ondrop="onImportDrop(event)">
+          <strong data-i18n="import.dropZone"></strong>
+          <span id="import-file-name" class="file-name" style="display:none"></span>
+          <input type="file" id="import-file" accept=".csv,.txt" style="display:none"
+            onchange="onImportFileChange(event)">
+        </div>
+
+        <!-- Paste toggle -->
+        <div class="import-paste-toggle">
+          <a onclick="toggleImportPaste()" id="import-paste-link" data-i18n="import.pasteToggle"></a>
+        </div>
+
+        <!-- Paste area (secondary, hidden by default) -->
+        <div id="import-paste-area" style="display:none;margin-bottom:1rem">
+          <div class="form-group">
+            <label data-i18n="import.csvLabel"></label>
+            <textarea id="import-csv" rows="8" data-i18n-placeholder="import.csvPlaceholder"></textarea>
+          </div>
         </div>
 
         <div class="btn-row">
           <button class="btn btn-primary" onclick="runImportPreview()" data-i18n="import.previewBtn"></button>
-          <button class="btn btn-secondary btn-sm"
-            onclick="document.getElementById('import-csv').value=''"
-            data-i18n="import.clearBtn"></button>
+          <button class="btn btn-secondary btn-sm" onclick="clearImport()" data-i18n="import.clearBtn"></button>
         </div>
       </div>
 
@@ -777,8 +795,69 @@ function onProfileChange() {
   document.getElementById('import-currency-group').style.display = profile.currency ? 'none' : 'block';
 }
 
+// ── Import file / paste toggle ────────────────────────────
+
+let _importCSVText = '';   // holds text loaded from a file
+
+function onImportFileChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _importCSVText = e.target.result;
+    document.getElementById('import-file-name').textContent = file.name;
+    document.getElementById('import-file-name').style.display = 'inline-block';
+    document.getElementById('import-zone').querySelector('strong').textContent = '✓ ' + file.name;
+  };
+  reader.readAsText(file);
+}
+
+function onImportDragOver(event) {
+  event.preventDefault();
+  document.getElementById('import-zone').classList.add('import-zone--active');
+  document.getElementById('import-zone').querySelector('strong').textContent = t('import.dropZoneActive');
+}
+
+function onImportDragLeave(event) {
+  document.getElementById('import-zone').classList.remove('import-zone--active');
+  document.getElementById('import-zone').querySelector('strong').textContent = t('import.dropZone');
+}
+
+function onImportDrop(event) {
+  event.preventDefault();
+  document.getElementById('import-zone').classList.remove('import-zone--active');
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _importCSVText = e.target.result;
+    document.getElementById('import-file-name').textContent = file.name;
+    document.getElementById('import-file-name').style.display = 'inline-block';
+    document.getElementById('import-zone').querySelector('strong').textContent = '✓ ' + file.name;
+  };
+  reader.readAsText(file);
+}
+
+function toggleImportPaste() {
+  const pasteArea = document.getElementById('import-paste-area');
+  const link      = document.getElementById('import-paste-link');
+  const shown     = pasteArea.style.display !== 'none';
+  pasteArea.style.display = shown ? 'none' : 'block';
+  link.textContent = shown ? t('import.pasteToggle') : t('import.fileToggle');
+}
+
+function clearImport() {
+  _importCSVText = '';
+  document.getElementById('import-file').value = '';
+  document.getElementById('import-file-name').style.display = 'none';
+  document.getElementById('import-zone').querySelector('strong').textContent = t('import.dropZone');
+  document.getElementById('import-csv').value = '';
+  document.getElementById('import-preview-section').style.display = 'none';
+}
+
 function runImportPreview() {
-  const csv        = document.getElementById('import-csv').value.trim();
+  const pasteText  = document.getElementById('import-csv').value.trim();
+  const csv        = _importCSVText || pasteText;
   const profileKey = document.getElementById('import-profile').value;
   const propId     = document.getElementById('import-apt').value;
 
@@ -840,8 +919,7 @@ async function confirmImport() {
     const batchId = await DB.saveImportBatch(State.importRows);
     toast(t('import.toast.done', { count: State.importRows.length, batchId }), 'success');
     State.importRows = [];
-    document.getElementById('import-preview-section').style.display = 'none';
-    document.getElementById('import-csv').value = '';
+    clearImport();
     await refreshAll();
   } catch(e) {
     toast(t('import.toast.failed', { error: e.message }), 'error');
