@@ -7,6 +7,7 @@
 const SheetsAPI = (() => {
 
   let _tokenCache = null;
+  let _keyCache   = null;
 
   // ── Helpers ───────────────────────────────────────────────
 
@@ -45,13 +46,25 @@ const SheetsAPI = (() => {
 
   // ── Auth ──────────────────────────────────────────────────
 
+  // Fetch the private key from key.php (which reads it from outside the web root).
+  async function fetchPrivateKey() {
+    if (_keyCache) return _keyCache;
+    const resp = await fetch(CONFIG.KEY_FETCHER_URL);
+    if (!resp.ok) throw new Error('Could not fetch key: ' + resp.status);
+    const pem = await resp.text();
+    if (!pem.includes('BEGIN PRIVATE KEY')) throw new Error('key.php did not return a valid PEM key');
+    _keyCache = pem;
+    return pem;
+  }
+
   async function getAccessToken() {
     if (_tokenCache && _tokenCache.expiry > Date.now()) return _tokenCache.token;
 
+    const pem = await fetchPrivateKey();
     const now = Math.floor(Date.now() / 1000);
     const header  = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
     const payload = b64url(JSON.stringify({
-      iss:   CONFIG.SERVICE_ACCOUNT.client_email,
+      iss:   CONFIG.SERVICE_ACCOUNT_EMAIL,
       scope: 'https://www.googleapis.com/auth/spreadsheets',
       aud:   'https://oauth2.googleapis.com/token',
       iat:   now,
@@ -59,7 +72,7 @@ const SheetsAPI = (() => {
     }));
 
     const sigInput = `${header}.${payload}`;
-    const key = await importPrivateKey(CONFIG.SERVICE_ACCOUNT.private_key);
+    const key = await importPrivateKey(pem);
     const sig = await crypto.subtle.sign(
       { name: 'RSASSA-PKCS1-v1_5' },
       key,
