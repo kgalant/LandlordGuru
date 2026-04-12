@@ -26,7 +26,7 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 ## Versioning
 - Update version.json in the same commit as the change: minor bump for new features, patch for fixes
 - Add an explicit line to the commit message stating the version changed from x to y
-- Tweaking existing features = increment z (x.y.z); new major feature = increment y
+- Tweaking existing features = increment z (x.y.z); new major feature = increment y - confirm explicitly
 - Never suggest incrementing x — the user will prompt for that explicitly
 
 ## Documentation hygiene
