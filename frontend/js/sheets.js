@@ -56,6 +56,7 @@ const SheetsAPI = (() => {
     const pem = await resp.text();
     if (!pem.includes('BEGIN PRIVATE KEY')) throw new Error('key.php did not return a valid PEM key');
     _keyCache = pem;
+    if (typeof Debug !== 'undefined') Debug.add('Auth', 'Key', 'loaded', 'info');
     return pem;
   }
 
@@ -93,6 +94,7 @@ const SheetsAPI = (() => {
 
     const data = await resp.json();
     _tokenCache = { token: data.access_token, expiry: Date.now() + 55 * 60 * 1000 };
+    if (typeof Debug !== 'undefined') Debug.add('Auth', 'Token expires', new Date(_tokenCache.expiry).toLocaleTimeString(), 'info');
     return data.access_token;
   }
 
