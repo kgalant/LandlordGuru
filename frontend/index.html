@@ -1281,10 +1281,10 @@ function runImportPreview() {
   preview.style.display = 'block';
   preview.scrollIntoView({ behavior: 'smooth' });
 
-  // Set thead sticky offset to match the card header height
+  // Set thead sticky offset: nav bar (52px) + card header height
   requestAnimationFrame(() => {
     const h = document.getElementById('import-preview-header')?.offsetHeight;
-    if (h) document.documentElement.style.setProperty('--preview-thead-top', h + 'px');
+    if (h) document.documentElement.style.setProperty('--preview-thead-top', (52 + h) + 'px');
   });
 }
 

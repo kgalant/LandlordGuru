@@ -306,7 +306,7 @@ textarea { resize: vertical; min-height: 70px; }
 
 #import-preview-header {
   position: sticky;
-  top: 0;
+  top: 52px;
   z-index: 20;
   background: var(--bg);
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
