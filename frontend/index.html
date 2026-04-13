@@ -249,7 +249,7 @@
             </div>
           </div>
           <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="import.reviewNote"></p>
-          <div class="table-wrap">
+          <div class="table-wrap" id="import-table-scroll">
             <table>
               <thead><tr>
                 <th style="width:28px"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll(this)"></th>
@@ -1281,11 +1281,6 @@ function runImportPreview() {
   preview.style.display = 'block';
   preview.scrollIntoView({ behavior: 'smooth' });
 
-  // Set thead sticky offset: nav bar (52px) + card header height
-  requestAnimationFrame(() => {
-    const h = document.getElementById('import-preview-header')?.offsetHeight;
-    if (h) document.documentElement.style.setProperty('--preview-thead-top', (52 + h) + 'px');
-  });
 }
 
 // ── Step navigation ───────────────────────────────────────

@@ -312,9 +312,14 @@ textarea { resize: vertical; min-height: 70px; }
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
-#import-preview-section thead th {
+#import-table-scroll {
+  overflow: auto;
+  max-height: calc(100vh - 220px);
+}
+
+#import-table-scroll thead th {
   position: sticky;
-  top: var(--preview-thead-top, 56px);
+  top: 0;
   z-index: 19;
   background: var(--bg);
   box-shadow: 0 1px 0 var(--border);
