@@ -45,31 +45,46 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 - @docs/data-model.md — property portfolio, rental types, income/expense model
 - @docs/ARCHITECTURE.md — key decisions, auth design, future migration plan
 
-## Resumable Workflow Policy
+# Resumable Workflow Policy
 
-Read AI_STATE.md before starting any work. If it does not exist, create it.
+## On every session start
+1. Read AI_STATE.md — if it doesn't exist, create it
+2. Read the Goal and Current phase
+3. Run the last listed Validation commands and report results
+4. Confirm what you are about to do before starting work
 
-Break all work into milestones small enough to complete in a single session.
-Always keep exactly one item in **Next step** and at most one item in **In progress**.
+## How to work
+Break all work into milestones small enough to complete in one session.
+Keep exactly one item in **Next step** and at most one item in **In progress**.
+Never begin a new milestone until the current one is validated.
 
-After every completed milestone, update AI_STATE.md:
-- Completed
-- In progress
-- Next step
-- Files touched
-- Decisions
-- Validation (commands + pass/fail)
-- Blockers
+## Update AI_STATE.md after every response where you:
+- Complete a milestone
+- Make a decision
+- Touch a file
+- Hit a blocker
+- Are about to stop for any reason
 
-Before stopping for any reason — context limit, interruption, end of task —
-write a final update to AI_STATE.md.
+Do not batch updates. Write to AI_STATE.md immediately after each of the above events.
 
-When resuming:
+## Before stopping — mandatory
+Before your final response in any session, write a closing update to AI_STATE.md:
+- Move completed work into Completed
+- Set In progress to what was interrupted (if anything)
+- Set Next step to the single next action
+- List all files touched this session
+- Record any decisions made
+- Record validation results
+
+## On resume
 1. Read AI_STATE.md
-2. Run `git status` and `git diff`
-3. Re-run the last listed validation commands
-4. Continue only with **Next step**
-5. Update AI_STATE.md again before stopping
+2. Run the listed Validation commands
+3. State what you are resuming and from where
+4. Continue with Next step only
+5. Update AI_STATE.md before stopping again
 
-Never begin a new milestone until the current one is validated and
-AI_STATE.md reflects the current state.
+## Rules
+- Never leave AI_STATE.md stale for more than one response turn
+- Never start a new milestone without updating AI_STATE.md first
+- If context is running low, prioritise writing AI_STATE.md over continuing work
+- One active Next step at all times — never a list, never vague Did you follow the instructions in the Resumable Work Policy?

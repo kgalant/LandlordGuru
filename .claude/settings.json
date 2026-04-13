@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
             "timeout": 10,
             "statusMessage": "Restoring session state"
           }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
             "timeout": 15,
             "statusMessage": "Saving checkpoint"
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
             "timeout": 15,
             "statusMessage": "Final checkpoint"
           }
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
             "timeout": 15,
             "statusMessage": "Post-compaction checkpoint"
           }
