@@ -44,3 +44,32 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 - @docs/SETUP.md — infrastructure details, credentials locations, Google Sheets config
 - @docs/data-model.md — property portfolio, rental types, income/expense model
 - @docs/ARCHITECTURE.md — key decisions, auth design, future migration plan
+
+## Resumable Workflow Policy
+
+Read AI_STATE.md before starting any work. If it does not exist, create it.
+
+Break all work into milestones small enough to complete in a single session.
+Always keep exactly one item in **Next step** and at most one item in **In progress**.
+
+After every completed milestone, update AI_STATE.md:
+- Completed
+- In progress
+- Next step
+- Files touched
+- Decisions
+- Validation (commands + pass/fail)
+- Blockers
+
+Before stopping for any reason — context limit, interruption, end of task —
+write a final update to AI_STATE.md.
+
+When resuming:
+1. Read AI_STATE.md
+2. Run `git status` and `git diff`
+3. Re-run the last listed validation commands
+4. Continue only with **Next step**
+5. Update AI_STATE.md again before stopping
+
+Never begin a new milestone until the current one is validated and
+AI_STATE.md reflects the current state.

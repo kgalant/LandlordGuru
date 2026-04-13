@@ -958,8 +958,9 @@ function onRowSelect(i) {
   State.importRows[i]._selected = checked;
 
   // If "select same description" is on and the row is being checked, auto-select all rows
-  // with exactly the same description
-  if (checked && document.getElementById('select-same-desc-toggle')?.checked) {
+  // with exactly the same description, then reset the toggle ready for next use
+  const sameDescToggle = document.getElementById('select-same-desc-toggle');
+  if (checked && sameDescToggle?.checked) {
     const desc = State.importRows[i].description;
     State.importRows.forEach((row, j) => {
       if (j !== i && row.description === desc) {
@@ -968,6 +969,7 @@ function onRowSelect(i) {
         if (cb) cb.checked = true;
       }
     });
+    sameDescToggle.checked = false;
   }
 
   const all = State.importRows.length > 0 && State.importRows.every(r => r._selected);

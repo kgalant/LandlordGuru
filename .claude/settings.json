@@ -1,0 +1,52 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "timeout": 10,
+            "statusMessage": "Restoring session state"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "timeout": 15,
+            "statusMessage": "Saving checkpoint"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "timeout": 15,
+            "statusMessage": "Final checkpoint"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File .claude/hooks/checkpoint.ps1",
+            "timeout": 15,
+            "statusMessage": "Post-compaction checkpoint"
+          }
+        ]
+      }
+    ]
+  }
+}
