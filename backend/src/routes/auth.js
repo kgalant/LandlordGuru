@@ -41,8 +41,14 @@ passport.use(
             last_modified_at: new Date(),
           });
 
-        console.log('[strategy] Calling done() with user:', { id: user.id, email: user.email });
-        return done(null, { id: user.id, email: user.email, name: user.name, google_id });
+        console.log('[strategy] Calling done() with user:', { id: user.id, email: user.email, primary_workspace_id: user.primary_workspace_id });
+        return done(null, {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          google_id,
+          primary_workspace_id: user.primary_workspace_id
+        });
       } catch (err) {
         console.error('[strategy] Error:', err.message);
         return done(err);
