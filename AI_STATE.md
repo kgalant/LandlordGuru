@@ -38,6 +38,25 @@ v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 - On UPDATE: app code explicitly sets `last_modified_at` and `last_modified_by`
 - Verified in database: psql shows all columns correctly
 
+### v2 Milestone 3 — Google OAuth + JWT authentication ✅
+- passport-google-oauth20, jsonwebtoken, express-session configured
+- Google OAuth callback → JWT issued, stored in httpOnly cookie
+- Frontend login screen + auth.js (token init, refresh, logout)
+- Auto-workspace creation on first login (one default workspace per user)
+- Auth middleware injects req.user + workspace_id from JWT
+- All routes (health, debug) require valid JWT + workspace_id isolation
+
+### Documentation — Data Model ✅
+- Updated docs/data-model.md: reflects v2 PostgreSQL schema from actual migrations
+- Added workspaces, users, workspace_users tables with field-by-field descriptions
+- Updated all data tables (properties, transactions, rules, fx_log, strings) with:
+  - UUID PKs (was string)
+  - workspace_id FK (CASCADE delete)
+  - Audit fields: created_at, created_by, last_modified_at, last_modified_by
+  - Actual decimal types (DECIMAL(12,2) for amounts, DECIMAL(12,6) for rates)
+  - Indexes and constraints (unique on strings(workspace_id, key, lang, user_id), etc.)
+- Added design notes: audit trail logic, amount precision, workspace isolation, client-side storage
+
 ### v2 Architecture decisions
 - **Server:** spare laptop running Linux (dev + prod on same machine)
 - **Database:** PostgreSQL; Knex.js as query builder/migration runner
@@ -56,14 +75,13 @@ v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 -
 
 ## Next step
-Milestone 3: Google OAuth + JWT authentication
-1. Add passport dependencies to backend/package.json
-2. Create backend/src/routes/auth.js — OAuth flow, JWT issuance, workspace auto-create
-3. Create backend/src/middleware/auth.js — JWT verification, req.user injection
-4. Update backend/src/index.js — wire up session + passport + auth routes
-5. Update backend/.env.example — add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, GOOGLE_CALLBACK_URL
-6. Add login screen to frontend (centered, sign-in-with-google button)
-7. Add auth init script to frontend (token storage, expiry check, logout)
+Milestone 4: Properties API (CRUD endpoints, workspace-scoped)
+1. Create backend/src/routes/properties.js with GET /api/properties, POST, PATCH, DELETE endpoints
+2. All routes require auth middleware (JWT + workspace_id injection)
+3. Query builder uses workspace_id filter on all queries
+4. Field validation: name required, currency/country ISO codes, decimal precision for rent/aconto
+5. Test each endpoint manually with curl + JWT token
+6. Verify workspace isolation: users from different workspaces see only their properties
 
 ## Milestone plan (v2)
 ```
@@ -104,12 +122,7 @@ Laptop: `cd ~/dev/landlordguru/backend && npm run migrate:rollback -- --all && n
 Result: ✅ `{"status":"ok"}` returned; psql confirmed all tables exist with UUID PKs and audit fields
 
 ## Files touched this session
-- backend/src/db/migrations/001_auth_tables.js (renamed updated_* to last_modified_*, set defaults)
-- backend/src/db/migrations/002_properties.js (same)
-- backend/src/db/migrations/003_transactions.js (same)
-- backend/src/db/migrations/004_rules.js (same)
-- backend/src/db/migrations/005_fx_log.js (same)
-- backend/src/db/migrations/006_strings.js (same)
+- docs/data-model.md (complete rewrite: reflects v2 PostgreSQL schema, added auth tables, audit fields, indexes, constraints)
 
 ## Automation log
 
@@ -562,3 +575,64 @@ Result: ✅ `{"status":"ok"}` returned; psql confirmed all tables exist with UUI
      M frontend/index.html
     ?? backend/src/middleware/
     ?? backend/src/routes/
+
+- 2026-04-15 16:16:52 [lifecycle]
+  - branch: main
+  - last_commit: fb6c892 Milestone 3: Google OAuth + JWT authentication (v2.1.0)
+
+- 2026-04-15 16:17:56 [lifecycle]
+  - branch: main
+  - last_commit: fb6c892 Milestone 3: Google OAuth + JWT authentication (v2.1.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:20:27 [lifecycle]
+  - branch: main
+  - last_commit: fb6c892 Milestone 3: Google OAuth + JWT authentication (v2.1.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:22:12 [lifecycle]
+  - branch: main
+  - last_commit: fb6c892 Milestone 3: Google OAuth + JWT authentication (v2.1.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:26:13 [lifecycle]
+  - branch: main
+  - last_commit: 7414e1f Add admin scripts for workspace and user management
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:31:57 [lifecycle]
+  - branch: main
+  - last_commit: 045cf54 Make assign-user-to-workspace script interactive
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:34:49 [lifecycle]
+  - branch: main
+  - last_commit: fb2ec17 Auto-create user if email doesn't exist in assign-user-to-workspace script
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:37:20 [lifecycle]
+  - branch: main
+  - last_commit: fb2ec17 Auto-create user if email doesn't exist in assign-user-to-workspace script
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:38:39 [lifecycle]
+  - branch: main
+  - last_commit: fb2ec17 Auto-create user if email doesn't exist in assign-user-to-workspace script
+  - changed_files: AI_STATE.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M docs/data-model.md

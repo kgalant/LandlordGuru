@@ -1,47 +1,111 @@
 # Data Model
 
-This document is the authoritative reference for the transaction taxonomy and all field definitions.
-It serves as the spec for the future database schema.
+This document is the authoritative reference for all database tables, fields, and the transaction taxonomy.
+
+**Current status:** This is the v2 PostgreSQL schema (in production). Defined by Knex.js migrations in `backend/src/db/migrations/`.
 
 ---
 
-## Properties
+## Core (Workspace & Auth)
 
-| Field        | Type    | Description |
-|--------------|---------|-------------|
-| `id`         | string  | Unique identifier, e.g. `apt_1234567890` |
-| `name`       | string  | Short display name, e.g. `VB77 1tv` |
-| `address`    | string  | Full address |
-| `country`    | string  | ISO 3166-1 alpha-2, e.g. `DK`, `PL` |
-| `currency`   | string  | ISO 4217, e.g. `DKK`, `PLN` |
-| `model`      | string  | `longterm` or `airbnb` |
-| `rent`       | number  | Monthly rent in local currency |
-| `aconto`     | number  | Monthly a/c heating & water in local currency |
-| `tenant`     | string  | Tenant name (long-term) |
-| `lease_start`| date    | ISO 8601 date |
-| `notes`      | string  | Free text |
-| `active`     | boolean | Whether the property is currently in use |
+### Workspaces
+
+Multi-tenant isolation: each workspace is a completely isolated portfolio.
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `name`               | varchar   | Workspace display name |
+| `created_at`         | timestamp | Set on creation, default `now()` |
+| `created_by`         | UUID      | FK → users.id; null if auto-created |
+| `last_modified_at`   | timestamp | Updated on any change, default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; null if auto-created |
+
+### Users
+
+Google OAuth identities, one per email address.
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `email`              | varchar   | Unique; used for Google OAuth matching |
+| `name`               | varchar   | Display name (from Google profile) |
+| `google_id`          | varchar   | Unique; Google OAuth subject ID |
+| `avatar_url`         | varchar   | Profile picture URL (from Google) |
+| `primary_workspace_id`| UUID     | FK → workspaces.id; user's default workspace on login; nullable (set NULL if workspace deleted) |
+| `created_at`         | timestamp | Set on first OAuth login |
+| `last_modified_at`   | timestamp | Updated on profile refresh |
+| `last_modified_by`   | UUID      | FK → users.id; self-reference, nullable |
+
+### Workspace_users
+
+Role and permission assignment. Composite primary key: `(workspace_id, user_id)`.
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `workspace_id`       | UUID      | Composite PK; FK → workspaces.id (CASCADE delete) |
+| `user_id`            | UUID      | Composite PK; FK → users.id (CASCADE delete) |
+| `role`               | varchar   | `owner`, `editor`, `viewer`, `member` — default `member` |
+| `permissions`        | jsonb     | Reserved; currently null; future per-user granular permissions |
+| `joined_at`          | timestamp | When user was added to this workspace; default `now()` |
+| `created_by`         | UUID      | FK → users.id; who invited this user; null if auto-created |
+| `last_modified_at`   | timestamp | Updated when role/permissions change; default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; who made the last change; null if auto-created |
 
 ---
 
-## Transactions
+## Data Tables
 
-| Field             | Type    | Description |
-|-------------------|---------|-------------|
-| `id`              | string  | Unique identifier, e.g. `tx_1234567890_ab3f` |
-| `date`            | date    | ISO 8601 date of the transaction |
-| `property_id`     | string  | FK → properties.id |
-| `type`            | string  | Top-level type: `income`, `expense`, `deposit`, `transfer` |
-| `category`        | string  | Subcategory (see taxonomy below) |
-| `amount`          | number  | Absolute value in local currency (always positive) |
-| `currency`        | string  | ISO 4217 |
-| `description`     | string  | Human-readable description (may be edited from bank text) |
-| `raw_description` | string  | Original bank export text, never edited |
-| `source`          | string  | `manual`, `jyske_bank`, `nordea_dk`, `mbank_pl`, `generic_csv` |
-| `import_batch`    | string  | Batch ID grouping all rows from one import run, e.g. `import_1234567890` |
-| `notes`           | string  | Free text annotation; required when category is `other_expense` |
-| `reconciled`      | boolean | Manually marked as verified against a statement |
-| `created_at`      | datetime| ISO 8601 datetime, set at write time |
+### Properties
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed |
+| `name`               | varchar   | Short display name, e.g. `VB77 1tv` |
+| `address`            | text      | Full address |
+| `country`            | varchar(2)| ISO 3166-1 alpha-2, e.g. `DK`, `PL` |
+| `currency`           | varchar(3)| ISO 4217, e.g. `DKK`, `PLN` |
+| `model`              | varchar   | `longterm` or `airbnb` |
+| `rent`               | decimal(12,2) | Monthly rent in local currency |
+| `aconto`             | decimal(12,2) | Monthly a/c heating & water in local currency |
+| `tenant`             | varchar   | Tenant name (long-term) |
+| `lease_start`        | date      | ISO 8601 date |
+| `notes`              | text      | Free text |
+| `active`             | boolean   | Whether the property is currently in use; default `true` |
+| `created_at`         | timestamp | Set on creation; default `now()` |
+| `created_by`         | UUID      | FK → users.id; who created this property; nullable |
+| `last_modified_at`   | timestamp | Updated on any change; default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; who made the last change; nullable |
+
+**Indexes:** `(workspace_id)`
+
+---
+
+### Transactions
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed with date and property_id |
+| `date`               | date      | ISO 8601 date of the transaction |
+| `property_id`        | UUID      | FK → properties.id; nullable (allows transactions without a property) |
+| `type`               | varchar   | Top-level type: `income`, `expense`, `deposit`, `transfer` |
+| `category`           | varchar   | Subcategory (see taxonomy below) |
+| `amount`             | decimal(12,2) | Absolute value in local currency (always positive) |
+| `currency`           | varchar(3)| ISO 4217 |
+| `description`        | text      | Human-readable description (may be edited from bank text) |
+| `raw_description`    | text      | Original bank export text, never edited |
+| `source`             | varchar   | `manual`, `jyske_bank`, `nordea_dk`, `mbank_pl`, `generic_csv` |
+| `import_batch`       | varchar   | Batch ID grouping all rows from one import run; indexed separately |
+| `notes`              | text      | Free text annotation; required when category is `other_expense` |
+| `reconciled`         | boolean   | Manually marked as verified against a statement; default `false` |
+| `created_at`         | timestamp | Set on creation; default `now()` |
+| `created_by`         | UUID      | FK → users.id; who imported/created this transaction; nullable |
+| `last_modified_at`   | timestamp | Updated on any edit; default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; who made the last change; nullable |
+
+**Indexes:** `(workspace_id)`, `(workspace_id, date)`, `(workspace_id, property_id)`, `(import_batch)`
 
 ### Sign convention
 
@@ -93,48 +157,73 @@ encoded in `type` and `category`:
 
 ---
 
-## Rules
+### Rules
 
-Auto-categorisation rules applied at CSV import time.
+Auto-categorisation rules applied at CSV import time. Rules are evaluated in order of `sort_order`; first match wins.
 
-| Field          | Type   | Description |
-|----------------|--------|-------------|
-| `bank_profile` | string | Applies only to this bank profile, or empty for any |
-| `keyword`      | string | Case-insensitive substring match against transaction description |
-| `category`     | string | Category to assign on match |
-| `property_id`  | string | Property to assign on match, or empty if not deterministic |
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed |
+| `bank_profile`       | varchar   | Applies only to this bank profile; null = applies to any profile |
+| `keyword`            | varchar   | Case-insensitive substring match against transaction description |
+| `category`           | varchar   | Category to assign on match (see taxonomy below) |
+| `property_id`        | UUID      | FK → properties.id; nullable if not deterministic |
+| `sort_order`         | integer   | Evaluation order; default `0` (lower = first) |
+| `created_at`         | timestamp | Set on creation; default `now()` |
+| `created_by`         | UUID      | FK → users.id; who created this rule; nullable |
+| `last_modified_at`   | timestamp | Updated on any change; default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; who made the last change; nullable |
 
-Rules are evaluated in order; first match wins.
+**Indexes:** `(workspace_id)`
 
 ---
 
-## Strings
+### Strings
 
 UI string overrides — allows per-language and per-user customisation without code changes.
-Hardcoded English strings in `js/strings.js` are the fallback; rows in this sheet layer on top.
+Hardcoded English strings in `js/strings.js` are the fallback; rows in this table layer on top.
 
-| Field     | Type   | Description |
-|-----------|--------|-------------|
-| `key`     | string | Dot-notation key matching the `STRINGS` object in strings.js, e.g. `nav.properties` |
-| `lang`    | string | ISO 639-1 language code, e.g. `en`, `da` |
-| `user_id` | string | Optional — restricts override to a specific user; empty = applies to all |
-| `value`   | string | The replacement string. Supports `{variable}` interpolation. |
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); part of unique constraint; indexed |
+| `key`                | varchar   | Dot-notation key matching the `STRINGS` object in strings.js, e.g. `nav.properties`; part of unique constraint |
+| `lang`               | varchar   | ISO 639-1 language code, e.g. `en`, `da`; part of unique constraint |
+| `user_id`            | UUID      | Optional FK → users.id; restricts override to a specific user; null = applies to all; part of unique constraint |
+| `value`              | text      | The replacement string. Supports `{variable}` interpolation. |
+| `created_at`         | timestamp | Set on creation; default `now()` |
+| `created_by`         | UUID      | FK → users.id; who created this override; nullable |
+| `last_modified_at`   | timestamp | Updated on any change; default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; who made the last change; nullable |
 
-Resolution order per key: user-specific sheet row → global sheet row → hardcoded default → English fallback → key itself.
+**Unique constraint:** `(workspace_id, key, lang, user_id)`
+
+**Indexes:** `(workspace_id)`
+
+**Resolution order:** workspace-specific, user-specific row → workspace-specific, global row → hardcoded default in frontend → English fallback → key itself
 
 ---
 
-## FX log
+### FX Log
 
-Snapshot of exchange rates for audit purposes. Not used for bookkeeping.
+Snapshot of exchange rates for audit purposes. Not used for bookkeeping — informational only.
 
-| Field           | Type   | Description |
-|-----------------|--------|-------------|
-| `date`          | date   | Date of the rate snapshot |
-| `from_currency` | string | ISO 4217 |
-| `to_currency`   | string | ISO 4217 |
-| `rate`          | number | Units of `from` per 1 unit of `to` |
-| `source`        | string | How the rate was obtained, e.g. `manual`, `ecb` |
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed |
+| `date`               | date      | Date of the rate snapshot |
+| `from_currency`      | varchar(3)| ISO 4217 |
+| `to_currency`        | varchar(3)| ISO 4217 |
+| `rate`               | decimal(12,6) | Units of `from` per 1 unit of `to` |
+| `source`             | varchar   | How the rate was obtained, e.g. `manual`, `ecb`, `alphavantage` |
+| `created_at`         | timestamp | Set on creation; default `now()` |
+| `created_by`         | UUID      | FK → users.id; who recorded this rate; nullable |
+| `last_modified_at`   | timestamp | Updated if corrected; default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; who made the last change; nullable |
+
+**Indexes:** `(workspace_id)`
 
 ---
 
@@ -189,13 +278,34 @@ They are never persisted to the sheet — they are per-browser/device. Structure
 
 ---
 
-## Future database schema notes
+## Notes on design decisions
 
-When migrating to PostgreSQL:
-- `properties` and `transactions` map cleanly to tables of the same name
-- `type` and `category` on transactions should be `VARCHAR` with CHECK constraints, not enums, to allow adding categories without a migration
-- `amount` should be `NUMERIC(12,2)` — never `FLOAT` for currency
-- `import_batch` warrants its own table in v2 to store metadata (import date, file name, row count, who imported)
-- `rules` could stay as a config table or move to application code once the category set stabilises
-- `strings` maps to a table with a composite unique index on `(key, lang, user_id)`
-- Column mappings can remain in localStorage in v2 (they are a UI concern, not a data concern)
+### Audit fields
+
+All tables carry `created_at`, `created_by`, `last_modified_at`, `last_modified_by`. These are automatically set/updated:
+- On INSERT: `created_at` and `last_modified_at` default to `now()`; backend code must set `created_by` and `last_modified_by` to the authenticated user ID
+- On UPDATE: backend code explicitly updates `last_modified_at` and `last_modified_by`; other fields never auto-update
+
+This allows a complete audit trail: who made each change, and when.
+
+### Amount precision
+
+`amount` and `rate` use `DECIMAL` (base-10), never `FLOAT`:
+- `DECIMAL(12,2)` for currency amounts (12 digits total, 2 after decimal point; up to 10 digits of currency)
+- `DECIMAL(12,6)` for exchange rates (supports rates up to 999999.999999)
+
+### Workspace isolation
+
+All data tables carry `workspace_id`. Auth middleware injects this from the JWT, so cross-workspace access is structurally impossible at the query level — no need for runtime checks.
+
+When a workspace is deleted, all its data cascades (properties, transactions, rules, fx_log, strings, workspace_users entries).
+
+When a user is deleted, their FK references (`created_by`, `last_modified_by`) set to NULL, preserving the audit trail.
+
+### Client-side storage (unchanged from v1)
+
+These remain in browser `localStorage` and are never persisted to the database:
+- Column mappings: `lg_col_mappings_v1` (CSV import preferences)
+- Description mappings: `lg_desc_mappings_v1` (manually captured category hints)
+
+They are per-browser/device and sync'ed via the UI, not stored on the server yet.
