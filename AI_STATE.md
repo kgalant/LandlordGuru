@@ -5,7 +5,7 @@ Build v2: real backend (Node/Express/PostgreSQL) + user auth + workspace multi-t
 Frontend served by Express (no NAS dependency). Google Sheets retired when backend is stable.
 
 ## Current phase
-v2 backend development — Milestone 2 (schema migrations) next.
+v2 backend development — Milestone 2 (schema migrations) files written, pending test on laptop.
 
 ## Completed
 ### Bug fixes (v1.3.x)
@@ -21,6 +21,14 @@ v2 backend development — Milestone 2 (schema migrations) next.
 - `/api/health` endpoint working
 - Frontend loads and displays correctly at http://localhost:3000
 - All files committed to GitHub, laptop clone working
+
+### v2 Milestone 2 — Schema & Migrations ✅ (files written, pending test on laptop)
+- 6 Knex migration files: 001_auth_tables through 006_strings
+- All 8 tables: workspaces, users, workspace_users, properties, transactions, rules, fx_log, strings
+- All data tables carry workspace_id for isolation
+- Auto-migration on startup: db.migrate.latest() runs before app.listen()
+- knexfile.js for Knex CLI
+- Idempotent migrations: safe for dev, prod, fresh databases
 
 ### v2 Architecture decisions
 - **Server:** spare laptop running Linux (dev + prod on same machine)
@@ -40,7 +48,7 @@ v2 backend development — Milestone 2 (schema migrations) next.
 -
 
 ## Next step
-Milestone 2 — database schema and migrations (all 8 tables with workspace_id isolation).
+On the laptop: git pull, cd backend, npm install knex (if not already), then node src/index.js to verify migrations run and tables create. Then commit and move to Milestone 3 (auth).
 
 ## Milestone plan (v2)
 ```
@@ -323,3 +331,7 @@ Begin Milestone 2: write all 8 database migrations (workspaces, users, workspace
   - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
+
+- 2026-04-15 14:54:38 [lifecycle]
+  - branch: main
+  - last_commit: 37d48bd Update AI_STATE: Milestone 1 complete and verified
