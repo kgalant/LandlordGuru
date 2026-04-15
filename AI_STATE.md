@@ -118,8 +118,11 @@ Auth middleware injects `workspace_id` from JWT — cross-workspace access struc
 -
 
 ## Validation (last run)
-Laptop: `cd ~/dev/landlordguru/backend && npm run migrate:rollback -- --all && npm run migrate && (pkill -f "node src/index.js" || true) && sleep 1 && npm start & sleep 5 && curl http://localhost:3000/api/health`
-Result: ✅ `{"status":"ok"}` returned; psql confirmed all tables exist with UUID PKs and audit fields
+Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
+- All 8 tables documented with correct field types, constraints, indexes
+- Audit field logic documented: created_at/created_by default on INSERT, last_modified_at/by set on UPDATE
+- Workspace isolation enforced via (workspace_id) on all data tables
+- Amount precision: DECIMAL(12,2) for currency, DECIMAL(12,6) for rates
 
 ## Files touched this session
 - docs/data-model.md (complete rewrite: reflects v2 PostgreSQL schema, added auth tables, audit fields, indexes, constraints)
