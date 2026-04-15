@@ -75,11 +75,26 @@ const roles = {
       process.exit(0);
     }
 
-    // Find user by email
-    const user = await db('users').where('email', email).first();
+    // Find user by email, or create if doesn't exist
+    let user = await db('users').where('email', email).first();
     if (!user) {
-      console.error(`\nError: User with email "${email}" not found`);
-      process.exit(1);
+      console.log(`\nUser with email "${email}" not found. Creating new user...`);
+      const name = await question('User name: ');
+      if (!name.trim()) {
+        console.error('Error: User name is required');
+        process.exit(1);
+      }
+
+      const [created] = await db('users')
+        .insert({
+          email: email,
+          name: name.trim(),
+          created_at: new Date(),
+          last_modified_at: new Date(),
+        })
+        .returning('*');
+      user = created;
+      console.log(`✓ User created with ID: ${user.id}`);
     }
 
     // Check if workspace exists
