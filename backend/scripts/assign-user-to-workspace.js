@@ -17,8 +17,9 @@ const question = (prompt) => {
 
 const roles = {
   1: 'owner',
-  2: 'admin',
-  3: 'member',
+  2: 'editor',
+  3: 'viewer',
+  4: 'member',
 };
 
 (async () => {
@@ -49,9 +50,10 @@ const roles = {
     if (!role) {
       console.log('\nSelect role:');
       console.log('  1) owner');
-      console.log('  2) admin');
-      console.log('  3) member');
-      const roleChoice = await question('\nRole (1-3): ');
+      console.log('  2) editor');
+      console.log('  3) viewer');
+      console.log('  4) member');
+      const roleChoice = await question('\nRole (1-4): ');
       role = roles[roleChoice];
       if (!role) {
         console.error('Error: Invalid role choice');
@@ -91,6 +93,7 @@ const roles = {
           name: name.trim(),
           created_at: new Date(),
           last_modified_at: new Date(),
+          last_modified_by: null,
         })
         .returning('*');
       user = created;
@@ -120,8 +123,9 @@ const roles = {
       user_id: user.id,
       role: role,
       joined_at: new Date(),
-      created_at: new Date(),
       last_modified_at: new Date(),
+      created_by: null,
+      last_modified_by: null,
     });
 
     // Update user's primary workspace if not set
