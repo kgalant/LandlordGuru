@@ -335,3 +335,21 @@ Begin Milestone 2: write all 8 database migrations (workspaces, users, workspace
 - 2026-04-15 14:54:38 [lifecycle]
   - branch: main
   - last_commit: 37d48bd Update AI_STATE: Milestone 1 complete and verified
+
+- 2026-04-15 14:57:32 [lifecycle]
+  - branch: main
+  - last_commit: 03c4c0e Milestone 2: database schema and migrations ΓÇö 8 tables with workspace_id isolation (v2.0.0)
+
+- 2026-04-15 14:58:53 [lifecycle]
+  - branch: main
+  - last_commit: 03c4c0e Milestone 2: database schema and migrations ΓÇö 8 tables with workspace_id isolation (v2.0.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:01:45 [lifecycle]
+  - branch: main
+  - last_commit: 03c4c0e Milestone 2: database schema and migrations ΓÇö 8 tables with workspace_id isolation (v2.0.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
