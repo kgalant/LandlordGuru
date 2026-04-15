@@ -4,8 +4,8 @@ exports.up = async (knex) => {
     table.varchar('name', 255).notNullable();
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
     table.uuid('created_by');
-    table.timestamp('updated_at');
-    table.uuid('updated_by');
+    table.timestamp('last_modified_at').notNullable().defaultTo(knex.fn.now());
+    table.uuid('last_modified_by');
   });
 
   await knex.schema.createTable('users', (table) => {
@@ -15,19 +15,19 @@ exports.up = async (knex) => {
     table.varchar('google_id', 255).unique();
     table.varchar('avatar_url', 500);
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamp('updated_at');
-    table.uuid('updated_by');
+    table.timestamp('last_modified_at').notNullable().defaultTo(knex.fn.now());
+    table.uuid('last_modified_by');
   });
 
   // created_by/updated_by on workspaces now reference users
   await knex.schema.table('workspaces', (table) => {
     table.foreign('created_by').references('id').inTable('users').onDelete('SET NULL');
-    table.foreign('updated_by').references('id').inTable('users').onDelete('SET NULL');
+    table.foreign('last_modified_by').references('id').inTable('users').onDelete('SET NULL');
   });
 
-  // updated_by on users self-references users
+  // last_modified_by on users self-references users
   await knex.schema.table('users', (table) => {
-    table.foreign('updated_by').references('id').inTable('users').onDelete('SET NULL');
+    table.foreign('last_modified_by').references('id').inTable('users').onDelete('SET NULL');
   });
 
   await knex.schema.createTable('workspace_users', (table) => {
@@ -37,8 +37,8 @@ exports.up = async (knex) => {
     table.jsonb('permissions');
     table.timestamp('joined_at').notNullable().defaultTo(knex.fn.now());
     table.uuid('created_by').references('id').inTable('users').onDelete('SET NULL');
-    table.timestamp('updated_at');
-    table.uuid('updated_by').references('id').inTable('users').onDelete('SET NULL');
+    table.timestamp('last_modified_at').notNullable().defaultTo(knex.fn.now());
+    table.uuid('last_modified_by').references('id').inTable('users').onDelete('SET NULL');
     table.primary(['workspace_id', 'user_id']);
   });
 };
