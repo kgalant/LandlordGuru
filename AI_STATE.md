@@ -57,6 +57,19 @@ v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
   - Indexes and constraints (unique on strings(workspace_id, key, lang, user_id), etc.)
 - Added design notes: audit trail logic, amount precision, workspace isolation, client-side storage
 
+### Documentation — Architecture & Backend Setup ✅
+- Updated docs/ARCHITECTURE.md:
+  - Reorganized v2 section (was "Intended future", now "Current state" with accurate file tree)
+  - Updated migration path table with completion status (M1-3 done, M4 in progress)
+  - Expanded key decisions: deployment model, audit trail, multi-tenancy, env vars, admin scripts
+- Created docs/BACKEND-SETUP.md (new):
+  - 8-step setup guide (prerequisites through production deployment)
+  - Google OAuth walkthrough (Google Cloud Console setup)
+  - PostgreSQL + Knex.js migration instructions
+  - Running dev server and testing endpoints
+  - Production deployment (PM2, reverse proxy, GitHub webhooks)
+  - Comprehensive troubleshooting section (13 common issues)
+
 ### v2 Architecture decisions
 - **Server:** spare laptop running Linux (dev + prod on same machine)
 - **Database:** PostgreSQL; Knex.js as query builder/migration runner
@@ -72,7 +85,7 @@ v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 - **NAS:** retired from this app once backend is live
 
 ## In progress
--
+Fix OAuth flow: find existing users by email instead of creating new ones
 
 ## Next step
 Milestone 4: Properties API (CRUD endpoints, workspace-scoped)
@@ -126,6 +139,8 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
 
 ## Files touched this session
 - docs/data-model.md (complete rewrite: reflects v2 PostgreSQL schema, added auth tables, audit fields, indexes, constraints)
+- docs/ARCHITECTURE.md (reorganized to show v2 current state, Milestones 1-3 done, M4 in progress)
+- docs/BACKEND-SETUP.md (new: 8-step guide for v2 backend dev/deployment, OAuth setup, troubleshooting)
 
 ## Automation log
 
@@ -639,3 +654,112 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
   - git_status:
      M AI_STATE.md
      M docs/data-model.md
+
+- 2026-04-15 16:41:19 [lifecycle]
+  - branch: main
+  - last_commit: 9d46e3d Update AI_STATE: documentation task complete
+
+- 2026-04-15 16:41:52 [lifecycle]
+  - branch: main
+  - last_commit: 9d46e3d Update AI_STATE: documentation task complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:44:02 [lifecycle]
+  - branch: main
+  - last_commit: e0f8e71 Update ARCHITECTURE.md and create BACKEND-SETUP.md
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:46:49 [lifecycle]
+  - branch: main
+  - last_commit: e0f8e71 Update ARCHITECTURE.md and create BACKEND-SETUP.md
+  - changed_files: AI_STATE.md, backend/scripts/assign-user-to-workspace.js
+  - git_status:
+     M AI_STATE.md
+     M backend/scripts/assign-user-to-workspace.js
+
+- 2026-04-15 16:50:37 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:54:54 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:56:30 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/007_add_users_created_by_and_verify_primary_workspace.js
+
+- 2026-04-15 16:58:50 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/007_add_users_created_by_and_verify_primary_workspace.js
+
+- 2026-04-15 16:59:10 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/007_add_users_created_by_and_verify_primary_workspace.js
+
+- 2026-04-15 16:59:23 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/007_add_users_created_by_and_verify_primary_workspace.js
+
+- 2026-04-15 16:59:43 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/007_add_users_created_by_and_verify_primary_workspace.js
+
+- 2026-04-15 17:00:47 [lifecycle]
+  - branch: main
+  - last_commit: c4b425d Fix assign-user-to-workspace script to match current database schema
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/007_add_users_created_by_and_verify_primary_workspace.js
+
+- 2026-04-15 17:01:28 [lifecycle]
+  - branch: main
+  - last_commit: c75f037 Add migration to add created_by field and verify primary_workspace_id in users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:03:13 [lifecycle]
+  - branch: main
+  - last_commit: c75f037 Add migration to add created_by field and verify primary_workspace_id in users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:21:23 [lifecycle]
+  - branch: main
+  - last_commit: c75f037 Add migration to add created_by field and verify primary_workspace_id in users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md

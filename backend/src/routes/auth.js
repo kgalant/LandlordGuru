@@ -19,31 +19,26 @@ passport.use(
         const { id: google_id, displayName: name, emails } = profile;
         const email = emails[0].value;
 
-        // Upsert user by google_id
-        const [user] = await db('users')
-          .where('google_id', google_id)
-          .select('*');
+        // Find existing user by email
+        const user = await db('users')
+          .where('email', email)
+          .first();
 
-        let userId;
-        if (user) {
-          userId = user.id;
-        } else {
-          // New user — create with null primary_workspace_id
-          // Admin will assign workspace later
-          const [inserted] = await db('users')
-            .insert({
-              google_id,
-              email,
-              name,
-              primary_workspace_id: null,
-              created_at: new Date(),
-              last_modified_at: new Date(),
-            })
-            .returning('id');
-          userId = inserted.id;
+        if (!user) {
+          // User does not exist — fail auth with user message
+          return done(new Error(`User ${email} not found. Contact admin to set up your account.`));
         }
 
-        return done(null, { id: userId, email, name, google_id });
+        // Update google_id and last_modified_at if they changed
+        await db('users')
+          .where('id', user.id)
+          .update({
+            google_id,
+            name, // Update display name from Google profile
+            last_modified_at: new Date(),
+          });
+
+        return done(null, { id: user.id, email: user.email, name: user.name, google_id });
       } catch (err) {
         return done(err);
       }
@@ -108,7 +103,9 @@ router.get(
       res.redirect(`/?token=${token}`);
     } catch (err) {
       console.error('OAuth callback error:', err);
-      res.redirect('/?auth_error=server_error');
+      // Pass the error message to the frontend if available
+      const errorMsg = encodeURIComponent(err.message || 'Authentication failed');
+      res.redirect(`/?auth_error=${errorMsg}`);
     }
   }
 );
