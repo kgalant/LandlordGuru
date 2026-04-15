@@ -1,31 +1,91 @@
 #!/usr/bin/env node
 
 require('dotenv').config();
+const readline = require('readline');
 const db = require('../src/db/knex');
 
-const workspaceId = process.argv[2];
-const email = process.argv[3];
-const role = process.argv[4] || 'member';
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
-if (!workspaceId || !email) {
-  console.error('Usage: node scripts/assign-user-to-workspace.js <workspace-id> <email> [role]');
-  console.error('  role defaults to "member", can also be "owner" or "admin"');
-  process.exit(1);
-}
+const question = (prompt) => {
+  return new Promise((resolve) => {
+    rl.question(prompt, resolve);
+  });
+};
+
+const roles = {
+  1: 'owner',
+  2: 'admin',
+  3: 'member',
+};
 
 (async () => {
   try {
+    let workspaceId = process.argv[2];
+    let email = process.argv[3];
+    let role = process.argv[4];
+
+    // Prompt for workspace ID if not provided
+    if (!workspaceId) {
+      workspaceId = await question('Workspace ID: ');
+      if (!workspaceId.trim()) {
+        console.error('Error: Workspace ID is required');
+        process.exit(1);
+      }
+    }
+
+    // Prompt for email if not provided
+    if (!email) {
+      email = await question('User email: ');
+      if (!email.trim()) {
+        console.error('Error: Email is required');
+        process.exit(1);
+      }
+    }
+
+    // Prompt for role if not provided
+    if (!role) {
+      console.log('\nSelect role:');
+      console.log('  1) owner');
+      console.log('  2) admin');
+      console.log('  3) member');
+      const roleChoice = await question('\nRole (1-3): ');
+      role = roles[roleChoice];
+      if (!role) {
+        console.error('Error: Invalid role choice');
+        process.exit(1);
+      }
+    }
+
+    // Validate inputs
+    workspaceId = workspaceId.trim();
+    email = email.trim().toLowerCase();
+
+    // Confirm before executing
+    console.log('\n--- Confirmation ---');
+    console.log(`Workspace ID: ${workspaceId}`);
+    console.log(`Email:        ${email}`);
+    console.log(`Role:         ${role}`);
+    const confirm = await question('\nProceed? (y/n): ');
+
+    if (confirm.toLowerCase() !== 'y') {
+      console.log('Cancelled.');
+      process.exit(0);
+    }
+
     // Find user by email
     const user = await db('users').where('email', email).first();
     if (!user) {
-      console.error(`Error: User with email "${email}" not found`);
+      console.error(`\nError: User with email "${email}" not found`);
       process.exit(1);
     }
 
     // Check if workspace exists
     const workspace = await db('workspaces').where('id', workspaceId).first();
     if (!workspace) {
-      console.error(`Error: Workspace with ID "${workspaceId}" not found`);
+      console.error(`\nError: Workspace with ID "${workspaceId}" not found`);
       process.exit(1);
     }
 
@@ -35,7 +95,7 @@ if (!workspaceId || !email) {
       .first();
 
     if (existing) {
-      console.error(`Error: User is already assigned to this workspace with role "${existing.role}"`);
+      console.error(`\nError: User is already assigned to this workspace with role "${existing.role}"`);
       process.exit(1);
     }
 
@@ -57,14 +117,16 @@ if (!workspaceId || !email) {
           primary_workspace_id: workspaceId,
           last_modified_at: new Date(),
         });
-      console.log(`✓ User assigned to workspace with role "${role}" and set as primary workspace`);
+      console.log(`\n✓ User assigned to workspace with role "${role}" and set as primary workspace`);
     } else {
-      console.log(`✓ User assigned to workspace with role "${role}"`);
+      console.log(`\n✓ User assigned to workspace with role "${role}"`);
     }
 
     process.exit(0);
   } catch (err) {
-    console.error('Error assigning user:', err.message);
+    console.error('Error:', err.message);
     process.exit(1);
+  } finally {
+    rl.close();
   }
 })();
