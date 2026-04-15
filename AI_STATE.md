@@ -5,7 +5,7 @@ Build v2: real backend (Node/Express/PostgreSQL) + user auth + workspace multi-t
 Frontend served by Express (no NAS dependency). Google Sheets retired when backend is stable.
 
 ## Current phase
-Planning complete — waiting for laptop setup before starting Milestone 1.
+v2 backend development — Milestone 2 (schema migrations) next.
 
 ## Completed
 ### Bug fixes (v1.3.x)
@@ -14,6 +14,13 @@ Planning complete — waiting for laptop setup before starting Milestone 1.
 - Fixed `select-same-desc-toggle` not resetting after firing
 - Fixed `thead` not sticking: contained scroll area (`#import-table-scroll`)
 - Fixed `#import-static-header` (Review — ready to import) scrolling offscreen (1.3.1 → 1.3.2)
+
+### v2 Milestone 1 — Backend skeleton ✅
+- Express app serving static frontend from backend/src/index.js
+- Knex.js connected to PostgreSQL (with .pgpass for local dev)
+- `/api/health` endpoint working
+- Frontend loads and displays correctly at http://localhost:3000
+- All files committed to GitHub, laptop clone working
 
 ### v2 Architecture decisions
 - **Server:** spare laptop running Linux (dev + prod on same machine)
@@ -30,10 +37,10 @@ Planning complete — waiting for laptop setup before starting Milestone 1.
 - **NAS:** retired from this app once backend is live
 
 ## In progress
-- Milestone 1 — backend skeleton (files written, pending npm install + verification on laptop)
+-
 
 ## Next step
-On the laptop: cd backend && npm install, copy .env.example to .env, set DATABASE_URL, run node src/index.js, verify /api/health and static serving.
+Milestone 2 — database schema and migrations (all 8 tables with workspace_id isolation).
 
 ## Milestone plan (v2)
 ```
@@ -67,11 +74,11 @@ New tables: `workspaces`, `users`, `workspace_users` (role + permissions JSON, n
 Auth middleware injects `workspace_id` from JWT — cross-workspace access structurally impossible.
 
 ## Blockers
-- Laptop not yet set up with Linux
+-
 
 ## Resume prompt
-Read this file. Laptop should now have Linux, Node.js, PostgreSQL, and PM2 installed.
-Confirm those are in place, then begin Milestone 1: backend skeleton.
+Read this file. Milestone 1 is complete and verified on laptop.
+Begin Milestone 2: write all 8 database migrations (workspaces, users, workspace_users, properties, transactions, rules, fx_log, strings).
 
 ## Automation log
 
@@ -277,3 +284,42 @@ Confirm those are in place, then begin Milestone 1: backend skeleton.
     ?? backend/.env.example
     ?? backend/package.json
     ?? backend/src/
+
+- 2026-04-15 14:39:32 [lifecycle]
+  - branch: main
+  - last_commit: 989064a Milestone 1: backend skeleton ΓÇö Express + Knex + static frontend serving (v2.0.0)
+
+- 2026-04-15 14:45:02 [lifecycle]
+  - branch: main
+  - last_commit: 989064a Milestone 1: backend skeleton ΓÇö Express + Knex + static frontend serving (v2.0.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 14:47:27 [lifecycle]
+  - branch: main
+  - last_commit: 989064a Milestone 1: backend skeleton ΓÇö Express + Knex + static frontend serving (v2.0.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 14:49:17 [lifecycle]
+  - branch: main
+  - last_commit: 989064a Milestone 1: backend skeleton ΓÇö Express + Knex + static frontend serving (v2.0.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 14:49:50 [lifecycle]
+  - branch: main
+  - last_commit: 989064a Milestone 1: backend skeleton ΓÇö Express + Knex + static frontend serving (v2.0.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 14:50:53 [lifecycle]
+  - branch: main
+  - last_commit: 989064a Milestone 1: backend skeleton ΓÇö Express + Knex + static frontend serving (v2.0.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
