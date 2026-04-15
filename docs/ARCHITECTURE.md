@@ -73,10 +73,46 @@ PostgreSQL
 
 | Phase | Description |
 |-------|-------------|
-| 1 (now) | Static frontend + Google Sheets. Deployed on Synology NAS. |
-| 2 | Add backend/ with Node + Express. Define schema in migrations/. Import Google Sheet data. |
+| 1 (done) | Static frontend + Google Sheets. Deployed on Synology NAS. |
+| 2 (active) | Add backend/ with Node + Express + PostgreSQL. Express serves frontend static files. |
 | 3 | Replace sheets.js + data.js with api-client.js pointing to backend. |
-| 4 | Add authentication (JWT or session). Remove credential from frontend entirely. |
-| 5 | Optional: containerise with Docker, deploy to VPS or cloud. |
+| 4 | Add authentication (Google OAuth → JWT). Remove Google Sheets credential from frontend. |
+| 5 | Optional: move to managed hosting / separate domain (www.landlordguru.com). |
 
-Phase 2 is the natural next step once the data model has stabilised through real use.
+---
+
+## v2 backend (in progress)
+
+```
+Browser
+  ↕  HTTPS (landlordguru.galant.info)
+Linux server
+  └── Express (backend/src/index.js)
+        ├── express.static → frontend/     serves the full browser app
+        └── /api/*                         REST API routes
+              ↕  Knex.js
+        PostgreSQL
+              ├── workspaces
+              ├── users
+              ├── workspace_users
+              ├── properties         (+ workspace_id)
+              ├── transactions       (+ workspace_id)
+              ├── rules              (+ workspace_id)
+              ├── fx_log             (+ workspace_id)
+              └── strings            (+ workspace_id)
+```
+
+**Key decisions:**
+- Express serves the static frontend from the same process — no NAS, no CORS, one domain
+- Knex.js for all DB access: query builder, dialect-portable (PostgreSQL today, swappable later)
+- Migrations live in `backend/src/db/migrations/` — run with `npm run migrate`
+- All data tables carry `workspace_id`; auth middleware injects it from the JWT so
+  cross-workspace access is structurally impossible at the query level
+- No Docker required — deployment is `git pull && npm install && pm2 reload`
+- `config.js` is retired once Milestone 7 (cut-over) completes
+
+**Environment variables** (see `backend/.env.example`):
+- `PORT` — Express listen port (default 3000)
+- `FRONTEND_URL` — allowed CORS origin
+- `DATABASE_URL` — PostgreSQL connection string
+- `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — added in Milestone 3
