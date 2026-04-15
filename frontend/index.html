@@ -7,6 +7,18 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<!-- Login screen — shown when not authenticated -->
+<div id="login-screen" style="display:none">
+  <div class="login-card">
+    <h1>LandlordGuru</h1>
+    <p>Sign in with your Google account</p>
+    <a href="/auth/google" class="btn btn-primary" style="display:inline-block;padding:0.75rem 1.5rem;margin-top:1rem">
+      Sign in with Google
+    </a>
+  </div>
+</div>
+
 <div id="app">
 
   <header>
@@ -22,6 +34,7 @@
     <div class="header-right">
       <span id="sync-status">Loading…</span>
       <button class="btn btn-sm btn-secondary" onclick="refreshAll()" data-i18n="common.refresh"></button>
+      <button class="btn btn-sm btn-secondary" onclick="logout()" id="logout-btn" style="display:none">Sign out</button>
     </div>
   </header>
 
@@ -559,6 +572,108 @@
 <!-- Scripts — order matters -->
 <script src="js/strings.js"></script>
 <script src="config.js"></script>
+<script>
+// ============================================================
+//  AUTH — JWT token initialization and check
+// ============================================================
+
+const AUTH_STORAGE_KEY = 'landlordguru_token';
+
+// Decode JWT payload (without verification — done server-side)
+function decodeToken(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    return payload;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Check if token is expired
+function isTokenExpired(token) {
+  const payload = decodeToken(token);
+  if (!payload || !payload.exp) return true;
+  return Date.now() >= payload.exp * 1000;
+}
+
+// Get token from localStorage or query params
+function getValidToken() {
+  // Check query params for token from OAuth callback
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('token')) {
+    const token = params.get('token');
+    if (!isTokenExpired(token)) {
+      localStorage.setItem(AUTH_STORAGE_KEY, token);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return token;
+    }
+  }
+
+  // Check localStorage
+  const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+  if (stored && !isTokenExpired(stored)) {
+    return stored;
+  }
+
+  return null;
+}
+
+// Check auth error from query params
+function checkAuthError() {
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('auth_error');
+  if (error) {
+    const errorMessages = {
+      'oauth_failed': 'Google sign-in failed. Please try again.',
+      'no_workspace_assigned': 'Your account has not been assigned to a workspace. Please contact your administrator.',
+      'no_workspace_access': 'You do not have access to any workspace. Please contact your administrator.',
+      'server_error': 'An error occurred during sign-in. Please try again.',
+    };
+    alert(errorMessages[error] || 'An authentication error occurred.');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// Initialize auth state
+function initAuth() {
+  checkAuthError();
+  const token = getValidToken();
+
+  if (token) {
+    // Authenticated — show app, hide login
+    document.getElementById('app').style.display = '';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('logout-btn').style.display = '';
+    window.AUTH_TOKEN = token;
+  } else {
+    // Not authenticated — hide app, show login
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('logout-btn').style.display = 'none';
+    window.AUTH_TOKEN = null;
+  }
+}
+
+// Logout function
+async function logout() {
+  try {
+    const response = await fetch('/auth/logout');
+    if (response.ok) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.AUTH_TOKEN = null;
+      window.location.reload();
+    }
+  } catch (e) {
+    console.error('Logout failed:', e);
+  }
+}
+
+// Run on page load
+initAuth();
+</script>
 <script src="js/sheets.js"></script>
 <script src="js/data.js"></script>
 <script src="js/importer.js"></script>

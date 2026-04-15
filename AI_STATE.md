@@ -5,7 +5,7 @@ Build v2: real backend (Node/Express/PostgreSQL) + user auth + workspace multi-t
 Frontend served by Express (no NAS dependency). Google Sheets retired when backend is stable.
 
 ## Current phase
-v2 backend development — Milestone 2 (schema migrations) files written, pending test on laptop.
+v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 
 ## Completed
 ### Bug fixes (v1.3.x)
@@ -22,13 +22,21 @@ v2 backend development — Milestone 2 (schema migrations) files written, pendin
 - Frontend loads and displays correctly at http://localhost:3000
 - All files committed to GitHub, laptop clone working
 
-### v2 Milestone 2 — Schema & Migrations ✅ (files written, pending test on laptop)
+### v2 Milestone 2 — Schema & Migrations ✅
 - 6 Knex migration files: 001_auth_tables through 006_strings
 - All 8 tables: workspaces, users, workspace_users, properties, transactions, rules, fx_log, strings
 - All data tables carry workspace_id for isolation
 - Auto-migration on startup: db.migrate.latest() runs before app.listen()
 - knexfile.js for Knex CLI
 - Idempotent migrations: safe for dev, prod, fresh databases
+- Tested on laptop: migration rollback + re-run successful
+
+### Pre-M3 — Audit Fields ✅
+- Updated all 6 migrations: renamed `updated_at`/`updated_by` → `last_modified_at`/`last_modified_by`
+- All timestamps now have DEFAULT now() — data always stamped on creation
+- On INSERT: app code must set both `created_by` and `last_modified_by` to authenticated user
+- On UPDATE: app code explicitly sets `last_modified_at` and `last_modified_by`
+- Verified in database: psql shows all columns correctly
 
 ### v2 Architecture decisions
 - **Server:** spare laptop running Linux (dev + prod on same machine)
@@ -48,7 +56,14 @@ v2 backend development — Milestone 2 (schema migrations) files written, pendin
 -
 
 ## Next step
-On the laptop: git pull, cd backend, npm install knex (if not already), then node src/index.js to verify migrations run and tables create. Then commit and move to Milestone 3 (auth).
+Milestone 3: Google OAuth + JWT authentication
+1. Add passport dependencies to backend/package.json
+2. Create backend/src/routes/auth.js — OAuth flow, JWT issuance, workspace auto-create
+3. Create backend/src/middleware/auth.js — JWT verification, req.user injection
+4. Update backend/src/index.js — wire up session + passport + auth routes
+5. Update backend/.env.example — add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, GOOGLE_CALLBACK_URL
+6. Add login screen to frontend (centered, sign-in-with-google button)
+7. Add auth init script to frontend (token storage, expiry check, logout)
 
 ## Milestone plan (v2)
 ```
@@ -84,9 +99,17 @@ Auth middleware injects `workspace_id` from JWT — cross-workspace access struc
 ## Blockers
 -
 
-## Resume prompt
-Read this file. Milestone 1 is complete and verified on laptop.
-Begin Milestone 2: write all 8 database migrations (workspaces, users, workspace_users, properties, transactions, rules, fx_log, strings).
+## Validation (last run)
+Laptop: `cd ~/dev/landlordguru/backend && npm run migrate:rollback -- --all && npm run migrate && (pkill -f "node src/index.js" || true) && sleep 1 && npm start & sleep 5 && curl http://localhost:3000/api/health`
+Result: ✅ `{"status":"ok"}` returned; psql confirmed all tables exist with UUID PKs and audit fields
+
+## Files touched this session
+- backend/src/db/migrations/001_auth_tables.js (renamed updated_* to last_modified_*, set defaults)
+- backend/src/db/migrations/002_properties.js (same)
+- backend/src/db/migrations/003_transactions.js (same)
+- backend/src/db/migrations/004_rules.js (same)
+- backend/src/db/migrations/005_fx_log.js (same)
+- backend/src/db/migrations/006_strings.js (same)
 
 ## Automation log
 
@@ -353,3 +376,189 @@ Begin Milestone 2: write all 8 database migrations (workspaces, users, workspace
   - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
+
+- 2026-04-15 15:08:22 [lifecycle]
+  - branch: main
+  - last_commit: 7ae11c8 Milestone 2 verified on laptop: all 8 tables created
+
+- 2026-04-15 15:15:32 [lifecycle]
+  - branch: main
+  - last_commit: 9261b10 Pre-M3: add UUID PKs and audit fields (created_at, created_by, updated_at, updated_by) to all tables
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:15:55 [lifecycle]
+  - branch: main
+  - last_commit: 9261b10 Pre-M3: add UUID PKs and audit fields (created_at, created_by, updated_at, updated_by) to all tables
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:16:32 [lifecycle]
+  - branch: main
+  - last_commit: 9261b10 Pre-M3: add UUID PKs and audit fields (created_at, created_by, updated_at, updated_by) to all tables
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:16:33 [lifecycle]
+  - branch: main
+  - last_commit: 9261b10 Pre-M3: add UUID PKs and audit fields (created_at, created_by, updated_at, updated_by) to all tables
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:17:31 [lifecycle]
+  - branch: main
+  - last_commit: 9261b10 Pre-M3: add UUID PKs and audit fields (created_at, created_by, updated_at, updated_by) to all tables
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:23:11 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:25:51 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:30:43 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:31:07 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:32:04 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:32:33 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:33:29 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:33:47 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:35:12 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:35:42 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:39:59 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:44:20 [lifecycle]
+  - branch: main
+  - last_commit: 4ff3cda Rename updated_* to last_modified_* and set defaults ΓÇö ensures audit trail always populated on create
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:47:17 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:50:42 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:51:45 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 15:53:51 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:06:53 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:06:54 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:11:57 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 16:14:57 [lifecycle]
+  - branch: main
+  - last_commit: 8c104ce Add primary_workspace_id to users table
+  - changed_files: AI_STATE.md, backend/.env.example, backend/package.json, backend/src/index.js, frontend/css/style.css, frontend/index.html
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/package.json
+     M backend/src/index.js
+     M frontend/css/style.css
+     M frontend/index.html
+    ?? backend/src/middleware/
+    ?? backend/src/routes/

@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -13,6 +15,25 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
 }));
 app.use(express.json());
+
+// Session middleware (used during OAuth handshake)
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || 'dev-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production' },
+  })
+);
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Auth routes
+app.use('/auth', require('./routes/auth'));
+
+// Static files
 app.use(express.static(FRONTEND_DIR));
 
 app.get('/api/health', (req, res) => {
