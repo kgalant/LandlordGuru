@@ -14,6 +14,7 @@ exports.up = async (knex) => {
     table.varchar('name', 255);
     table.varchar('google_id', 255).unique();
     table.varchar('avatar_url', 500);
+    table.uuid('primary_workspace_id').references('id').inTable('workspaces').onDelete('SET NULL');
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
     table.timestamp('last_modified_at').notNullable().defaultTo(knex.fn.now());
     table.uuid('last_modified_by');
