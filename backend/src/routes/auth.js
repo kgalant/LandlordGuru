@@ -18,6 +18,7 @@ passport.use(
       try {
         const { id: google_id, displayName: name, emails } = profile;
         const email = emails[0].value;
+        console.log('[strategy] OAuth profile received:', { email, google_id, name });
 
         // Find existing user by email
         const user = await db('users')
@@ -26,9 +27,11 @@ passport.use(
 
         if (!user) {
           // User does not exist — fail auth with user message
+          console.log('[strategy] User not found:', email);
           return done(new Error(`User ${email} not found. Contact admin to set up your account.`));
         }
 
+        console.log('[strategy] User found, updating google_id');
         // Update google_id and last_modified_at if they changed
         await db('users')
           .where('id', user.id)
@@ -38,8 +41,10 @@ passport.use(
             last_modified_at: new Date(),
           });
 
+        console.log('[strategy] Calling done() with user:', { id: user.id, email: user.email });
         return done(null, { id: user.id, email: user.email, name: user.name, google_id });
       } catch (err) {
+        console.error('[strategy] Error:', err.message);
         return done(err);
       }
     }
