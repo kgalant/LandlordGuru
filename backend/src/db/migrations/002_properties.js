@@ -1,6 +1,6 @@
 exports.up = async (knex) => {
   await knex.schema.createTable('properties', (table) => {
-    table.varchar('id', 50).primary();
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     table.uuid('workspace_id').notNullable().references('id').inTable('workspaces').onDelete('CASCADE');
     table.varchar('name', 255).notNullable();
     table.text('address');
@@ -13,6 +13,10 @@ exports.up = async (knex) => {
     table.date('lease_start');
     table.text('notes');
     table.boolean('active').notNullable().defaultTo(true);
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+    table.uuid('created_by').references('id').inTable('users').onDelete('SET NULL');
+    table.timestamp('updated_at');
+    table.uuid('updated_by').references('id').inTable('users').onDelete('SET NULL');
     table.index('workspace_id');
   });
 };

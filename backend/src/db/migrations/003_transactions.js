@@ -1,9 +1,9 @@
 exports.up = async (knex) => {
   await knex.schema.createTable('transactions', (table) => {
-    table.varchar('id', 50).primary();
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     table.uuid('workspace_id').notNullable().references('id').inTable('workspaces').onDelete('CASCADE');
     table.date('date').notNullable();
-    table.varchar('property_id', 50).references('id').inTable('properties').onDelete('SET NULL');
+    table.uuid('property_id').references('id').inTable('properties').onDelete('SET NULL');
     table.varchar('type', 20).notNullable();
     table.varchar('category', 50).notNullable();
     table.decimal('amount', 12, 2).notNullable();
@@ -15,6 +15,9 @@ exports.up = async (knex) => {
     table.text('notes');
     table.boolean('reconciled').notNullable().defaultTo(false);
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+    table.uuid('created_by').references('id').inTable('users').onDelete('SET NULL');
+    table.timestamp('updated_at');
+    table.uuid('updated_by').references('id').inTable('users').onDelete('SET NULL');
     table.index('workspace_id');
     table.index(['workspace_id', 'date']);
     table.index(['workspace_id', 'property_id']);
