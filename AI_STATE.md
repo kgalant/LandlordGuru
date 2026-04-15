@@ -8,6 +8,12 @@ Frontend served by Express (no NAS dependency). Google Sheets retired when backe
 v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 
 ## Completed
+### OAuth flow fix
+- Changed strategy to find existing users by email (not google_id)
+- Removed automatic user creation — now fails with helpful error if user not found
+- Updated callback to pass error messages to frontend
+- Only pre-registered users can now authenticate; admin has full control
+
 ### Bug fixes (v1.3.x)
 - Fixed `#import-preview-header` showing as a tiny sliver
 - Fixed `#import-preview-header` scrolling offscreen: `top: 52px` for nav bar
@@ -85,7 +91,7 @@ v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 - **NAS:** retired from this app once backend is live
 
 ## In progress
-Fix OAuth flow: find existing users by email instead of creating new ones
+-
 
 ## Next step
 Milestone 4: Properties API (CRUD endpoints, workspace-scoped)
@@ -138,9 +144,8 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
 - Amount precision: DECIMAL(12,2) for currency, DECIMAL(12,6) for rates
 
 ## Files touched this session
-- docs/data-model.md (complete rewrite: reflects v2 PostgreSQL schema, added auth tables, audit fields, indexes, constraints)
-- docs/ARCHITECTURE.md (reorganized to show v2 current state, Milestones 1-3 done, M4 in progress)
-- docs/BACKEND-SETUP.md (new: 8-step guide for v2 backend dev/deployment, OAuth setup, troubleshooting)
+- backend/src/routes/auth.js (OAuth strategy: find by email, don't create new users)
+- AI_STATE.md (updated status)
 
 ## Automation log
 
