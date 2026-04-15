@@ -55,8 +55,10 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (userId, done) => {
   try {
     const user = await db('users').where('id', userId).first();
+    console.log('[deserializeUser] Fetched user:', { id: user?.id, email: user?.email, primary_workspace_id: user?.primary_workspace_id });
     done(null, user);
   } catch (err) {
+    console.error('[deserializeUser] Error:', err.message);
     done(err);
   }
 });
@@ -71,9 +73,11 @@ router.get(
   async (req, res) => {
     try {
       const user = req.user;
+      console.log('[callback] req.user:', { id: user?.id, email: user?.email, primary_workspace_id: user?.primary_workspace_id });
 
       // Check if user has a primary workspace assigned
       if (!user.primary_workspace_id) {
+        console.log('[callback] User missing primary_workspace_id');
         return res.redirect('/?auth_error=no_workspace_assigned');
       }
 
