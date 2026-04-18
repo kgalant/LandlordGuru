@@ -103,8 +103,17 @@ Before your final response in any session, write a closing update to AI_STATE.md
 4. Continue with Next step only
 5. Update AI_STATE.md before stopping again
 
+## Automation log (in AI_STATE.md)
+
+Keep ONE automation log entry per session at the end of AI_STATE.md:
+- **Format:** timestamp, branch, last_commit, changed_files, git_status
+- **On new entry:** move the previous entry to `.claude/ai_state_archive.json` (JSON array, append to end)
+- **Purpose:** track state changes for context without bloating the active file
+- **Rule:** always replace the old entry, never accumulate multiple entries in AI_STATE.md
+
 ## Rules
 - Never leave AI_STATE.md stale for more than one response turn
 - Never start a new milestone without updating AI_STATE.md first
 - If context is running low, prioritise writing AI_STATE.md over continuing work
-- One active Next step at all times — never a list, never vague Did you follow the instructions in the Resumable Work Policy?
+- One active Next step at all times — never a list, never vague
+- Automation log: keep only the latest entry in AI_STATE.md; archive older entries

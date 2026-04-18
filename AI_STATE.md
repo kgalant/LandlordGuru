@@ -91,15 +91,19 @@ All 9 data tables carry `workspace_id`. Auth middleware injects from JWT — cro
 (Use this space for decisions, blockers, or clarifications made in the current session)
 
 ## Automation log
+(Latest entry only; previous entries in `.claude/ai_state_archive.json`)
 
-- 2026-04-18 17:38:39 [lifecycle]
+- 2026-04-18 17:41:25 [lifecycle]
   - branch: main
-  - last_commit: 43d3238 Milestone 5.5: Logging & Telemetry ΓÇö Phase 2: Retrofit Transactions API
-  - changed_files: AI_STATE.md, backend/src/app.js, docs/ARCHITECTURE.md, frontend/version.json
+  - last_commit: fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 → v2.7.0)
+  - changed_files: AI_STATE.md
+  - git_status: M AI_STATE.md
+
+- 2026-04-18 18:22:59 [lifecycle]
+  - branch: main
+  - last_commit: fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 ΓåÆ v2.7.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
   - git_status:
      M AI_STATE.md
-     M backend/src/app.js
-     M docs/ARCHITECTURE.md
-     M frontend/version.json
-    ?? backend/src/routes/rules.js
-    ?? backend/tests/rules.test.js
+     M CLAUDE.md
+    ?? .claude/ai_state_archive.json
