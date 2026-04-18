@@ -173,10 +173,10 @@ v2 backend development — Milestone 4 (Properties API + test infrastructure)
 - Version bumped 2.4.0 → 2.5.0
 
 ## In progress
-Milestone 5.5: Logging & Telemetry — Phase 0, Documentation ✅ COMPLETE
+Milestone 5.5: Logging & Telemetry — Phase 0 Code ✅ COMPLETE
 
 ## Next step
-Review documentation updates before proceeding to code implementation (Phase 0 infrastructure)
+(Ready for Phase 1: retrofit Properties API with logging calls)
 
 ## Milestone plan (v2)
 ```
@@ -241,13 +241,27 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
 - Amount precision: DECIMAL(12,2) for currency, DECIMAL(12,6) for rates
 
 ## Files touched this session
+**Documentation (committed a036789):**
 - docs/LOGGING.md (NEW — comprehensive logging guide)
 - docs/ARCHITECTURE.md (logging layer, migration path update, key decisions)
 - docs/data-model.md (log_level columns, activity_log table schema)
 - CLAUDE.md (logging hygiene rule)
 - backend/.env.example (LOGGER_* vars, SESSION_SECRET)
 - docs/BACKEND-SETUP.md (Step 9 — logging configuration)
+- frontend/version.json (v2.5.0 → v2.6.0)
+
+**Code (not yet committed):**
+- backend/src/db/migrations/010_add_log_level_to_workspaces.js (NEW)
+- backend/src/db/migrations/011_add_log_level_to_workspace_users.js (NEW)
+- backend/src/db/migrations/012_create_activity_log.js (NEW)
+- backend/src/lib/logger.js (NEW — Logger class, level resolution, output)
+- backend/src/middleware/auth.js (UPDATE — inject req.logger)
+- backend/src/middleware/telemetry.js (NEW — placeholder for Phase 3)
 - AI_STATE.md (multiple updates throughout session)
+
+## Last commit
+a036789 Milestone 5.5: Logging & Telemetry — Phase 0 documentation (v2.5.0 → v2.6.0)
+✅ All documentation complete, committed, ready for Phase 0 code
 
 ## Automation log
 
@@ -1586,3 +1600,95 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
      M docs/BACKEND-SETUP.md
      M docs/data-model.md
     ?? docs/LOGGING.md
+
+- 2026-04-18 16:44:13 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 16:57:23 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/010_add_log_level_to_workspaces.js
+    ?? backend/src/db/migrations/011_add_log_level_to_workspace_users.js
+    ?? backend/src/db/migrations/012_create_activity_log.js
+
+- 2026-04-18 16:58:23 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? backend/src/db/migrations/010_add_log_level_to_workspaces.js
+    ?? backend/src/db/migrations/011_add_log_level_to_workspace_users.js
+    ?? backend/src/db/migrations/012_create_activity_log.js
+
+- 2026-04-18 16:59:58 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md, backend/src/middleware/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/middleware/auth.js
+    ?? backend/src/db/migrations/010_add_log_level_to_workspaces.js
+    ?? backend/src/db/migrations/011_add_log_level_to_workspace_users.js
+    ?? backend/src/db/migrations/012_create_activity_log.js
+    ?? backend/src/lib/
+    ?? backend/src/middleware/telemetry.js
+
+- 2026-04-18 17:01:00 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md, backend/src/middleware/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/middleware/auth.js
+    ?? backend/src/db/migrations/010_add_log_level_to_workspaces.js
+    ?? backend/src/db/migrations/011_add_log_level_to_workspace_users.js
+    ?? backend/src/db/migrations/012_create_activity_log.js
+    ?? backend/src/lib/
+    ?? backend/src/middleware/telemetry.js
+
+- 2026-04-18 17:02:31 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md, backend/src/middleware/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/middleware/auth.js
+    ?? backend/src/db/migrations/010_add_log_level_to_workspaces.js
+    ?? backend/src/db/migrations/011_add_log_level_to_workspace_users.js
+    ?? backend/src/db/migrations/012_create_activity_log.js
+    ?? backend/src/lib/
+    ?? backend/src/middleware/telemetry.js
+
+- 2026-04-18 17:05:27 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md, backend/src/middleware/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/middleware/auth.js
+    ?? backend/src/db/migrations/010_add_log_level_to_workspaces.js
+    ?? backend/src/db/migrations/011_add_log_level_to_workspace_users.js
+    ?? backend/src/db/migrations/012_create_activity_log.js
+    ?? backend/src/lib/
+    ?? backend/src/middleware/telemetry.js
+
+- 2026-04-18 17:11:02 [lifecycle]
+  - branch: main
+  - last_commit: a036789 Milestone 5.5: Logging & Telemetry ΓÇö Phase 0 documentation
+  - changed_files: AI_STATE.md, backend/src/middleware/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/middleware/auth.js
+    ?? backend/src/db/migrations/010_add_log_level_to_workspaces.js
+    ?? backend/src/db/migrations/011_add_log_level_to_workspace_users.js
+    ?? backend/src/db/migrations/012_create_activity_log.js
+    ?? backend/src/lib/
+    ?? backend/src/middleware/telemetry.js

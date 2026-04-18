@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const Logger = require('../lib/logger');
 
 const requireAuth = (req, res, next) => {
   // Try to get token from Authorization header or query param
@@ -23,6 +24,16 @@ const requireAuth = (req, res, next) => {
       role: decoded.role,
     };
     req.workspace_id = decoded.workspace_id;
+
+    // Inject logger (available on all authenticated requests as req.logger)
+    const db = req.app.get('db');
+    req.logger = new Logger({
+      workspace_id: decoded.workspace_id,
+      user_id: decoded.user_id,
+      db,
+      defaultLevel: process.env.LOGGER_DEFAULT_LEVEL || 'error',
+    });
+
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
