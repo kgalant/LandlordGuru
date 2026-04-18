@@ -2,31 +2,42 @@
 
 ## What this is
 A web app for tracking rental property income and expenses across a portfolio of properties.
-Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
+Node.js/Express backend + PostgreSQL + Google OAuth + multi-tenant workspaces.
+Frontend (vanilla JS) served by the backend from the same process.
 
-## Infrastructure
-- NAS: nas.galant.info, SSH on port 1022, user kim
-- Web root: /volume1/web/landlordguru/
-- Private key location on NAS: /volume1/homes/Kim/private/landlord-guru.pem
+## Current architecture (v2)
+- **Backend:** Node.js + Express + Knex.js migrations, runs on Linux server with PM2
+- **Database:** PostgreSQL (all data, including audit logs)
+- **Authentication:** Google OAuth 2.0 → JWT in httpOnly cookie
+- **Frontend:** Vanilla JS served by Express; replaced Google Sheets with REST API calls
+- **Multi-tenancy:** All tables carry `workspace_id`; structurally isolated per JWT claim
 
-## Deployment
-- `.\scripts\publish.ps1 "message"` — commits, pushes to GitHub, deploys frontend/ to NAS
-- `.\scripts\deploy.ps1` — deploys only, no git
-- Always provide the full deploy command when telling the user to run the deploy script
-- config.js is excluded from deploy (lives on NAS only, never in repo)
+## Development
+- Local dev: `npm install && npm start` from `backend/` — runs on http://localhost:3000
+- `.env` file required (see `backend/.env.example`)
+- Environment variables: `PORT`, `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`
+
+## Production deployment
+- Server: SSH `kim@homedev` (see memory: server_access.md)
+- Backend runs under PM2: `pm2 start backend/src/index.js`
+- Restart: `pm2 restart landlordguru` (or check PM2 app name)
+- Logs: `pm2 logs` or check `/var/log/` on server
+- Database backups: PostgreSQL dumps on server (managed separately, not in git)
 
 ## Security rules
-- No credentials ever in git
-- config.js contains only non-sensitive settings (spreadsheet ID, service account email)
-- key.php serves the PEM key only when the request includes header `X-LandlordGuru: key-request`
+- No credentials ever in git (`.env` is git-ignored)
+- `.env` lives on server only — never in the repo
+- `backend/.env.example` is the template; fill in actual values on deployment server
+- OAuth credentials (Google Cloud Console) must match `FRONTEND_URL` env var
 
 ## Coding conventions
 - Never add Co-Authored-By or similar trailer lines to commits unless explicitly asked
 
 ## Versioning
+- `version.json` is at the project root (served by frontend `version.html` endpoint)
 - Update version.json in the same commit as the change: minor bump for new features, patch for fixes
 - Add an explicit line to the commit message stating the version changed from x to y
-- Tweaking existing features = increment z (x.y.z); new major feature = increment y - confirm explicitly
+- Tweaking existing features = increment z (x.y.z); new major feature = increment y — confirm explicitly
 - Never suggest incrementing x — the user will prompt for that explicitly
 
 ## Test hygiene
@@ -61,9 +72,11 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 - Include doc updates in the same commit as the feature, not a separate one
 
 ## Reference docs
-- @docs/SETUP.md — infrastructure details, credentials locations, Google Sheets config
-- @docs/data-model.md — property portfolio, rental types, income/expense model
-- @docs/ARCHITECTURE.md — key decisions, auth design, future migration plan
+- @docs/ARCHITECTURE.md — v1 vs v2, key decisions, auth design, migration path
+- @docs/data-model.md — table schema, field reference, category taxonomy, audit fields
+- @docs/LOGGING.md — log level configuration, resolution chain, per-workspace/per-user overrides
+- @docs/SETUP.md — v1 only (historical; NAS/Google Sheets setup)
+- @docs/BACKEND-SETUP.md — v2 database setup, Google Cloud OAuth, local dev environment (if exists)
 
 # Resumable Workflow Policy
 

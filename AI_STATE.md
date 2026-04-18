@@ -93,42 +93,17 @@ All 9 data tables carry `workspace_id`. Auth middleware injects from JWT — cro
 ## Automation log
 (Latest entry only; previous entries in `.claude/ai_state_archive.json`)
 
-- 2026-04-18 17:41:25 [lifecycle]
+- 2026-04-18 18:44:05 [lifecycle]
   - branch: main
-  - last_commit: fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 → v2.7.0)
-  - changed_files: AI_STATE.md
-  - git_status: M AI_STATE.md
+  - last_commit: dc63484 Fix logger in tests: register db on app before each test suite
+  - changed_files: CLAUDE.md, AI_STATE.md
+  - git_status: M CLAUDE.md, M AI_STATE.md
 
-- 2026-04-18 18:22:59 [lifecycle]
+- 2026-04-18 18:48:36 [lifecycle]
   - branch: main
-  - last_commit: fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 ΓåÆ v2.7.0)
-  - changed_files: AI_STATE.md, CLAUDE.md
+  - last_commit: dc63484 Fix logger in tests: register db on app before each test suite
+  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, CLAUDE.md
   - git_status:
+     M .claude/ai_state_archive.json
      M AI_STATE.md
      M CLAUDE.md
-    ?? .claude/ai_state_archive.json
-
-- 2026-04-18 18:24:03 [lifecycle]
-  - branch: main
-  - last_commit: 75e409c Slim down AI_STATE.md and establish automation log policy
-
-- 2026-04-18 18:25:32 [lifecycle]
-  - branch: main
-  - last_commit: 75e409c Slim down AI_STATE.md and establish automation log policy
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 18:27:40 [lifecycle]
-  - branch: main
-  - last_commit: 75e409c Slim down AI_STATE.md and establish automation log policy
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 18:29:47 [lifecycle]
-  - branch: main
-  - last_commit: 8265242 Fix logger DB access: register db on app before starting server
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
