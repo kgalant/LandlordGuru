@@ -1,327 +1,217 @@
 # AI State
 
 ## Goal
-Build v2: real backend (Node/Express/PostgreSQL) + user auth + workspace multi-tenancy.
-Frontend served by Express (no NAS dependency). Google Sheets retired when backend is stable.
 
-## Current phase
-M9 — E2E Testing & Bug Fixes (found 4 issues during browser testing on server)
+Short 1–2 line statement of the overarching goal.
 
-## Pending work
-(none)
-
-## In progress
-(none)
-
-## Completed (this session)
-- ✅ Issue 1: CATEGORIES not defined (commit 47293a2)
-- ✅ Issue 2: Dashboard routing (verified: currentPage defaults to 'dashboard', renders on boot)
-- ✅ Issue 3: Add 'Add your first property' button on dashboard when no properties exist (commit 6d533da)
-- ✅ Issue 4: Fix sync error (root cause: GOOGLE_CALLBACK_URL mismatch in .env; fixed on dev server)
-- ✅ Translation keys: Updated renderDashboard() to use property.noProperties + property.noPropertiesSub
-
-### M8 Completed:
-✅ 1. Remove v1 code paths: stripped sheets.js, data.js, and all !AUTH_TOKEN fallbacks from frontend
-✅ 2. Remove Google Sheets config from config.example.js
-✅ 3. Remove !AUTH_TOKEN conditionals throughout index.html (9 functions updated)
-✅ 4. Test dev server: npm start boots cleanly, database connects
-✅ 5. Verify no broken references: npm test 60/60 passing
-✅ 6. Version: v2.8.0 → v2.9.0 (cleanup release, commit 37d1c30)
-⏳ 7. Manual e2e test: login + CRUD — pending browser testing (no code changes needed)
+Example:
+"Complete MVP backend + UI for rental tracking (v2), ready for manual end‑to‑end testing in the browser."
 
 ---
 
-## Completed milestones
+## Current focus
 
-| Milestone | Version | Description |
-|-----------|---------|-------------|
-| M1 — Backend skeleton | v2.0.0 | Express + Knex + PostgreSQL |
-| M2 — Database schema | v2.0.0 | 8 tables with workspace_id isolation |
-| M3 — Google OAuth + JWT | v2.1.0 | Auth flow, auto-workspace creation |
-| M4 — Properties API | v2.2.0 | Full CRUD + Jest/Supertest tests |
-| Feature 2.2 — Property UI wired | v2.3.0 | frontend/js/api.js, Properties list live |
-| M5 — Transactions API | v2.4.0 | Full CRUD with filters & validation |
-| Feature 5.2 — Transactions UI wired | v2.5.0 | Transactions list live (create/edit/delete) |
-| M5.5 — Logging & Telemetry | v2.6.0 | Phases 0-2: docs, logger.js, Properties & Transactions logging |
-| M6 — Rules API | v2.7.0 | Full CRUD + tests, logging from day 1 |
-| M7 — Frontend cut-over | v2.8.0 | All CRUD + import via backend API; rules auto-save |
-| M8 — Retire v1 code | v2.9.0 | Removed sheets.js, data.js, all !AUTH_TOKEN fallbacks, Google Sheets config |
+The single item we are actively working on.
+
+- Type: feature | bug | chore
+- Epic: E<epic-number> <epic name>
+  - Example: E2 Account and Property Management
+- ID: <feature-or-bug-id>
+  - Example: F2.1, F3.4, BUG-3.1
+- Title: <one-line title>
+  - Example: Bulk transaction import endpoint
+- Short summary: <1–2 line human-readable description>
+  - Example: Implement POST /api/transactions/import for CSV import, with validation and batch rollback support.
 
 ---
 
-## Design decisions (locked)
+## Previous focus
 
-**Logging:**
-- Levels: `error`, `info`, `debug` (least → most verbose)
-- Resolution: user override (expires) → workspace default (expires) → global `error`
-- Storage: `log_level` + `log_level_expires_at` on workspaces and workspace_users
-- Injection: auth middleware as `req.logger`
-- Tests do NOT assert on logging (side-effect only)
+If we paused a feature or bug to work on the current focus, record it here so we can resume it later.
+If nothing is paused, set this section to `None`.
 
-**Architecture:**
-- Monolithic: Express serves static frontend from same process
-- Multi-tenancy: all data tables carry `workspace_id`; structurally isolated
-- Auth: Google OAuth 2.0 → JWT in httpOnly cookie
-- DB: PostgreSQL + Knex.js migrations
-- Deployment: PM2 on Linux, no Docker
+Example when something is paused:
 
-**Accounts:**
-- Auto-created `is_default=true` account per workspace (fallback)
-- On property creation: auto-create account + link via account_properties
-- Resolution: explicit → property's account → workspace default
+- Type: feature
+- Epic: E3 Transaction Management
+- ID: F3.2
+- Title: Transaction list UI
+- Short summary: Build frontend list view for transactions with filtering and sorting.
+- State: paused
+- Return point: Resume at S3: Add tests for combined filter and sort scenarios.
 
 ---
 
-## Schema notes
+## Task breakdown (current focus)
 
-All 9 data tables carry `workspace_id`. Auth middleware injects from JWT — cross-workspace access structurally impossible.
+Break the current focus into small, concrete subtasks.
+Use checkboxes with a strict status convention:
 
-**Migrations:**
-- 001-009: core schema (workspaces, users, properties, transactions, rules, accounts, etc.)
-- 010: `log_level` + `log_level_expires_at` on workspaces
-- 011: `log_level` + `log_level_expires_at` on workspace_users
-- 012: activity_log table (workspace_id, user_id, timestamp, level, action, parameters)
+- `[ ]` pending
+- `[-]` in_progress
+- `[x]` completed
+
+There must be at most **one** `[-]` subtask at any time.
+
+Example:
+
+- [x] S1: Define request/response shape for POST /api/transactions/import.
+- [-] S2: Implement validation and all‑or‑nothing batch insert in the backend route.
+- [ ] S3: Wire import endpoint into UI and show validation errors.
+
+Status rules:
+
+- Before starting work on a new subtask, move any existing `[-]` to `[x]` (done) or `[ ]` (pending/abandoned), then mark the new one as `[-]`.
+- Whenever a subtask’s status changes, update this section in the same response.
 
 ---
 
-## Blockers
-(none)
+## Backlog pointers
+
+High‑level pointers only; full details live in the epic docs (01‑*.md, 02‑*.md, 03‑*.md, etc.).
+
+Use IDs here, not full specs.
+
+- Next candidate features (IDs): F2.2, F3.1, F5.4
+- Known bugs (IDs): BUG-2.1, BUG-3.1
+- Relevant epic docs:
+  - docs/01-workspace-user-management.md   (Epic 1)
+  - docs/02-account-property-management.md (Epic 2)
+  - docs/03-transaction-management.md      (Epic 3)
+  - docs/04-reporting-analytics.md         (Epic 4)
+  - docs/05-integrations-data-import.md    (Epic 5)
+
+Backlog discipline:
+
+- Backlog items live in epic docs, not here.
+- When a new idea or non‑blocking bug comes up during work on the current focus:
+  - Ask the user whether to:
+    - (a) add it to the backlog under the appropriate epic, or
+    - (b) switch the Current focus to it.
+  - Only change `Current focus` if the user explicitly chooses (b).
 
 ---
-
-## Checkpoint Procedure (use after each completed step)
-
-After you finish a step or make significant progress:
-
-1. **Commit changes to git** with a clear message
-2. **Update this file immediately:**
-   - Mark completed items in "In progress" section
-   - Update "In progress:" field with current step and specific action
-   - Update "Next step:" field with the single next action (be specific: "Read X line Y to understand Z")
-   - Update "Files touched:" list below
-3. **Only then continue** to the next step
-
-**Example (after completing a step):**
-```
-## In progress
-Step 4: Wiring rules in refreshAll
 
 ## Next step
-Read index.html:722 to understand refreshAll() structure; add Api.getRules() call
+
+A single, concrete action that should happen next.
+
+Examples:
+
+- "Run npm test backend/tests/transactions.test.js and fix any failing cases in the import logic."
+- "Read data-model.md section on transactions to confirm fields before updating the schema."
+
+Rules:
+
+- Exactly one next step.
+- It must be specific enough that you could execute it immediately without more planning.
+
+---
+
+## Validation
+
+Commands and checks that confirm the current focus is in a good state.
+
+- Commands to run:
+  - npm test
+  - npm start
+  - (add any extra commands specific to this focus, e.g. `npm test backend/tests/properties.test.js`)
+- Last result:
+  - Date/time: <ISO-like timestamp, local time>
+    - Example: 2026-04-18 21:45:00
+  - Outcome: brief summary
+    - Example: "Tests passing, app boots cleanly, manual browser E2E pending."
+
+Whenever a validation command is re‑run, update the Date/time and Outcome here.
+
+---
 
 ## Files touched this session
-- backend/src/routes/properties.js
-- backend/tests/properties.test.js
-- git_commits: 60d3f1f, efd126d
-```
 
-This ensures that if the session stops at any point, the next session can resume exactly where you left off.
+List all files (code + docs + this file) modified in this session.
 
----
+Examples:
 
-## Last validation
+- backend/src/routes/transactions.js
+- backend/tests/transactions.test.js
+- docs/03-transaction-management.md
+- AI_STATE.md
 
-✅ All 60 tests passing (M8 changes)
-- No broken references from v1 code removal
-- All backend API tests still pass
-
-✅ App boot test
-- npm start: cleanly boots, no v1 code references
-- Database connects successfully
-- Frontend served by Express
-
-⏳ Manual e2e testing pending
-- Login via Google OAuth, verify CRUD operations work
-- (Can be done in browser without impacting code)
+Update this list as you touch files; do not wait until the end of the session.
 
 ---
 
-## Last commit
-37d1c30 Milestone 8: Retire Google Sheets credentials and v1 code paths (v2.8.0 → v2.9.0)
+## Automation log (latest only)
+
+Keep exactly **one** automation log entry here.
+Older entries are moved into an archive file (for example, `.claude/aistate-archive.json`) by automation.
+
+Format:
+
+- <timestamp> <short label>
+  - branch: <git branch>
+  - lastcommit: <short commit hash>
+  - changedfiles: <comma-separated list of files changed since last commit>
+  - gitstatus: <output summary from git status in short form>
+
+Example:
+
+- 2026-04-18 21:45:00 lifecycle
+  - branch: main
+  - lastcommit: 37d1c30
+  - changedfiles: AI_STATE.md, backend/src/routes/transactions.js
+  - gitstatus: M AI_STATE.md
+
+Rules:
+
+- On a new automation log entry:
+  - Move the previous entry to the archive file.
+  - Replace it here with the latest entry only.
+- Never accumulate multiple entries in `AI_STATE.md`.
 
 ---
 
-## Files touched this session
-- frontend/index.html (removed sheets.js + data.js script tags; removed all !AUTH_TOKEN fallback paths from boot, refreshAll, saveTx, deleteTxModal, processImportFile, savePropertyModal, deleteRule, saveRuleModal, saveRules)
-- frontend/config.example.js (removed all Google Sheets config; kept only BANK_PROFILES, CATEGORIES, FX_RATES display config)
-- frontend/js/sheets.js (DELETED)
-- frontend/js/data.js (DELETED)
-- frontend/version.json (v2.8.0 → v2.9.0)
+## Update and focus-switching rules (for the assistant)
 
-## Session notes
-✅ npm test: 60/60 tests passing (no broken references from v1 code removal)
-- Confirmed all v1 fallback paths successfully removed from index.html
-- sheets.js and data.js deleted
-- config.example.js now v2-only
+These rules exist so the assistant can use this file correctly without additional instructions.
 
-✅ App boot test: npm start succeeds cleanly
-- No references to sheets.js, data.js, Google Sheets config
-- Database connects successfully
-- Frontend served by Express on port 3000
-- Ready for manual e2e in browser (login → CRUD)
+1. **When to update AI_STATE.md**
 
-## Automation log
-(Latest entry only; previous entries in `.claude/ai_state_archive.json`)
+   Update this file in the same response whenever you:
 
-- 2026-04-18 21:45:00 [M8 complete — v1 code retirement]
-  - branch: main
-  - last_commit: 37d1c30 Milestone 8: Retire Google Sheets credentials and v1 code paths (v2.8.0 → v2.9.0)
-  - changed_files: frontend/index.html, frontend/config.example.js, frontend/version.json, frontend/js/sheets.js (deleted), frontend/js/data.js (deleted), AI_STATE.md
-  - session_work: M8 complete (removed sheets.js, data.js, all !AUTH_TOKEN fallbacks, Google Sheets config); 60/60 tests passing; app boots cleanly
-  - git_status: committed; M8 complete, manual e2e testing pending (browser-only)
+   - Break a task into subtasks.
+   - Change any subtask status.
+   - Switch the Current focus (e.g. from a feature to a bug).
+   - Finish the Current focus.
+   - Run validation commands.
+   - Touch new files.
+   - Are about to end the session.
 
-- 2026-04-18 19:04:09 [lifecycle]
-  - branch: main
-  - last_commit: 21b5bc5 Prepare M8: document scope and stopping point for next session
+2. **How to switch focus (feature ↔ bug)**
 
-- 2026-04-18 19:06:31 [lifecycle]
-  - branch: main
-  - last_commit: 21b5bc5 Prepare M8: document scope and stopping point for next session
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+   When a new feature or bug comes up while working on the Current focus:
 
-- 2026-04-18 19:12:35 [lifecycle]
-  - branch: main
-  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+   - Ask the user:
 
-- 2026-04-18 19:13:16 [lifecycle]
-  - branch: main
-  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+     "Should we:
+      (a) add this as a backlog item under the appropriate epic, or
+      (b) switch our Current focus to this item now?"
 
-- 2026-04-18 19:15:03 [lifecycle]
-  - branch: main
-  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+   - If the user chooses (a):
+     - Add an ID’ed entry (e.g. F3.8, BUG-3.2) with a status like `[backlog]` in the relevant epic doc.
+     - Do not change the Current focus here.
 
-- 2026-04-18 19:15:41 [lifecycle]
-  - branch: main
-  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+   - If the user chooses (b):
+     - Move the existing Current focus into the Previous focus section, with:
+       - Type, Epic, ID, Title, Short summary, and a clear Return point.
+     - Set the new item as Current focus and create a fresh Task breakdown.
+     - Ensure only one `[-]` subtask is active.
 
-- 2026-04-18 19:16:39 [lifecycle]
-  - branch: main
-  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+3. **Before stopping a session**
 
-- 2026-04-18 19:18:00 [lifecycle]
-  - branch: main
-  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+   Before the final response in any session:
 
-- 2026-04-18 19:20:06 [lifecycle]
-  - branch: main
-  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:26:30 [lifecycle]
-  - branch: main
-  - last_commit: 47293a2 Fix CATEGORIES not defined: check config.js into git (no secrets in v2)
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:28:38 [lifecycle]
-  - branch: main
-  - last_commit: 47293a2 Fix CATEGORIES not defined: check config.js into git (no secrets in v2)
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:32:03 [lifecycle]
-  - branch: main
-  - last_commit: 930475d AI_STATE: Document Issue 4 investigation (sync error root cause analysis)
-
-- 2026-04-18 19:34:13 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-
-- 2026-04-18 19:36:14 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:39:07 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:40:10 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:43:21 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:48:02 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:49:10 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:50:21 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:53:56 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:55:09 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:55:27 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:56:02 [lifecycle]
-  - branch: main
-  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+   - Move any finished subtasks to `[x]`.
+   - Make sure Current focus, Previous focus, Task breakdown, Next step, Validation, and Files touched are all up to date.
+   - Write a new Automation log entry (replacing the previous one).
+   - The Next step must be a single, concrete action to resume from.
