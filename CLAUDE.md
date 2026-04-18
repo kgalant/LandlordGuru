@@ -91,6 +91,8 @@ Break all work into milestones small enough to complete in one session.
 Keep exactly one item in **Next step** and at most one item in **In progress**.
 Never begin a new milestone until the current one is validated.
 
+**→ After each step, use the Checkpoint Procedure in AI_STATE.md to stay resumable**
+
 ## Update AI_STATE.md after every response where you:
 - Complete a milestone
 - Make a decision

@@ -72,6 +72,36 @@ All 9 data tables carry `workspace_id`. Auth middleware injects from JWT — cro
 
 ---
 
+## Checkpoint Procedure (use after each completed step)
+
+After you finish a step or make significant progress:
+
+1. **Commit changes to git** with a clear message
+2. **Update this file immediately:**
+   - Mark completed items in "In progress" section
+   - Update "In progress:" field with current step and specific action
+   - Update "Next step:" field with the single next action (be specific: "Read X line Y to understand Z")
+   - Update "Files touched:" list below
+3. **Only then continue** to the next step
+
+**Example (after completing a step):**
+```
+## In progress
+Step 4: Wiring rules in refreshAll
+
+## Next step
+Read index.html:722 to understand refreshAll() structure; add Api.getRules() call
+
+## Files touched this session
+- backend/src/routes/properties.js
+- backend/tests/properties.test.js
+- git_commits: 60d3f1f, efd126d
+```
+
+This ensures that if the session stops at any point, the next session can resume exactly where you left off.
+
+---
+
 ## Last validation
 
 ✅ All 60 tests passing (M7 changes)
@@ -104,3 +134,28 @@ efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
   - last_commit: efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
   - changed_files: backend/src/routes/properties.js, backend/src/routes/transactions.js, backend/tests/properties.test.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/index.html, frontend/version.json, AI_STATE.md
   - git_status: committed
+
+- 2026-04-18 18:57:47 [lifecycle]
+  - branch: main
+  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
+
+- 2026-04-18 18:59:03 [lifecycle]
+  - branch: main
+  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:01:02 [lifecycle]
+  - branch: main
+  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:02:25 [lifecycle]
+  - branch: main
+  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
