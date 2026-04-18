@@ -13,12 +13,14 @@ M9 — E2E Testing & Bug Fixes (found 4 issues during browser testing on server)
 ## In progress
 - Issue 4: Fix sync error showing next to refresh and sign out buttons
   - Root cause: refreshAll() is throwing an error when calling the backend API
-  - Location: refreshAll() line 727-730 catches API errors and calls setStatus('status.syncError')
-  - Likely triggers:
-    1. JWT token is expired or invalid (401 error from backend)
-    2. Backend API endpoint returning an error (500, etc)
-    3. Network issue or CORS blocking the request
-  - Next step: Test locally with npm start and check browser console for the actual error being thrown by Promise.all([Api.getProperties(), Api.getTransactions(), Api.getRules()])
+  - Backend tests: ✅ Server running (http://localhost:3000/api/health returns v2.9.0)
+  - Frontend tests: ✅ config.js serving correctly with CATEGORIES defined
+  - API auth test: ✅ Invalid token correctly returns 401 error
+  - Next step: Manual browser testing required
+    1. Open http://localhost:3000 in browser
+    2. Login via Google OAuth
+    3. Check browser console (F12) for any errors
+    4. Look for the actual error message when sync fails
 
 ## Completed (this session)
 - ✅ Issue 1: CATEGORIES not defined (commit 47293a2)
@@ -244,3 +246,7 @@ This ensures that if the session stops at any point, the next session can resume
   - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
+
+- 2026-04-18 19:32:03 [lifecycle]
+  - branch: main
+  - last_commit: 930475d AI_STATE: Document Issue 4 investigation (sync error root cause analysis)
