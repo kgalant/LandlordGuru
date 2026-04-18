@@ -819,8 +819,8 @@ function renderDashboard() {
 
   document.getElementById('dash-apt-cards').innerHTML = props.length === 0
     ? `<div class="empty-state-cta" style="text-align:center;padding:2rem;grid-column:1/-1">
-        <h3 style="margin:0 0 0.5rem 0">${t('dashboard.noProperties')}</h3>
-        <p style="margin:0 0 1.5rem 0;color:#666">${t('dashboard.noPropertiesSub')}</p>
+        <h3 style="margin:0 0 0.5rem 0">${t('property.noProperties')}</h3>
+        <p style="margin:0 0 1.5rem 0;color:#666">${t('property.noPropertiesSub')}</p>
         <button class="btn btn-primary" onclick="openPropertyModal()">${t('property.addBtn')}</button>
       </div>`
     : props.map(p => {

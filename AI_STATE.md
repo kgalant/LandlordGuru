@@ -8,23 +8,17 @@ Frontend served by Express (no NAS dependency). Google Sheets retired when backe
 M9 — E2E Testing & Bug Fixes (found 4 issues during browser testing on server)
 
 ## Pending work
-- [ ] Issue 4: Fix sync error showing next to refresh and sign out buttons
+(none)
 
 ## In progress
-- Issue 4: Fix sync error showing next to refresh and sign out buttons
-  - Root cause: refreshAll() is throwing an error when calling the backend API
-  - Backend tests: ✅ Server running (http://localhost:3000/api/health returns v2.9.0)
-  - Frontend tests: ✅ config.js serving correctly with CATEGORIES defined
-  - API auth test: ✅ Invalid token correctly returns 401 error
-  - Next step: Manual browser testing required
-    1. Open http://localhost:3000 in browser
-    2. Login via Google OAuth
-    3. Check browser console (F12) for any errors
-    4. Look for the actual error message when sync fails
+(none)
 
 ## Completed (this session)
 - ✅ Issue 1: CATEGORIES not defined (commit 47293a2)
-- ✅ Issue 3: Add 'Add your first property' button on dashboard when no properties exist (modified index.html renderDashboard function)
+- ✅ Issue 2: Dashboard routing (verified: currentPage defaults to 'dashboard', renders on boot)
+- ✅ Issue 3: Add 'Add your first property' button on dashboard when no properties exist (commit 6d533da)
+- ✅ Issue 4: Fix sync error (root cause: GOOGLE_CALLBACK_URL mismatch in .env; fixed on dev server)
+- ✅ Translation keys: Updated renderDashboard() to use property.noProperties + property.noPropertiesSub
 
 ### M8 Completed:
 ✅ 1. Remove v1 code paths: stripped sheets.js, data.js, and all !AUTH_TOKEN fallbacks from frontend
@@ -250,3 +244,84 @@ This ensures that if the session stops at any point, the next session can resume
 - 2026-04-18 19:32:03 [lifecycle]
   - branch: main
   - last_commit: 930475d AI_STATE: Document Issue 4 investigation (sync error root cause analysis)
+
+- 2026-04-18 19:34:13 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+
+- 2026-04-18 19:36:14 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:39:07 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:40:10 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:43:21 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:48:02 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:49:10 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:50:21 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:53:56 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:55:09 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:55:27 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:56:02 [lifecycle]
+  - branch: main
+  - last_commit: dc17924 Testing: Local server verified running, ready for manual browser testing
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
