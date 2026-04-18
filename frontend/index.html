@@ -817,22 +817,28 @@ function renderDashboard() {
     </div>
   `;
 
-  document.getElementById('dash-apt-cards').innerHTML = props.map(p => {
-    const ptxs    = txs.filter(tx => tx.property_id === p.id);
-    const income  = ptxs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
-    const monthly = p.rent + p.aconto;
-    return `<div class="apt-card">
-      <span class="badge badge-${p.country.toLowerCase()}">${t('country.' + p.country)} · ${p.currency}</span>
-      <span class="badge badge-model" style="margin-left:6px">${t('property.model.' + (p.model || 'longterm'))}</span>
-      <div class="apt-name">${p.name}</div>
-      <div class="apt-addr">${p.address}</div>
-      <div class="apt-stats">
-        <div class="stat"><strong>${monthly ? Reports.fmt(monthly, p.currency) : '—'}</strong>${t('common.monthly')}</div>
-        <div class="stat"><strong>${income  ? Reports.fmt(income,  p.currency) : '—'}</strong>${t('common.totalIncome')}</div>
-        <div class="stat"><strong>${p.tenant || '—'}</strong>${t('property.metric.tenant')}</div>
-      </div>
-    </div>`;
-  }).join('');
+  document.getElementById('dash-apt-cards').innerHTML = props.length === 0
+    ? `<div class="empty-state-cta" style="text-align:center;padding:2rem;grid-column:1/-1">
+        <h3 style="margin:0 0 0.5rem 0">${t('dashboard.noProperties')}</h3>
+        <p style="margin:0 0 1.5rem 0;color:#666">${t('dashboard.noPropertiesSub')}</p>
+        <button class="btn btn-primary" onclick="openPropertyModal()">${t('property.addBtn')}</button>
+      </div>`
+    : props.map(p => {
+        const ptxs    = txs.filter(tx => tx.property_id === p.id);
+        const income  = ptxs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
+        const monthly = p.rent + p.aconto;
+        return `<div class="apt-card">
+          <span class="badge badge-${p.country.toLowerCase()}">${t('country.' + p.country)} · ${p.currency}</span>
+          <span class="badge badge-model" style="margin-left:6px">${t('property.model.' + (p.model || 'longterm'))}</span>
+          <div class="apt-name">${p.name}</div>
+          <div class="apt-addr">${p.address}</div>
+          <div class="apt-stats">
+            <div class="stat"><strong>${monthly ? Reports.fmt(monthly, p.currency) : '—'}</strong>${t('common.monthly')}</div>
+            <div class="stat"><strong>${income  ? Reports.fmt(income,  p.currency) : '—'}</strong>${t('common.totalIncome')}</div>
+            <div class="stat"><strong>${p.tenant || '—'}</strong>${t('property.metric.tenant')}</div>
+          </div>
+        </div>`;
+      }).join('');
 
   const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
   document.getElementById('dash-recent-tx').innerHTML = recent.length

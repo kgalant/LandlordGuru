@@ -5,13 +5,21 @@ Build v2: real backend (Node/Express/PostgreSQL) + user auth + workspace multi-t
 Frontend served by Express (no NAS dependency). Google Sheets retired when backend is stable.
 
 ## Current phase
-v2 backend development — Milestone 8 (Retire v1 code) complete
+M9 — E2E Testing & Bug Fixes (found 4 issues during browser testing on server)
+
+## Pending work
+- [ ] Issue 4: Fix sync error showing next to refresh and sign out buttons
 
 ## In progress
-(None — ready for manual e2e testing in browser, or next milestone)
+- Issue 4: Fix sync error showing next to refresh and sign out buttons
+  - Status: Investigating where "sync error" is displayed and triggered
+  - Location: Need to find setStatus() calls and what triggers them
+  - User report: "Sync error showing next to refresh and sign out buttons"
+  - Next: Search for setStatus('sync error') and understand what causes it
 
-## Next step
-Manual e2e testing: Start npm start, login via Google OAuth, verify CRUD operations (properties, transactions, rules) work without v1 code paths
+## Completed (this session)
+- ✅ Issue 1: CATEGORIES not defined (commit 47293a2)
+- ✅ Issue 3: Add 'Add your first property' button on dashboard when no properties exist (modified index.html renderDashboard function)
 
 ### M8 Completed:
 ✅ 1. Remove v1 code paths: stripped sheets.js, data.js, and all !AUTH_TOKEN fallbacks from frontend
@@ -170,6 +178,66 @@ This ensures that if the session stops at any point, the next session can resume
 - 2026-04-18 19:06:31 [lifecycle]
   - branch: main
   - last_commit: 21b5bc5 Prepare M8: document scope and stopping point for next session
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:12:35 [lifecycle]
+  - branch: main
+  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+
+- 2026-04-18 19:13:16 [lifecycle]
+  - branch: main
+  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:15:03 [lifecycle]
+  - branch: main
+  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:15:41 [lifecycle]
+  - branch: main
+  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:16:39 [lifecycle]
+  - branch: main
+  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:18:00 [lifecycle]
+  - branch: main
+  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:20:06 [lifecycle]
+  - branch: main
+  - last_commit: b4f3d98 Update AI_STATE.md: M8 complete, scope fully documented
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:26:30 [lifecycle]
+  - branch: main
+  - last_commit: 47293a2 Fix CATEGORIES not defined: check config.js into git (no secrets in v2)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 19:28:38 [lifecycle]
+  - branch: main
+  - last_commit: 47293a2 Fix CATEGORIES not defined: check config.js into git (no secrets in v2)
   - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
