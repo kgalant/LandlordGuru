@@ -48,12 +48,16 @@ function validateFields(body, requireAll) {
 // Returns all active properties in the workspace, sorted by name
 router.get('/', requireAuth, async (req, res) => {
   try {
+    await req.logger.info('property.list.started');
+
     const properties = await db('properties')
       .where({ workspace_id: req.workspace_id, active: true })
       .orderBy('name', 'asc');
 
+    await req.logger.info('property.list.success', { property_count: properties.length });
     res.json(properties);
   } catch (err) {
+    await req.logger.error('property.list.failed', { error: err.message });
     console.error('GET /api/properties error:', err.message);
     res.status(500).json({ error: 'Failed to fetch properties' });
   }
@@ -72,6 +76,12 @@ router.post('/', requireAuth, async (req, res) => {
   const user_id = req.user.id;
 
   try {
+    await req.logger.info('property.create.started', {
+      name: name.trim(),
+      country: country.trim(),
+      model,
+    });
+
     const result = await db.transaction(async (trx) => {
       // 1. Insert property
       const [property] = await trx('properties')
@@ -114,8 +124,14 @@ router.post('/', requireAuth, async (req, res) => {
       return property;
     });
 
+    await req.logger.info('property.create.success', {
+      property_id: result.id,
+      name: result.name,
+      country: result.country,
+    });
     res.status(201).json(result);
   } catch (err) {
+    await req.logger.error('property.create.failed', { error: err.message });
     console.error('POST /api/properties error:', err.message);
     res.status(500).json({ error: 'Failed to create property' });
   }
@@ -132,6 +148,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     .first();
 
   if (!existing) {
+    await req.logger.debug('property.update.notfound', { property_id: id });
     return res.status(404).json({ error: 'Property not found' });
   }
 
@@ -159,6 +176,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'No valid fields provided' });
   }
 
+  await req.logger.info('property.update.started', {
+    property_id: id,
+    fields_updated: Object.keys(updates).filter(k => k !== 'last_modified_at' && k !== 'last_modified_by'),
+  });
+
   updates.last_modified_at = new Date();
   updates.last_modified_by = req.user.id;
 
@@ -168,8 +190,13 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .update(updates)
       .returning('*');
 
+    await req.logger.info('property.update.success', {
+      property_id: updated.id,
+      name: updated.name,
+    });
     res.json(updated);
   } catch (err) {
+    await req.logger.error('property.update.failed', { property_id: id, error: err.message });
     console.error('PATCH /api/properties/:id error:', err.message);
     res.status(500).json({ error: 'Failed to update property' });
   }
@@ -185,10 +212,16 @@ router.delete('/:id', requireAuth, async (req, res) => {
     .first();
 
   if (!existing) {
+    await req.logger.debug('property.delete.notfound', { property_id: id });
     return res.status(404).json({ error: 'Property not found' });
   }
 
   try {
+    await req.logger.info('property.archive.started', {
+      property_id: id,
+      property_name: existing.name,
+    });
+
     await db('properties')
       .where({ id, workspace_id: req.workspace_id })
       .update({
@@ -197,8 +230,10 @@ router.delete('/:id', requireAuth, async (req, res) => {
         last_modified_by: req.user.id,
       });
 
+    await req.logger.info('property.archive.success', { property_id: id });
     res.json({ ok: true });
   } catch (err) {
+    await req.logger.error('property.archive.failed', { property_id: id, error: err.message });
     console.error('DELETE /api/properties/:id error:', err.message);
     res.status(500).json({ error: 'Failed to archive property' });
   }
