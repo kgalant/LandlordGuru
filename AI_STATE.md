@@ -8,10 +8,19 @@ Frontend served by Express (no NAS dependency). Google Sheets retired when backe
 v2 backend development — Milestone 7 (Frontend cut-over) complete
 
 ## In progress
-(None — Milestone 7 complete)
+(None — stopping for next session)
 
 ## Next step
-Milestone 8: Optional — Retire Google Sheets credentials and test end-to-end; OR Build Accounts UI with full multi-property support
+Milestone 8: Retire Google Sheets credentials and test end-to-end (Phase 7 path chosen)
+
+### M8 Scope:
+1. Remove v1 code paths: strip sheets.js, data.js, and Google Sheets auth from frontend
+2. Remove Google Sheets config from config.example.js
+3. Remove !AUTH_TOKEN conditionals throughout index.html (v1 fallback paths)
+4. Manual e2e test: properties, transactions, rules CRUD via backend
+5. Test dev server: npm start, login, full workflow
+6. Verify no broken references or dead code
+7. Version: v2.8.0 → v2.9.0 (cleanup release)
 
 ---
 
@@ -129,33 +138,9 @@ efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
 ## Automation log
 (Latest entry only; previous entries in `.claude/ai_state_archive.json`)
 
-- 2026-04-18 19:30:00 [M7 complete]
+- 2026-04-18 19:35:00 [M7 complete + M8 prepared]
   - branch: main
-  - last_commit: efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
-  - changed_files: backend/src/routes/properties.js, backend/src/routes/transactions.js, backend/tests/properties.test.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/index.html, frontend/version.json, AI_STATE.md
-  - git_status: committed
-
-- 2026-04-18 18:57:47 [lifecycle]
-  - branch: main
-  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
-
-- 2026-04-18 18:59:03 [lifecycle]
-  - branch: main
-  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:01:02 [lifecycle]
-  - branch: main
-  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-18 19:02:25 [lifecycle]
-  - branch: main
-  - last_commit: a119720 Update AI_STATE: M7 (Frontend cut-over) complete
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+  - last_commit: ee9d757 Add Checkpoint Procedure to enforce resumable workflow
+  - changed_files: backend/src/routes/properties.js, backend/src/routes/transactions.js, backend/tests/properties.test.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/index.html, frontend/version.json, CLAUDE.md, AI_STATE.md
+  - session_work: M7 complete (frontend cut-over v2.7.0→v2.8.0); added checkpoint infrastructure for resumable workflow
+  - git_status: committed; ready for M8
