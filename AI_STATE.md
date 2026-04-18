@@ -93,17 +93,8 @@ All 9 data tables carry `workspace_id`. Auth middleware injects from JWT — cro
 ## Automation log
 (Latest entry only; previous entries in `.claude/ai_state_archive.json`)
 
-- 2026-04-18 18:44:05 [lifecycle]
-  - branch: main
-  - last_commit: dc63484 Fix logger in tests: register db on app before each test suite
-  - changed_files: CLAUDE.md, AI_STATE.md
-  - git_status: M CLAUDE.md, M AI_STATE.md
-
 - 2026-04-18 18:48:36 [lifecycle]
   - branch: main
-  - last_commit: dc63484 Fix logger in tests: register db on app before each test suite
-  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, CLAUDE.md
-  - git_status:
-     M .claude/ai_state_archive.json
-     M AI_STATE.md
-     M CLAUDE.md
+  - last_commit: b0af5a2 Update CLAUDE.md for v2 architecture; prune AI_STATE automation log
+  - changed_files: CLAUDE.md, AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: committed
