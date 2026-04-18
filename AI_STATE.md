@@ -12,10 +12,13 @@ M9 — E2E Testing & Bug Fixes (found 4 issues during browser testing on server)
 
 ## In progress
 - Issue 4: Fix sync error showing next to refresh and sign out buttons
-  - Status: Investigating where "sync error" is displayed and triggered
-  - Location: Need to find setStatus() calls and what triggers them
-  - User report: "Sync error showing next to refresh and sign out buttons"
-  - Next: Search for setStatus('sync error') and understand what causes it
+  - Root cause: refreshAll() is throwing an error when calling the backend API
+  - Location: refreshAll() line 727-730 catches API errors and calls setStatus('status.syncError')
+  - Likely triggers:
+    1. JWT token is expired or invalid (401 error from backend)
+    2. Backend API endpoint returning an error (500, etc)
+    3. Network issue or CORS blocking the request
+  - Next step: Test locally with npm start and check browser console for the actual error being thrown by Promise.all([Api.getProperties(), Api.getTransactions(), Api.getRules()])
 
 ## Completed (this session)
 - ✅ Issue 1: CATEGORIES not defined (commit 47293a2)
