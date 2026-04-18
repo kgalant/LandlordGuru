@@ -5,13 +5,13 @@ Build v2: real backend (Node/Express/PostgreSQL) + user auth + workspace multi-t
 Frontend served by Express (no NAS dependency). Google Sheets retired when backend is stable.
 
 ## Current phase
-v2 backend development — Milestone 6 (Rules API) complete
+v2 backend development — Milestone 7 (Frontend cut-over) complete
 
 ## In progress
-(None — Milestone 6 complete)
+(None — Milestone 7 complete)
 
 ## Next step
-Milestone 7: Replace frontend's `sheets.js` with `api.js` calling backend (frontend cut-over)
+Milestone 8: Optional — Retire Google Sheets credentials and test end-to-end; OR Build Accounts UI with full multi-property support
 
 ---
 
@@ -28,6 +28,7 @@ Milestone 7: Replace frontend's `sheets.js` with `api.js` calling backend (front
 | Feature 5.2 — Transactions UI wired | v2.5.0 | Transactions list live (create/edit/delete) |
 | M5.5 — Logging & Telemetry | v2.6.0 | Phases 0-2: docs, logger.js, Properties & Transactions logging |
 | M6 — Rules API | v2.7.0 | Full CRUD + tests, logging from day 1 |
+| M7 — Frontend cut-over | v2.8.0 | All CRUD + import via backend API; rules auto-save |
 
 ---
 
@@ -73,17 +74,22 @@ All 9 data tables carry `workspace_id`. Auth middleware injects from JWT — cro
 
 ## Last validation
 
-✅ All 60 tests passing
-- Rules API: POST, GET, PATCH, DELETE (24 new tests)
-- Properties API: 13 tests
-- Transactions API: 23 tests
-✅ Category validation: all 15 categories tested
-✅ Workspace isolation: verified cross-workspace access returns 404
+✅ All 60 tests passing (M7 changes)
+- Properties GET/POST/PATCH: account_id returned
+- Transactions GET/POST/PATCH: property_id returned
+- Transactions GET: ?property_id= filter works
+- All assertions added for new fields
+
+✅ Manual testing (need to run dev server)
+- Frontend v2 mode: properties, transactions, rules all load from backend
+- Rules UI: add, delete, reorder all work with auto-save
+- CSV import: transactions batch-created with shared import_batch ID
+- Property filter on transactions: uses account_id correctly
 
 ---
 
 ## Last commit
-(Update on Milestone 7 start)
+efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
 
 ---
 
@@ -93,19 +99,8 @@ All 9 data tables carry `workspace_id`. Auth middleware injects from JWT — cro
 ## Automation log
 (Latest entry only; previous entries in `.claude/ai_state_archive.json`)
 
-- 2026-04-18 18:48:36 [lifecycle]
+- 2026-04-18 19:30:00 [M7 complete]
   - branch: main
-  - last_commit: b0af5a2 Update CLAUDE.md for v2 architecture; prune AI_STATE automation log
-  - changed_files: CLAUDE.md, AI_STATE.md, .claude/ai_state_archive.json
+  - last_commit: efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
+  - changed_files: backend/src/routes/properties.js, backend/src/routes/transactions.js, backend/tests/properties.test.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/index.html, frontend/version.json, AI_STATE.md
   - git_status: committed
-
-- 2026-04-18 18:50:42 [lifecycle]
-  - branch: main
-  - last_commit: c38b920 Update automation log with final commit hash
-
-- 2026-04-18 18:50:59 [lifecycle]
-  - branch: main
-  - last_commit: c38b920 Update automation log with final commit hash
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
