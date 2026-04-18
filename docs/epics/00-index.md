@@ -7,6 +7,7 @@
 | E3 | [Transaction Management](03-transaction-management.md) | Planned (M4+) | Yes |
 | E4 | [Reporting and Analytics](04-reporting-analytics.md) | Planned | Yes |
 | E5 | [Integrations and Data Import](05-integrations-data-import.md) | Partially done (frontend) | Yes |
+| E6 | [Architecture and Backend](06-architecture-backend.md) | In progress | No |
 
 ## Numbering/naming convention
 

@@ -46,10 +46,11 @@ None
 
 Relevant epic docs:
 
-- `docs/02-account-property-management.md` (Epic 2)
-- `docs/03-transaction-management.md`      (Epic 3)
-- `docs/04-reporting-analytics.md`         (Epic 4)
-- `docs/05-integrations-data-import.md`    (Epic 5)
+- `docs/epics/02-account-property-management.md` (E2)
+- `docs/epics/03-transaction-management.md`      (E3)
+- `docs/epics/04-reporting-analytics.md`         (E4)
+- `docs/epics/05-integrations-data-import.md`    (E5)
+- `docs/epics/06-architecture-backend.md`        (E6)
 
 ---
 
@@ -75,48 +76,19 @@ Review backlog and select next candidate feature (F2-2, F3-1, or F5-4) or known 
 
 - frontend/index.html (fixed renderDashboard to handle null address and parseFloat rent/aconto)
 - deploy.ps1 (PowerShell deploy script with nvm sourcing)
-- deploy.sh (bash deploy script)
 - AI_STATE.md (task breakdown, validation, completed work, automation log)
+- CLAUDE.md (restructured to workflow-only)
+- PROJECT_LANDLORDGURU.md (new — app-specific rules)
+- AI_STATE-GUIDE.md (new — AI_STATE.md structure reference)
+- docs/epics/00-index.md (E-prefixed IDs, numbering convention, E6 added)
+- docs/epics/06-architecture-backend.md (new — E6 epic)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-18 22:40:00 B2-2-1 complete
+- 2026-04-18 22:40:00 session housekeeping complete
   - branch: main
-  - lastcommit: 69c228f
-  - changedfiles: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md, AI_STATE-GUIDE.md, PROJECT_LANDLORDGURU.md
-  - gitstatus: M AI_STATE.md, M CLAUDE.md, M docs/epics/00-index.md (plus untracked: AI_STATE-GUIDE.md, PROJECT_LANDLORDGURU.md)
-
-- 2026-04-18 22:17:21 [lifecycle]
-  - branch: main
-  - last_commit: 69c228f Add PowerShell deployment automation script
-  - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
-  - git_status:
-     M AI_STATE.md
-     M CLAUDE.md
-     M docs/epics/00-index.md
-    ?? AI_STATE-GUIDE.md
-    ?? PROJECT_LANDLORDGURU.md
-
-- 2026-04-18 22:19:00 [lifecycle]
-  - branch: main
-  - last_commit: 69c228f Add PowerShell deployment automation script
-  - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
-  - git_status:
-     M AI_STATE.md
-     M CLAUDE.md
-     M docs/epics/00-index.md
-    ?? AI_STATE-GUIDE.md
-    ?? PROJECT_LANDLORDGURU.md
-
-- 2026-04-18 22:21:04 [lifecycle]
-  - branch: main
-  - last_commit: 69c228f Add PowerShell deployment automation script
-  - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
-  - git_status:
-     M AI_STATE.md
-     M CLAUDE.md
-     M docs/epics/00-index.md
-    ?? AI_STATE-GUIDE.md
-    ?? PROJECT_LANDLORDGURU.md
+  - lastcommit: 91ccfa4
+  - changedfiles: AI_STATE.md, docs/epics/00-index.md, docs/epics/06-architecture-backend.md
+  - gitstatus: M AI_STATE.md, M docs/epics/00-index.md, ?? docs/epics/06-architecture-backend.md
