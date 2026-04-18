@@ -19,4 +19,9 @@ function makeToken(overrides = {}) {
   );
 }
 
-module.exports = { WORKSPACE_ID, USER_ID, makeToken };
+// Set up the app with db for testing (call this in beforeAll of your test file)
+function setupAppWithDb(app, db) {
+  app.set('db', db);
+}
+
+module.exports = { WORKSPACE_ID, USER_ID, makeToken, setupAppWithDb };

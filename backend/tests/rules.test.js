@@ -3,9 +3,14 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env.test')
 const request = require('supertest');
 const app     = require('../src/app');
 const db      = require('../src/db/knex');
-const { makeToken, WORKSPACE_ID, USER_ID } = require('./helpers');
+const { makeToken, WORKSPACE_ID, USER_ID, setupAppWithDb } = require('./helpers');
 
 const token = makeToken();
+
+// Set up app with db for logging middleware
+beforeAll(() => {
+  setupAppWithDb(app, db);
+});
 
 const VALID_RULE = {
   keyword:      'tenant rent payment',
