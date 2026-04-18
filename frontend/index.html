@@ -723,10 +723,15 @@ async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
     if (window.AUTH_TOKEN) {
-      // v2 mode: data from backend API; rules pending Milestone 6
-      State.properties   = await Api.getProperties();
-      State.transactions = await Api.getTransactions();
-      State.rules        = [];
+      // v2 mode: data from backend API
+      const [props, txs, rules] = await Promise.all([
+        Api.getProperties(),
+        Api.getTransactions(),
+        Api.getRules(),
+      ]);
+      State.properties  = props;
+      State.transactions = txs;
+      State.rules        = rules;
     } else {
       // v1 mode: all data from Google Sheets
       const [props, txs, rules] = await Promise.all([
@@ -1645,7 +1650,25 @@ async function doImport(saveMappings) {
 
   setLoading(true, t('status.importing'));
   try {
-    const batchId = await DB.saveImportBatch(activeRows);
+    let batchId;
+    if (window.AUTH_TOKEN) {
+      // v2 mode: resolve property_id → account_id and create via backend API
+      const toSave = activeRows.map(row => {
+        const prop = State.properties.find(p => p.id === row.property_id);
+        return {
+          ...row,
+          property_id: undefined, // remove field — backend uses account_id
+          account_id: prop?.account_id ?? null,
+        };
+      });
+      const result = await Api.createTransactionBatch(toSave);
+      batchId = result.batchId;
+      // Backend doesn't return all transactions, so we'll refresh after import
+    } else {
+      // v1 mode: Google Sheets path (unchanged)
+      batchId = await DB.saveImportBatch(activeRows);
+      State.transactions.push(...activeRows);
+    }
     toast(t('import.toast.done', { count: activeRows.length, batchId }), 'success');
     State.importRows = [];
     clearImport();
@@ -1849,9 +1872,23 @@ function renderRules() {
   }).join('');
 }
 
-function deleteRule(idx) {
-  State.rules.splice(idx, 1);
-  renderRules();
+async function deleteRule(idx) {
+  if (window.AUTH_TOKEN) {
+    // v2 mode: call Api.deleteRule()
+    const rule = State.rules[idx];
+    try {
+      await Api.deleteRule(rule.id);
+      State.rules.splice(idx, 1);
+      renderRules();
+      toast(t('rules.toast.saved'), 'success');
+    } catch(e) {
+      toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
+    }
+  } else {
+    // v1 mode: in-memory only (user must click Save Order to persist)
+    State.rules.splice(idx, 1);
+    renderRules();
+  }
 }
 
 function openRuleModal() {
@@ -1866,44 +1903,87 @@ async function saveRuleModal() {
   const kw  = document.getElementById('rule-m-kw').value.trim().toLowerCase();
   const cat = document.getElementById('rule-m-cat').value;
   if (!kw || !cat) { toast(t('rules.toast.kwCatReq'), 'error'); return; }
-  State.rules.push({
+
+  const ruleData = {
     bank_profile: document.getElementById('rule-m-profile').value,
     keyword:      kw,
     category:     cat,
-    property_id:  document.getElementById('rule-m-apt').value,
-  });
-  renderRules();
-  closeRuleModal();
-  await saveRules();
+    property_id:  document.getElementById('rule-m-apt').value || null,
+  };
+
+  if (window.AUTH_TOKEN) {
+    // v2 mode: create via Api.createRule()
+    try {
+      const rule = await Api.createRule(ruleData);
+      State.rules.push(rule);
+      renderRules();
+      closeRuleModal();
+      toast(t('rules.toast.saved'), 'success');
+    } catch(e) {
+      toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
+    }
+  } else {
+    // v1 mode: in-memory, then save all rules
+    State.rules.push(ruleData);
+    renderRules();
+    closeRuleModal();
+    await saveRules();
+  }
 }
 
 async function saveRules() {
   setLoading(true, t('status.savingRules'));
   try {
-    await DB.saveRules(State.rules);
-    toast(t('rules.toast.saved'), 'success');
+    if (window.AUTH_TOKEN) {
+      // v2 mode: update sort_order on each rule
+      await Promise.all(State.rules.map((r, i) =>
+        Api.updateRule(r.id, { sort_order: i })
+      ));
+      toast(t('rules.toast.saved'), 'success');
+    } else {
+      // v1 mode: full overwrite
+      await DB.saveRules(State.rules);
+      toast(t('rules.toast.saved'), 'success');
+    }
   } catch(e) {
     toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
   }
   setLoading(false);
 }
 
-function loadDefaultRules() {
+async function loadDefaultRules() {
   const defaults = [
-    { bank_profile: 'jyske_bank', keyword: 'sabumba',      category: 'rent',               property_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'husleje',      category: 'rent',               property_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'varmebidrag',  category: 'heating_aconto',     property_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'vandafregn',   category: 'heating_settlement', property_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'ejendomsskat', category: 'property_tax',       property_id: '' },
-    { bank_profile: 'jyske_bank', keyword: 'forsikring',   category: 'insurance',          property_id: '' },
-    { bank_profile: 'mbank_pl',   keyword: 'czynsz',       category: 'rent',               property_id: '' },
-    { bank_profile: 'mbank_pl',   keyword: 'najem',        category: 'rent',               property_id: '' },
-    { bank_profile: '',           keyword: 'bank fee',     category: 'bank_charges',       property_id: '' },
-    { bank_profile: '',           keyword: 'gebyr',        category: 'bank_charges',       property_id: '' },
+    { bank_profile: 'jyske_bank', keyword: 'sabumba',      category: 'rent',               property_id: null },
+    { bank_profile: 'jyske_bank', keyword: 'husleje',      category: 'rent',               property_id: null },
+    { bank_profile: 'jyske_bank', keyword: 'varmebidrag',  category: 'heating_aconto',     property_id: null },
+    { bank_profile: 'jyske_bank', keyword: 'vandafregn',   category: 'heating_settlement', property_id: null },
+    { bank_profile: 'jyske_bank', keyword: 'ejendomsskat', category: 'property_tax',       property_id: null },
+    { bank_profile: 'jyske_bank', keyword: 'forsikring',   category: 'insurance',          property_id: null },
+    { bank_profile: 'mbank_pl',   keyword: 'czynsz',       category: 'rent',               property_id: null },
+    { bank_profile: 'mbank_pl',   keyword: 'najem',        category: 'rent',               property_id: null },
+    { bank_profile: '',           keyword: 'bank fee',     category: 'bank_charges',       property_id: null },
+    { bank_profile: '',           keyword: 'gebyr',        category: 'bank_charges',       property_id: null },
   ];
-  State.rules = [...State.rules, ...defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword))];
-  renderRules();
-  toast(t('rules.toast.defaultLoaded'), 'info');
+
+  if (window.AUTH_TOKEN) {
+    // v2 mode: create new defaults via Api
+    const newDefaults = defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword));
+    try {
+      for (const d of newDefaults) {
+        const rule = await Api.createRule(d);
+        State.rules.push(rule);
+      }
+      renderRules();
+      toast(t('rules.toast.defaultLoaded'), 'info');
+    } catch(e) {
+      toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
+    }
+  } else {
+    // v1 mode: in-memory only
+    State.rules = [...State.rules, ...defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword))];
+    renderRules();
+    toast(t('rules.toast.defaultLoaded'), 'info');
+  }
 }
 
 // ── Toasts ────────────────────────────────────────────────
