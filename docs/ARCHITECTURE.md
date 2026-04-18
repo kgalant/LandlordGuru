@@ -53,7 +53,7 @@ backend/ (Node.js + Express)
   │   ├── health.js             GET /api/health (for monitoring)
   │   ├── properties.js         GET/POST/PATCH/DELETE /api/properties ✅
   │   ├── transactions.js       GET/POST/PATCH/DELETE /api/transactions ✅
-  │   └── rules.js              GET/POST/PATCH/DELETE /api/rules (todo)
+  │   └── rules.js              GET/POST/PATCH/DELETE /api/rules ✅
   ├── src/middleware/
   │   ├── auth.js               JWT verification, req.user + workspace_id + req.logger injection
   │   └── errors.js             Error handler (todo)
@@ -63,7 +63,7 @@ backend/ (Node.js + Express)
                   account_properties, transactions, rules, fx_log, strings, activity_log
 ```
 
-**What's done (Milestones 1-5):**
+**What's done (Milestones 1-5.5):**
 - ✅ Express skeleton + Knex + PostgreSQL connected
 - ✅ All tables created with UUID PKs, workspace_id isolation, audit fields
 - ✅ Google OAuth flow (Passport.js) — login redirects to Google, JWT issued on callback
@@ -73,10 +73,10 @@ backend/ (Node.js + Express)
 - ✅ Admin scripts for workspace/user management
 - ✅ Properties API — full CRUD, workspace-scoped, auto-creates account on property creation
 - ✅ Transactions API — full CRUD, workspace-scoped, with date/type/category validation
+- ✅ Logging & Telemetry Foundation (migrations 010-012, logger utility, retrofit existing APIs)
+- ✅ Rules API — full CRUD, workspace-scoped, with category/property validation and hard delete
 
-**What's next (Milestone 5.5+):**
-- Logging & Telemetry Foundation (migrations 010-012, logger utility, retrofit existing APIs)
-- Rules API (built with logging from day 1)
+**What's next (Milestone 7+):**
 - Replace frontend's `sheets.js` with `api.js` calling backend
 - Retire Google Sheets credential from frontend
 
@@ -97,10 +97,10 @@ backend/ (Node.js + Express)
 | 2 | Add backend/ with Node + Express + PostgreSQL | ✅ Done (M1-M3) |
 | 3 | Add authentication (Google OAuth → JWT) | ✅ Done (M3) |
 | 4 | Build API routes (properties, transactions) | ✅ Done (M4-M5) |
-| 4.5 | Logging & Telemetry Foundation | 🔄 In progress (M5.5) |
-| 5 | Rules API + logging from day 1 | ⏳ Pending (M6) |
-| 6 | Replace sheets.js + data.js with api.js | ⏳ Pending (post-M6) |
-| 7 | Retire Google Sheets credential, test e2e | ⏳ Pending (post-M6) |
+| 4.5 | Logging & Telemetry Foundation | ✅ Done (M5.5) |
+| 5 | Rules API + logging from day 1 | ✅ Done (M6) |
+| 6 | Replace sheets.js + data.js with api.js | ⏳ Pending (M7) |
+| 7 | Retire Google Sheets credential, test e2e | ⏳ Pending (post-M7) |
 | 8 | Optional: move to managed hosting / separate domain | ⏳ Future |
 
 ---

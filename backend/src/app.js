@@ -35,6 +35,7 @@ app.use('/auth', require('./routes/auth'));
 // API routes
 app.use('/api/properties',   require('./routes/properties'));
 app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/rules',        require('./routes/rules'));
 
 // Static files
 app.use(express.static(FRONTEND_DIR));
