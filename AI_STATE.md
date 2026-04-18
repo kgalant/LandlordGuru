@@ -5,7 +5,7 @@ Build v2: real backend (Node/Express/PostgreSQL) + user auth + workspace multi-t
 Frontend served by Express (no NAS dependency). Google Sheets retired when backend is stable.
 
 ## Current phase
-v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
+v2 backend development — Milestone 4 (Properties API + test infrastructure)
 
 ## Completed
 ### OAuth flow fix
@@ -90,18 +90,28 @@ v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 - **Deployment:** git pull + pm2 reload (optionally via GitHub webhook)
 - **NAS:** retired from this app once backend is live
 
+### v2 Milestone 4 — Properties API ✅ (partial)
+- GET/POST/PATCH/DELETE /api/properties — workspace-scoped, soft delete
+- POST auto-creates matching account + account_properties row (transaction)
+- Field validation: name/country/currency/model required; ISO codes enforced; decimals positive
+- app.js split from index.js so Express app is importable without starting a server
+- Jest + Supertest test suite: 13 tests, all passing
+  - Tests run locally against landlordguru_test on homedev via SSH tunnel
+  - globalSetup.js: runs migrations + seeds test workspace/user
+  - afterEach: truncates properties/accounts/account_properties between tests
+  - Workspace isolation verified: cross-workspace PATCH/DELETE returns 404
+
+### Test infrastructure decisions
+- `backend/.env.test` — gitignored; loaded by test files before app.js runs
+- `app.js` skips dotenv.config() when NODE_ENV=test (test file owns env loading)
+- Test DB: landlordguru_test on homedev; access via SSH tunnel (ssh -N -L 5432:localhost:5432 kim@homedev)
+- Fixed UUIDs for test workspace + user — FK constraints satisfied without mocking
+
 ## In progress
 -
 
 ## Next step
-Milestone 4: Properties API (CRUD endpoints, workspace-scoped)
-- Note: POST /api/properties must auto-create a matching account + account_properties row (migration 008 decision)
-1. Create backend/src/routes/properties.js with GET /api/properties, POST, PATCH, DELETE endpoints
-2. All routes require auth middleware (JWT + workspace_id injection)
-3. Query builder uses workspace_id filter on all queries
-4. Field validation: name required, currency/country ISO codes, decimal precision for rent/aconto
-5. Test each endpoint manually with curl + JWT token
-6. Verify workspace isolation: users from different workspaces see only their properties
+Milestone 4 continued: Feature 2.2 — Property list UI (frontend view showing active properties)
 
 ## Milestone plan (v2)
 ```
@@ -1147,3 +1157,147 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
     ?? backend/src/db/migrations/008_accounts.js
     ?? docs/DESIGN-DISCUSSION.md
     ?? docs/epics/
+
+- 2026-04-18 13:20:16 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+
+- 2026-04-18 13:28:04 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:28:26 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:29:47 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:32:16 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:33:51 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:33:56 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:33:59 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:34:02 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:35:59 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:37:44 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:38:10 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 13:39:52 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md, backend/src/index.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/index.js
+    ?? backend/src/routes/properties.js
+
+- 2026-04-18 13:41:41 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md, backend/src/index.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/index.js
+    ?? backend/src/routes/properties.js
+
+- 2026-04-18 13:44:44 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md, backend/src/index.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/index.js
+    ?? backend/src/routes/properties.js
+
+- 2026-04-18 13:47:15 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md, backend/src/index.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/index.js
+    ?? backend/src/routes/properties.js
+
+- 2026-04-18 13:48:59 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md, backend/src/index.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/index.js
+    ?? backend/src/routes/properties.js
+
+- 2026-04-18 13:49:53 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md, backend/src/index.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/index.js
+    ?? backend/src/routes/properties.js
+
+- 2026-04-18 13:51:26 [lifecycle]
+  - branch: main
+  - last_commit: c21a8a9 Add design planning docs, epics backlog, and accounts schema (migration 008)
+  - changed_files: AI_STATE.md, backend/src/index.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/index.js
+    ?? backend/src/routes/properties.js

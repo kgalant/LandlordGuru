@@ -9,6 +9,7 @@ backend/node_modules/
 .env
 .env.local
 .env.*.local
+.env.test
 
 # Build output (for future frontend build step)
 frontend/dist/
