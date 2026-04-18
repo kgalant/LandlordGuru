@@ -117,11 +117,23 @@ v2 backend development — Milestone 4 (Properties API + test infrastructure)
 - New strings: property.toast.archiveConfirm, property.toast.archived
 - Version bumped 2.2.0 → 2.3.0
 
+### v2 Milestone 5 — Transactions API ✅
+- GET/POST/PATCH/DELETE /api/transactions — workspace-scoped, hard delete
+- GET supports optional filters: account_id, type, from, to (date range)
+- Validation: type (income/expense/deposit/transfer), category must match type,
+  amount > 0, currency 3-char, notes required for other_expense
+- account_id verified against workspace on POST and PATCH
+- date normalised to YYYY-MM-DD on all responses (local timezone, not UTC)
+- source defaults to 'manual' when not provided
+- Registered as /api/transactions in app.js
+- 23 tests in backend/tests/transactions.test.js — all passing (36 total across both suites)
+- Version bumped 2.3.0 → 2.4.0
+
 ## In progress
 -
 
 ## Next step
-Milestone 5: Transactions API (GET/POST/PATCH/DELETE /api/transactions)
+Feature 5.2 — wire transactions GET to frontend (refreshAll v2 mode loads real transactions)
 
 ## Milestone plan (v2)
 ```
@@ -1340,3 +1352,23 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
      M frontend/js/strings.js
      M frontend/version.json
     ?? frontend/js/api.js
+
+- 2026-04-18 14:14:37 [lifecycle]
+  - branch: main
+  - last_commit: 73cd31b Feature 2.2: Property list UI wired to backend API (v2.2.0 ΓåÆ v2.3.0)
+
+- 2026-04-18 14:14:55 [lifecycle]
+  - branch: main
+  - last_commit: 73cd31b Feature 2.2: Property list UI wired to backend API (v2.2.0 ΓåÆ v2.3.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 14:17:30 [lifecycle]
+  - branch: main
+  - last_commit: 73cd31b Feature 2.2: Property list UI wired to backend API (v2.2.0 ΓåÆ v2.3.0)
+  - changed_files: AI_STATE.md, backend/src/app.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/app.js
+    ?? backend/src/routes/transactions.js
