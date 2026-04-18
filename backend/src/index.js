@@ -5,6 +5,9 @@ const PORT = process.env.PORT || 3000;
 
 db.migrate.latest()
   .then(() => {
+    // Register db on app so auth middleware can access it for logger
+    app.set('db', db);
+
     app.listen(PORT, () => {
       console.log(`LandlordGuru backend listening on port ${PORT}`);
 
