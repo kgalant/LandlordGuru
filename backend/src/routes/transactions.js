@@ -82,6 +82,15 @@ function validateFields(body, requireAll) {
 // Optional query params: account_id, type, from (date), to (date)
 router.get('/', requireAuth, async (req, res) => {
   try {
+    await req.logger.info('transaction.list.started', {
+      filters: {
+        account_id: req.query.account_id || null,
+        type: req.query.type || null,
+        from: req.query.from || null,
+        to: req.query.to || null,
+      },
+    });
+
     let query = db('transactions')
       .where('workspace_id', req.workspace_id)
       .orderBy('date', 'desc')
@@ -101,8 +110,10 @@ router.get('/', requireAuth, async (req, res) => {
     }
 
     const transactions = await query;
+    await req.logger.info('transaction.list.success', { transaction_count: transactions.length });
     res.json(transactions.map(formatDate));
   } catch (err) {
+    await req.logger.error('transaction.list.failed', { error: err.message });
     console.error('GET /api/transactions error:', err.message);
     res.status(500).json({ error: 'Failed to fetch transactions' });
   }
@@ -123,15 +134,23 @@ router.post('/', requireAuth, async (req, res) => {
   const workspace_id = req.workspace_id;
   const user_id = req.user.id;
 
-  // Verify account_id belongs to this workspace (if provided)
-  if (account_id) {
-    const account = await db('accounts').where({ id: account_id, workspace_id }).first();
-    if (!account) {
-      return res.status(400).json({ error: 'account_id not found in this workspace' });
-    }
-  }
-
   try {
+    await req.logger.info('transaction.create.started', {
+      date,
+      type,
+      category,
+      amount: parseFloat(amount),
+      currency: currency.trim().toUpperCase(),
+    });
+
+    // Verify account_id belongs to this workspace (if provided)
+    if (account_id) {
+      const account = await db('accounts').where({ id: account_id, workspace_id }).first();
+      if (!account) {
+        return res.status(400).json({ error: 'account_id not found in this workspace' });
+      }
+    }
+
     const [tx] = await db('transactions')
       .insert({
         workspace_id,
@@ -152,8 +171,15 @@ router.post('/', requireAuth, async (req, res) => {
       })
       .returning('*');
 
+    await req.logger.info('transaction.create.success', {
+      transaction_id: tx.id,
+      type: tx.type,
+      category: tx.category,
+      amount: tx.amount,
+    });
     res.status(201).json(formatDate(tx));
   } catch (err) {
+    await req.logger.error('transaction.create.failed', { error: err.message });
     console.error('POST /api/transactions error:', err.message);
     res.status(500).json({ error: 'Failed to create transaction' });
   }
@@ -168,6 +194,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     .first();
 
   if (!existing) {
+    await req.logger.debug('transaction.update.notfound', { transaction_id: id });
     return res.status(404).json({ error: 'Transaction not found' });
   }
 
@@ -202,6 +229,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
   if (updates.amount !== undefined) updates.amount = parseFloat(updates.amount);
   if (updates.currency) updates.currency = updates.currency.trim().toUpperCase();
 
+  await req.logger.info('transaction.update.started', {
+    transaction_id: id,
+    fields_updated: Object.keys(updates).filter(k => k !== 'last_modified_at' && k !== 'last_modified_by'),
+  });
+
   updates.last_modified_at = new Date();
   updates.last_modified_by = req.user.id;
 
@@ -211,8 +243,14 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .update(updates)
       .returning('*');
 
+    await req.logger.info('transaction.update.success', {
+      transaction_id: updated.id,
+      type: updated.type,
+      category: updated.category,
+    });
     res.json(formatDate(updated));
   } catch (err) {
+    await req.logger.error('transaction.update.failed', { transaction_id: id, error: err.message });
     console.error('PATCH /api/transactions/:id error:', err.message);
     res.status(500).json({ error: 'Failed to update transaction' });
   }
@@ -228,13 +266,24 @@ router.delete('/:id', requireAuth, async (req, res) => {
     .first();
 
   if (!existing) {
+    await req.logger.debug('transaction.delete.notfound', { transaction_id: id });
     return res.status(404).json({ error: 'Transaction not found' });
   }
 
   try {
+    await req.logger.info('transaction.delete.started', {
+      transaction_id: id,
+      type: existing.type,
+      category: existing.category,
+      amount: existing.amount,
+    });
+
     await db('transactions').where({ id, workspace_id: req.workspace_id }).del();
+
+    await req.logger.info('transaction.delete.success', { transaction_id: id });
     res.json({ ok: true });
   } catch (err) {
+    await req.logger.error('transaction.delete.failed', { transaction_id: id, error: err.message });
     console.error('DELETE /api/transactions/:id error:', err.message);
     res.status(500).json({ error: 'Failed to delete transaction' });
   }
