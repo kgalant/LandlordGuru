@@ -34,6 +34,12 @@ Backend REST endpoints for reading and writing transactions.
 
 **Sign convention:** `amount` is always positive. Sign is encoded in `type`/`category`.
 
+**Non-base-currency transactions:** If `currency` differs from the workspace
+`reporting_currency`, a valid rate must exist in `currency_rates` for the
+transaction date (see F2-9). The API returns HTTP 422 if no rate is
+resolvable. The resolved rate and converted amount are returned in the
+response for client display.
+
 ---
 
 ### F3-2 Transaction list UI `[MVP]`
@@ -49,6 +55,10 @@ Frontend view showing transactions with filtering and sorting.
 - Clicking a row opens an edit form (F3-1 PATCH)
 - "Add transaction" button opens a new transaction form
 - Bulk select + delete for removing imported rows
+- In multi-currency workspaces, each row shows the native amount and
+  currency; a workspace-level toggle displays the converted value in the
+  reporting currency alongside the native value, using the dated rate from
+  `currency_rates` current on the transaction date
 
 ---
 

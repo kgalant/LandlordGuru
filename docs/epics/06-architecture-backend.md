@@ -84,3 +84,4 @@ None recorded.
 ## Notes
 - Features here are infrastructure work items, not user-facing. They do not increment the minor version unless they change observable API behaviour.
 - Deployment scripts (`deploy.ps1`, `deploy.sh`) live at the project root, not under `backend/`.
+- Automated currency rate refresh (F2-10) requires scheduled backend job infrastructure. When F2-10 is implemented, recurring server-side job support (PM2 scheduled tasks or equivalent) must be in place — this should be tracked as a subtask of F2-10 or as a new F6 item at that time.

@@ -24,8 +24,8 @@ None
 
 ## Task breakdown (current focus)
 
-- [ ] S1: Review E2 account model (F2-3, F2-4) and identify gaps or open questions in the current design.
-- [ ] S2: Update E2 (and any cross-references in E3/E5) with deeper account management decisions.
+- [x] S1: Review E2 account model (F2-3, F2-4) and identify gaps or open questions in the current design.
+- [x] S2: Update E2 (and cross-references in E1, E3, E4, E5, E6 and DESIGN-DISCUSSION) with deeper account management decisions.
 
 ---
 
@@ -47,7 +47,7 @@ Relevant epic docs:
 
 ## Next step
 
-Review E2 account model sections (F2-3, F2-4) and identify gaps or open questions to discuss before writing deeper design decisions.
+Commit the account management deep-dive changes, then select the next feature to implement from the backlog.
 
 ---
 
@@ -65,6 +65,7 @@ Review E2 account model sections (F2-3, F2-4) and identify gaps or open question
 
 ## Files touched this session
 
+- docs/DESIGN-DISCUSSION.md
 - docs/epics/01-workspace-user-management.md
 - docs/epics/02-account-property-management.md
 - docs/epics/03-transaction-management.md
@@ -77,8 +78,22 @@ Review E2 account model sections (F2-3, F2-4) and identify gaps or open question
 
 ## Automation log (latest only)
 
-- 2026-04-18 23:15:00 epic rewrite — standardise feature IDs to F<e>-<n>
+- 2026-04-18 23:30:00 account management deep-dive — hierarchy, currency rates, versioning
   - branch: main
-  - lastcommit: 2166e18
-  - changedfiles: docs/epics/01-workspace-user-management.md, docs/epics/02-account-property-management.md, docs/epics/03-transaction-management.md, docs/epics/04-reporting-analytics.md, docs/epics/05-integrations-data-import.md, docs/epics/06-architecture-backend.md, AI_STATE.md
-  - gitstatus: M AI_STATE.md, M docs/epics/01-workspace-user-management.md, M docs/epics/02-account-property-management.md, M docs/epics/03-transaction-management.md, M docs/epics/04-reporting-analytics.md, M docs/epics/05-integrations-data-import.md, M docs/epics/06-architecture-backend.md
+  - lastcommit: 46f2322
+  - changedfiles: docs/DESIGN-DISCUSSION.md, docs/epics/01-workspace-user-management.md, docs/epics/02-account-property-management.md, docs/epics/03-transaction-management.md, docs/epics/04-reporting-analytics.md, docs/epics/05-integrations-data-import.md, docs/epics/06-architecture-backend.md, AI_STATE.md
+  - gitstatus: M AI_STATE.md, M docs/DESIGN-DISCUSSION.md, M docs/epics/01-workspace-user-management.md, M docs/epics/02-account-property-management.md, M docs/epics/03-transaction-management.md, M docs/epics/04-reporting-analytics.md, M docs/epics/05-integrations-data-import.md, M docs/epics/06-architecture-backend.md
+
+- 2026-04-18 23:20:13 [lifecycle]
+  - branch: main
+  - last_commit: 46f2322 Standardise epic feature IDs to F<epic>-<n> convention
+  - changed_files: AI_STATE.md, docs/DESIGN-DISCUSSION.md, docs/epics/01-workspace-user-management.md, docs/epics/02-account-property-management.md, docs/epics/03-transaction-management.md, docs/epics/04-reporting-analytics.md, docs/epics/05-integrations-data-import.md, docs/epics/06-architecture-backend.md
+  - git_status:
+     M AI_STATE.md
+     M docs/DESIGN-DISCUSSION.md
+     M docs/epics/01-workspace-user-management.md
+     M docs/epics/02-account-property-management.md
+     M docs/epics/03-transaction-management.md
+     M docs/epics/04-reporting-analytics.md
+     M docs/epics/05-integrations-data-import.md
+     M docs/epics/06-architecture-backend.md

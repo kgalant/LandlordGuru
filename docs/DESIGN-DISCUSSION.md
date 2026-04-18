@@ -44,15 +44,17 @@ The application is designed as a multi-user, multi-workspace SaaS system where:
 
 ### Accounts Model
 
-**Definition**: An account is a flexible unit of accounting that serves as a container for transactions. It bridges properties and transactions, allowing workspaces to organize according to their needs.
+**Definition**: An account is a flexible unit of accounting that serves as a container for transactions. It bridges properties and transactions. The account structure is workspace-level — all users in a workspace share the same account hierarchy.
 
-**Flexibility**: 
-- A landlord with one property might have one account
-- A landlord with multiple properties in the same building might have one account for the whole building
-- Different users can organize differently within their own workspaces
-- The system does not mandate a single accounting structure
+**Hierarchy**: Accounts form a parent-child tree. The workspace default account is always the root; it cannot be a child of any other account. Additional accounts can be standalone top-level accounts or children of existing accounts. The hierarchy is freeform — the system enforces no semantic meaning on levels. Different workspaces can use accounts to represent companies, buildings, units, tenants, or any other grouping that suits them.
 
-**Extensibility Consideration**: The accounts model is designed to eventually support tenant and lease management without major refactoring, but this is explicitly NOT part of the MVP.
+**Roll-up and filtering**: A parent account aggregates the figures of all its descendants. Filtering a report by an account implicitly includes all descendant accounts. These two properties are the primary value of the hierarchy.
+
+**Maximum depth**: Each workspace carries a `max_account_depth` setting (default: 5, no system ceiling). Workspaces with unusual structures can raise this setting.
+
+**Simplicity for simple users**: The default account is the catch-all. Users who never configure accounts never encounter the hierarchy — every transaction and property resolves to the default account automatically.
+
+**Extensibility**: The accounts model is designed to eventually support tenant and lease management and account structure versioning (building a new hierarchy alongside the old, then activating it while archiving the old) without destroying historical data. Both are explicitly post-MVP.
 
 ### Optional Complexity
 
@@ -111,6 +113,17 @@ Based on this discussion, the backlog will be organized into five main epics:
    - Field mapping configuration
    - Bulk import workflows
    - Data transformation pipelines
+
+### Multi-Currency
+
+Workspaces can contain properties and transactions in multiple currencies. The system handles this as follows:
+
+- **Source currency**: every transaction is stored in its native currency. Amounts are never silently converted on write.
+- **Reporting currency**: each workspace has a single `reporting_currency` setting. In any view that aggregates or displays multiple amounts, a toggle offers display in native currency or in the reporting currency. When the reporting currency is selected, non-native amounts show both the raw value and a converted value; the converted value is used for all arithmetic and aggregation.
+- **Dated bilateral rates**: exchange rates are stored as `(from_currency, to_currency, effective_date, rate)` scoped to the workspace. A rate is valid from its `effective_date` until the next rate for the same pair — users control validity by controlling how often they update rates. Rates are workspace-specific; different workspaces can use different rates for the same day.
+- **Rate requirement**: any transaction in a non-reporting currency requires a valid rate on or before its transaction date. Transactions without a resolvable rate are rejected at import and blocked at manual entry.
+- **Rate lookup rule**: the most recent rate where `effective_date ≤ transaction date` is used. There is no exact-date requirement.
+- **Automated refresh**: workspaces can configure automated rate refresh from a public data source at a configurable frequency (source TBD — see F2-10).
 
 ## Next Steps
 

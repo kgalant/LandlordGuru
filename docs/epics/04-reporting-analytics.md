@@ -26,14 +26,21 @@ Reports are not hardcoded layouts. They are driven by a pivot table approach:
 Summarise income and expenses for a date range, grouped by category.
 
 **Acceptance criteria:**
-- `GET /api/reports/pnl` — accepts: `from`, `to` (date range), optional `property_id`
+- `GET /api/reports/pnl` — accepts: `from`, `to` (date range), optional
+  `property_id`, optional `account_id`
+- `account_id` filter resolves to the specified account and all its
+  descendants (recursive); add `account_scope=exact` to restrict to a
+  single account only — at minimum both modes must be supported; further
+  descendant filtering options (e.g. by account name or level) are Future
 - Returns:
   - Income total, broken down by category
   - Expense total, broken down by category
   - Net P&L
   - `transfer` / `inter_account` transactions excluded
 - Response includes the date range and any applied filters for traceability
-- Amounts are returned in each transaction's native currency; the client handles FX conversion for display
+- Amounts are returned in each transaction's native currency; the client
+  applies FX conversion using the dated rate from `currency_rates` current
+  on each transaction's date
 
 ---
 
@@ -147,5 +154,6 @@ None recorded.
 
 ## Notes
 - The existing `js/reports.js` contains working P&L logic (filtering, aggregation). The backend API can be modelled on this logic.
-- FX conversion: amounts are stored in native currency. The client applies FX rates at display time using `CONFIG.FX_RATES`. The backend does not perform currency conversion.
+- FX conversion: amounts are stored in native currency. The backend returns native amounts; the client applies conversion using the dated rate from `currency_rates` current on each transaction's date (most recent rate with `effective_date ≤ transaction date`). The backend does not perform currency conversion.
+- Multi-currency display: wherever amounts are aggregated, a workspace-level toggle selects the reporting currency. Non-native values show both the raw amount and the converted amount; the converted value is used for summing.
 - `inter_account` transfers must always be excluded from P&L to avoid double-counting.

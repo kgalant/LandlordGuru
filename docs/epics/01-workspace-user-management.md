@@ -97,6 +97,29 @@ Fine-grained per-user permission control within a workspace.
 
 ---
 
+### F1-6 Workspace settings `[MVP]`
+**Status:** Planned
+
+Workspace-level configuration parameters that control system behaviour across
+all features.
+
+**Acceptance criteria:**
+- `GET /api/workspace/settings` — returns current settings for the active
+  workspace
+- `PATCH /api/workspace/settings` — updates one or more settings; only
+  owners can update
+- Initial settings:
+  - `reporting_currency` — ISO 4217 currency code used as the base for
+    multi-currency display and conversion (e.g. `USD`, `DKK`)
+  - `max_account_depth` — maximum allowed depth of the account hierarchy;
+    default: `5`; no system ceiling
+- Additional settings will be added here as features require them (e.g.
+  tenant tracking toggle, rate auto-refresh config)
+- Settings are fully scoped to the workspace; different workspaces are
+  independent
+
+---
+
 ## Bugs
 
 None recorded.

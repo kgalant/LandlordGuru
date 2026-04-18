@@ -118,6 +118,10 @@ Show the user all parsed rows with their proposed category and property before c
 - User can override category and property per-row before importing
 - "Import N rows" button submits the validated rows to `POST /api/transactions/import` (F3-4)
 - Duplicate rows (same date + amount + description already in workspace) are highlighted with a warning
+- Rows in a non-reporting currency are excluded from the importable set if no
+  rate exists in `currency_rates` for the transaction date; a message
+  identifies the missing rate and links to the rate management UI (F2-9)
+  so the user can add the rate and re-import
 
 ---
 
@@ -136,15 +140,26 @@ View and roll back previous import batches.
 
 ---
 
-### F5-7 FX rate logging `[MVP — passive]`
+### F5-7 Import-time currency rate resolution `[MVP]`
 **Status:** Planned
 
-Record the exchange rates in use at the time of import for audit purposes.
+Ensure non-reporting-currency rows in an import have a resolvable exchange
+rate before they are accepted.
 
 **Acceptance criteria:**
-- When an import includes non-base-currency transactions, the current FX rates are written to `fx_log`
-- `GET /api/fx-log` — returns rate snapshots for the workspace
-- No UI required — informational only; rates are visible in a raw log view if needed
+- During import preview (F5-5), each row whose `currency` differs from the
+  workspace `reporting_currency` is looked up against `currency_rates`
+  (most recent rate with `effective_date ≤ row date`)
+- Rows with a resolvable rate display the resolved rate and converted amount
+  in the preview table
+- Rows without a resolvable rate are flagged and excluded from the importable
+  set; the preview message identifies which currency pairs and date ranges
+  are missing and links to the rate management UI (F2-9)
+- The rate used for each transaction is recorded on the transaction row at
+  import time (`fx_rate_at_import`, `fx_rate_date`) for audit purposes
+
+**Note:** The authoritative rate store is `currency_rates` (F2-9).
+The `fx_log` table from earlier designs is superseded by this approach.
 
 ---
 
