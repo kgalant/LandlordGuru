@@ -206,6 +206,70 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/properties
 
 ---
 
+## Step 9 — Logging configuration (Milestone 5.5+)
+
+All backend operations are logged to stdout and to the `activity_log` database table.
+
+### Default log level
+
+By default, only errors are logged. To enable more verbose logging:
+
+```bash
+# In .env, set:
+LOGGER_DEFAULT_LEVEL=info    # or debug for maximum verbosity
+LOGGER_STDOUT_FORMAT=json    # structured JSON (or text for human-readable)
+LOGGER_STORE_IN_DB=true      # write to activity_log table (recommended)
+```
+
+### Per-workspace or per-user log level
+
+You can temporarily elevate logging for a specific workspace or user without changing the global setting:
+
+```bash
+psql landlordguru_dev
+
+# For a workspace (temporary, expires tomorrow):
+UPDATE workspaces
+SET log_level = 'debug',
+    log_level_expires_at = NOW() + INTERVAL '24 hours'
+WHERE name = 'My Workspace';
+
+# For a user (temporary, expires in 2 hours):
+UPDATE workspace_users
+SET log_level = 'debug',
+    log_level_expires_at = NOW() + INTERVAL '2 hours'
+WHERE workspace_id = '<id>' AND user_id = '<id>';
+
+\q
+```
+
+When the expiry time passes, logging automatically reverts to the workspace (or global) default.
+
+### Viewing logs
+
+**In real-time (during development):**
+```bash
+npm start    # logs appear in the terminal
+```
+
+**From the database (production):**
+```bash
+psql landlordguru_prod
+SELECT timestamp, level, action, parameters FROM activity_log
+WHERE workspace_id = '<id>'
+ORDER BY timestamp DESC
+LIMIT 50;
+```
+
+**From PM2 (production):**
+```bash
+pm2 logs landlordguru
+```
+
+See `docs/LOGGING.md` for full reference on log levels, action naming conventions, and querying.
+
+---
+
 ## Production deployment
 
 ### On a Linux server (spare laptop or VPS)

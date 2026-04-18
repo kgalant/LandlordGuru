@@ -38,6 +38,17 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 - Include test changes in the same commit as the feature, not a separate one
 - Run `npm test` (from `backend/`) before committing to confirm all tests pass
 
+## Logging hygiene
+- All route handlers and backend operations must log their actions: use `req.logger.info()`, `req.logger.error()`, or `req.logger.debug()`
+- Log format: `req.logger.info(action, parameters)` where action is dot-notation (e.g. `'property.create.success'`)
+- Include relevant IDs and context in parameters (e.g. property_id, user_id, error message)
+- Tests do NOT need to assert on logging — it is a side-effect. Tests verify that the API works.
+- Log level is configurable per workspace and per user with automatic expiry — see `docs/LOGGING.md`
+
+## Architectural guidance
+- When having conversations about any general architecture topic related to the app, consider the input provided from an adversarial angle also. Call out key shortcomings if any with the user-suggested approach and propose alternatives if there are obvious better ways of doing certain things that are common practice. Confirm explicitly with the user before taking any such alternative approach.
+
+
 ## Documentation hygiene
 - After any task that adds a feature, renames something, or changes how a system works,
   check whether documentation needs updating or creating before committing:

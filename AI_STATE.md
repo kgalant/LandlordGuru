@@ -8,6 +8,40 @@ Frontend served by Express (no NAS dependency). Google Sheets retired when backe
 v2 backend development — Milestone 4 (Properties API + test infrastructure)
 
 ## Completed
+
+### Milestone 5.5 — Phase 0 Documentation ✅
+- **docs/LOGGING.md** (NEW): Comprehensive logging guide
+  - Architecture overview, log levels (error/info/debug), configuration reference
+  - Per-workspace and per-user log level resolution with automatic expiry
+  - Backend logger usage patterns and action naming convention
+  - Activity log table schema and example queries
+  - Frontend telemetry overview (Phase 3 placeholder)
+  - Troubleshooting section
+- **docs/ARCHITECTURE.md** (UPDATE): Added logging layer
+  - Updated v2 system diagram to include `logger.js` middleware
+  - Updated migration path table (added 4.5 for logging foundation)
+  - Added structured logging to key decisions section
+  - Updated status from M4 "in progress" to M5 "done"
+- **docs/data-model.md** (UPDATE): Logging configuration columns and activity_log table
+  - Added `log_level` and `log_level_expires_at` to workspaces table
+  - Added `log_level` and `log_level_expires_at` to workspace_users table
+  - Added Activity Log table schema with all fields and indexes
+- **CLAUDE.md** (UPDATE): Added logging hygiene rule
+  - New section after test hygiene: all routes must use req.logger
+  - Logging is side-effect only, tests do not assert on it
+  - Log format standard: `req.logger.info(action, parameters)`
+- **backend/.env.example** (UPDATE): Added logging environment variables
+  - `LOGGER_DEFAULT_LEVEL=error` (global default, least verbose)
+  - `LOGGER_STDOUT_FORMAT=json` (structured or text)
+  - `LOGGER_STORE_IN_DB=true` (write to activity_log)
+  - Also added missing `SESSION_SECRET` var
+- **docs/BACKEND-SETUP.md** (UPDATE): New Step 9 — Logging configuration
+  - Instructions for setting default log level globally
+  - Per-workspace and per-user temporary overrides with SQL examples
+  - Viewing logs in dev (stdout) and production (DB queries, PM2)
+  - Reference to docs/LOGGING.md for full details
+
+## Completed (earlier)
 ### OAuth flow fix
 - Changed strategy to find existing users by email (not google_id)
 - Removed automatic user creation — now fails with helpful error if user not found
@@ -139,36 +173,48 @@ v2 backend development — Milestone 4 (Properties API + test infrastructure)
 - Version bumped 2.4.0 → 2.5.0
 
 ## In progress
--
+Milestone 5.5: Logging & Telemetry — Phase 0, Documentation ✅ COMPLETE
 
 ## Next step
-Milestone 6: Rules API (GET/POST/PATCH/DELETE /api/rules)
+Review documentation updates before proceeding to code implementation (Phase 0 infrastructure)
 
 ## Milestone plan (v2)
 ```
-Milestone 1   Backend skeleton
-              Express app, Knex connected to PostgreSQL,
-              health-check endpoint, running on laptop
+Milestone 1   Backend skeleton ✅
+Milestone 2   Schema ✅
+Milestone 3   Auth ✅
+Milestone 4   Properties API ✅
+Milestone 5   Transactions API ✅
 
-Milestone 2   Schema
-              Migrations: workspaces, users, workspace_users,
-              properties, transactions, rules, fx_log, strings
-              (all data tables get workspace_id)
+Milestone 5.5 Logging & Telemetry Foundation
+              Phase 0 (docs + infrastructure):
+                - docs/LOGGING.md (new)
+                - Update ARCHITECTURE.md, data-model.md, CLAUDE.md,
+                  BACKEND-SETUP.md, backend/.env.example
+                - Migrations 010 (workspaces.log_level + expiry),
+                  011 (workspace_users.log_level + expiry),
+                  012 (activity_log table)
+                - backend/src/lib/logger.js
+                - backend/src/middleware/telemetry.js (placeholder)
+                - Inject req.logger in auth middleware
+              Phase 1: Retrofit Properties API with logging
+              Phase 2: Retrofit Transactions API with logging
+              Phase 3: Frontend telemetry (deferred)
 
-Milestone 3   Auth
-              Google OAuth, JWT issued, frontend login screen
-
-Milestone 4   Properties API
-              CRUD endpoints, workspace-scoped
-
-Milestone 5   Transactions API
-              CRUD + batch import endpoint
-
-Milestone 6   Rules + Reports API
+Milestone 6   Rules API
+              Built with logging from day 1
 
 Milestone 7   Cut over
               api.js replaces sheets.js, Google Sheets retired
 ```
+
+## Logging design decisions (locked)
+- Log levels: error, info, debug (least → most verbose)
+- Resolution: user override (with expiry) → workspace default (with expiry) → global 'error'
+- Storage: dedicated columns log_level + log_level_expires_at on workspaces and workspace_users
+- Logger injection: via auth middleware as req.logger (not manually per route)
+- Retention: keep activity_log forever (no archive policy for now)
+- Tests do NOT assert on logging (side-effect only)
 
 ## Schema notes
 All existing tables get `workspace_id`.
@@ -195,8 +241,13 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
 - Amount precision: DECIMAL(12,2) for currency, DECIMAL(12,6) for rates
 
 ## Files touched this session
-- backend/src/routes/auth.js (OAuth strategy: find by email, don't create new users)
-- AI_STATE.md (updated status)
+- docs/LOGGING.md (NEW — comprehensive logging guide)
+- docs/ARCHITECTURE.md (logging layer, migration path update, key decisions)
+- docs/data-model.md (log_level columns, activity_log table schema)
+- CLAUDE.md (logging hygiene rule)
+- backend/.env.example (LOGGER_* vars, SESSION_SECRET)
+- docs/BACKEND-SETUP.md (Step 9 — logging configuration)
+- AI_STATE.md (multiple updates throughout session)
 
 ## Automation log
 
@@ -1392,3 +1443,146 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
   - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
+
+- 2026-04-18 14:26:44 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: CLAUDE.md
+  - git_status:
+     M CLAUDE.md
+
+- 2026-04-18 14:26:50 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:32:12 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:34:33 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:37:55 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:40:52 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:41:29 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:42:13 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:42:38 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:43:23 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 14:43:44 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+
+- 2026-04-18 16:30:26 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+    ?? docs/LOGGING.md
+
+- 2026-04-18 16:32:43 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md, docs/ARCHITECTURE.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+     M docs/ARCHITECTURE.md
+    ?? docs/LOGGING.md
+
+- 2026-04-18 16:34:09 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, CLAUDE.md, docs/ARCHITECTURE.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+     M docs/ARCHITECTURE.md
+     M docs/data-model.md
+    ?? docs/LOGGING.md
+
+- 2026-04-18 16:37:11 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, backend/.env.example, CLAUDE.md, docs/ARCHITECTURE.md, docs/BACKEND-SETUP.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+     M backend/.env.example
+     M docs/ARCHITECTURE.md
+     M docs/BACKEND-SETUP.md
+     M docs/data-model.md
+    ?? docs/LOGGING.md
+
+- 2026-04-18 16:38:48 [lifecycle]
+  - branch: main
+  - last_commit: 99f0a9d Feature 5.2: Wire transactions list UI to backend API (v2.4.0 ΓåÆ v2.5.0)
+  - changed_files: AI_STATE.md, backend/.env.example, CLAUDE.md, docs/ARCHITECTURE.md, docs/BACKEND-SETUP.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+     M backend/.env.example
+     M docs/ARCHITECTURE.md
+     M docs/BACKEND-SETUP.md
+     M docs/data-model.md
+    ?? docs/LOGGING.md

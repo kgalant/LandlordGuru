@@ -46,33 +46,37 @@ Browser
               ↕  HTTPS (landlordguru.galant.info)
 backend/ (Node.js + Express)
   ├── src/index.js              Express app, session + passport setup, static frontend serving
+  ├── src/lib/
+  │   └── logger.js             Structured logger — injected as req.logger by auth middleware
   ├── src/routes/
   │   ├── auth.js               GET /auth/google, /auth/google/callback, POST /logout
   │   ├── health.js             GET /api/health (for monitoring)
-  │   ├── properties.js          GET/POST/PATCH/DELETE /api/properties (in progress)
-  │   ├── transactions.js        GET/POST/PATCH/DELETE /api/transactions (todo)
+  │   ├── properties.js         GET/POST/PATCH/DELETE /api/properties ✅
+  │   ├── transactions.js       GET/POST/PATCH/DELETE /api/transactions ✅
   │   └── rules.js              GET/POST/PATCH/DELETE /api/rules (todo)
   ├── src/middleware/
-  │   ├── auth.js               JWT verification, req.user + workspace_id injection
+  │   ├── auth.js               JWT verification, req.user + workspace_id + req.logger injection
   │   └── errors.js             Error handler (todo)
-  └── src/db/migrations/         Knex.js schema migrations (001-006, all created)
+  └── src/db/migrations/         Knex.js schema migrations (001-012)
               ↕  PostgreSQL
-        8 tables: workspaces, users, workspace_users, properties, transactions, rules, fx_log, strings
+        9 tables: workspaces, users, workspace_users, properties, accounts,
+                  account_properties, transactions, rules, fx_log, strings, activity_log
 ```
 
-**What's done (Milestones 1-3):**
+**What's done (Milestones 1-5):**
 - ✅ Express skeleton + Knex + PostgreSQL connected
-- ✅ All 8 tables created with UUID PKs, workspace_id isolation, audit fields
+- ✅ All tables created with UUID PKs, workspace_id isolation, audit fields
 - ✅ Google OAuth flow (Passport.js) — login redirects to Google, JWT issued on callback
-- ✅ Auth middleware injects `req.user` + `workspace_id` from JWT
+- ✅ Auth middleware injects `req.user`, `workspace_id`, and `req.logger` from JWT
 - ✅ Auto-workspace creation on first login (user gets one default workspace)
 - ✅ Frontend login screen + token management (storage in httpOnly cookie, logout)
 - ✅ Admin scripts for workspace/user management
+- ✅ Properties API — full CRUD, workspace-scoped, auto-creates account on property creation
+- ✅ Transactions API — full CRUD, workspace-scoped, with date/type/category validation
 
-**What's next (Milestone 4+):**
-- Properties API (GET/POST/PATCH/DELETE routes)
-- Transactions API (+ batch CSV import endpoint)
-- Rules + Reports API
+**What's next (Milestone 5.5+):**
+- Logging & Telemetry Foundation (migrations 010-012, logger utility, retrofit existing APIs)
+- Rules API (built with logging from day 1)
 - Replace frontend's `sheets.js` with `api.js` calling backend
 - Retire Google Sheets credential from frontend
 
@@ -92,10 +96,12 @@ backend/ (Node.js + Express)
 | 1 | Static frontend + Google Sheets on Synology NAS | ✅ Done |
 | 2 | Add backend/ with Node + Express + PostgreSQL | ✅ Done (M1-M3) |
 | 3 | Add authentication (Google OAuth → JWT) | ✅ Done (M3) |
-| 4 | Build API routes (properties, transactions, rules) | 🔄 In progress (M4) |
-| 5 | Replace sheets.js + data.js with api.js | ⏳ Pending (post-M4) |
-| 6 | Retire Google Sheets credential, test e2e | ⏳ Pending (post-M5) |
-| 7 | Optional: move to managed hosting / separate domain | ⏳ Future |
+| 4 | Build API routes (properties, transactions) | ✅ Done (M4-M5) |
+| 4.5 | Logging & Telemetry Foundation | 🔄 In progress (M5.5) |
+| 5 | Rules API + logging from day 1 | ⏳ Pending (M6) |
+| 6 | Replace sheets.js + data.js with api.js | ⏳ Pending (post-M6) |
+| 7 | Retire Google Sheets credential, test e2e | ⏳ Pending (post-M6) |
+| 8 | Optional: move to managed hosting / separate domain | ⏳ Future |
 
 ---
 
@@ -109,6 +115,11 @@ backend/ (Node.js + Express)
 - **Authentication:** Google OAuth 2.0 → JWT issued in httpOnly cookie (secure against XSS)
 - **Audit trail:** All tables have `created_at`, `created_by`, `last_modified_at`, `last_modified_by`
   - Automatically stamped on INSERT/UPDATE, backend code sets the user ID from JWT
+- **Structured logging:** All routes use `req.logger` (injected by auth middleware)
+  - Writes to stdout and to the `activity_log` table
+  - Log level configurable per workspace and per user, with automatic expiry back to global default
+  - Global default: `error` (least verbose); levels: `error`, `info`, `debug`
+  - See `docs/LOGGING.md` for full reference
 - **Deployment:** No Docker required
   - Dev: `npm start` on laptop, port 3000
   - Prod: `pm2 start backend/src/index.js` on Linux server, port 3001

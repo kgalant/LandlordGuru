@@ -16,6 +16,8 @@ Multi-tenant isolation: each workspace is a completely isolated portfolio.
 |----------------------|-----------|-------------|
 | `id`                 | UUID      | Primary key |
 | `name`               | varchar   | Workspace display name |
+| `log_level`          | varchar(10) | Log verbosity override: `error`, `info`, or `debug`; null = use global default |
+| `log_level_expires_at` | timestamp | When the override expires and falls back to global default; null = permanent |
 | `created_at`         | timestamp | Set on creation, default `now()` |
 | `created_by`         | UUID      | FK → users.id; null if auto-created |
 | `last_modified_at`   | timestamp | Updated on any change, default `now()` |
@@ -48,6 +50,8 @@ Role and permission assignment. Composite primary key: `(workspace_id, user_id)`
 | `role`               | varchar   | `owner`, `editor`, `viewer`, `member` — default `member` |
 | `permissions`        | jsonb     | Reserved; currently null; future per-user granular permissions |
 | `joined_at`          | timestamp | When user was added to this workspace; default `now()` |
+| `log_level`          | varchar(10) | Per-user log verbosity override: `error`, `info`, or `debug`; null = use workspace setting |
+| `log_level_expires_at` | timestamp | When the user override expires; null = permanent |
 | `created_by`         | UUID      | FK → users.id; who invited this user; null if auto-created |
 | `last_modified_at`   | timestamp | Updated when role/permissions change; default `now()` |
 | `last_modified_by`   | UUID      | FK → users.id; who made the last change; null if auto-created |
@@ -324,6 +328,31 @@ They are never persisted to the sheet — they are per-browser/device. Structure
   }
 }
 ```
+
+---
+
+## Activity Log
+
+Captures all backend operations and (when implemented) frontend user actions. Used for
+real-time debugging and long-term usage statistics. Retained indefinitely.
+
+Log verbosity is controlled by `log_level` and `log_level_expires_at` on the `workspaces`
+and `workspace_users` tables. See `docs/LOGGING.md` for the resolution chain and configuration.
+
+| Field          | Type         | Description |
+|----------------|--------------|-------------|
+| `id`           | UUID         | Primary key |
+| `workspace_id` | UUID         | FK → workspaces.id (CASCADE delete); indexed |
+| `user_id`      | UUID         | FK → users.id (SET NULL on delete); indexed |
+| `timestamp`    | timestamp    | When the event occurred; default `now()` |
+| `level`        | varchar(10)  | `error`, `info`, or `debug` |
+| `source`       | varchar(20)  | `backend` or `frontend` |
+| `action`       | varchar(100) | Dot-notation event name, e.g. `property.create.success` |
+| `description`  | text         | Optional human-readable summary |
+| `parameters`   | jsonb        | Event-specific metadata (IDs, values, error messages) |
+| `created_at`   | timestamp    | Row insertion time; default `now()` |
+
+**Indexes:** `(workspace_id, timestamp DESC)`, `(user_id, timestamp DESC)`, `(level)`
 
 ---
 
