@@ -76,6 +76,8 @@ backend/ (Node.js + Express)
 - Replace frontend's `sheets.js` with `api.js` calling backend
 - Retire Google Sheets credential from frontend
 
+**Backlog and epics:** See [`docs/epics/`](epics/00-index.md) for the full feature backlog organised by epic, including acceptance criteria, dependencies, and MVP vs future tags.
+
 **What stays the same:**
 - The transaction data model and category taxonomy (see data-model.md)
 - The bank import profiles and column mapping system (client-side)

@@ -95,6 +95,7 @@ v2 backend development — Milestone 3 (Google OAuth + JWT authentication)
 
 ## Next step
 Milestone 4: Properties API (CRUD endpoints, workspace-scoped)
+- Note: POST /api/properties must auto-create a matching account + account_properties row (migration 008 decision)
 1. Create backend/src/routes/properties.js with GET /api/properties, POST, PATCH, DELETE endpoints
 2. All routes require auth middleware (JWT + workspace_id injection)
 3. Query builder uses workspace_id filter on all queries
@@ -132,6 +133,15 @@ Milestone 7   Cut over
 All existing tables get `workspace_id`.
 New tables: `workspaces`, `users`, `workspace_users` (role + permissions JSON, null for now).
 Auth middleware injects `workspace_id` from JWT — cross-workspace access structurally impossible.
+
+Migration 008 (accounts): adds `accounts` + `account_properties` tables; replaces `transactions.property_id`
+with `transactions.account_id`. Transactions belong to accounts (semantic unit of accounting); property-level
+queries join through account_properties.
+
+Default account rule: every workspace gets one is_default=true account created atomically with the workspace.
+This is the catch-all fallback for all operations. Account resolution order: (1) explicit selection, (2)
+auto-created account for the property, (3) workspace default. On property creation, backend must also
+auto-create a named account and link it via account_properties.
 
 ## Blockers
 -
@@ -772,3 +782,368 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
 - 2026-04-15 17:22:45 [lifecycle]
   - branch: main
   - last_commit: 8686a45 Update AI_STATE: OAuth flow fix complete
+
+- 2026-04-15 17:24:50 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+
+- 2026-04-15 17:25:18 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:26:55 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:30:30 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:33:49 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:34:36 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:35:16 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-15 17:36:45 [lifecycle]
+  - branch: main
+  - last_commit: 9585dd4 Update AI_STATE: record OAuth fix completion
+  - changed_files: AI_STATE.md, backend/src/routes/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/routes/auth.js
+
+- 2026-04-15 17:40:49 [lifecycle]
+  - branch: main
+  - last_commit: 5306ab1 Add debug logging to OAuth callback to trace user object
+  - changed_files: AI_STATE.md, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:42:28 [lifecycle]
+  - branch: main
+  - last_commit: 5306ab1 Add debug logging to OAuth callback to trace user object
+  - changed_files: AI_STATE.md, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:42:51 [lifecycle]
+  - branch: main
+  - last_commit: 5306ab1 Add debug logging to OAuth callback to trace user object
+  - changed_files: AI_STATE.md, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:43:09 [lifecycle]
+  - branch: main
+  - last_commit: 5306ab1 Add debug logging to OAuth callback to trace user object
+  - changed_files: AI_STATE.md, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:43:45 [lifecycle]
+  - branch: main
+  - last_commit: 5306ab1 Add debug logging to OAuth callback to trace user object
+  - changed_files: AI_STATE.md, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:44:58 [lifecycle]
+  - branch: main
+  - last_commit: 5306ab1 Add debug logging to OAuth callback to trace user object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:46:13 [lifecycle]
+  - branch: main
+  - last_commit: 5306ab1 Add debug logging to OAuth callback to trace user object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:47:56 [lifecycle]
+  - branch: main
+  - last_commit: 01f27d5 Rewrite admin scripts to use psql directly instead of Node.js pg driver
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:50:28 [lifecycle]
+  - branch: main
+  - last_commit: a5728a1 Fix .env path resolution in admin scripts
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:53:39 [lifecycle]
+  - branch: main
+  - last_commit: a5728a1 Fix .env path resolution in admin scripts
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-15 17:54:15 [lifecycle]
+  - branch: main
+  - last_commit: a5728a1 Fix .env path resolution in admin scripts
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js, backend/src/routes/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+     M backend/src/routes/auth.js
+
+- 2026-04-15 17:55:59 [lifecycle]
+  - branch: main
+  - last_commit: 80bfb18 Add strategy debug logging to trace OAuth flow
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js, backend/src/routes/auth.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+     M backend/src/routes/auth.js
+
+- 2026-04-18 12:56:10 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-18 12:56:11 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-18 12:56:12 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+
+- 2026-04-18 12:57:14 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESING-DISCUSSION.md
+
+- 2026-04-18 12:57:16 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESING-DISCUSSION.md
+
+- 2026-04-18 12:57:17 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESING-DISCUSSION.md
+
+- 2026-04-18 12:57:18 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESING-DISCUSSION.md
+
+- 2026-04-18 12:57:19 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESING-DISCUSSION.md
+
+- 2026-04-18 12:57:23 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESING-DISCUSSION.md
+
+- 2026-04-18 12:58:23 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESING-DISCUSSION.md
+
+- 2026-04-18 12:59:31 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESIGN-DISCUSSION.md
+
+- 2026-04-18 13:02:39 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/
+
+- 2026-04-18 13:02:53 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/
+
+- 2026-04-18 13:03:12 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/
+
+- 2026-04-18 13:04:08 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js, docs/ARCHITECTURE.md
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+     M docs/ARCHITECTURE.md
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/
+
+- 2026-04-18 13:07:51 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js, docs/ARCHITECTURE.md
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+     M docs/ARCHITECTURE.md
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/
+
+- 2026-04-18 13:10:54 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js, docs/ARCHITECTURE.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+     M docs/ARCHITECTURE.md
+     M docs/data-model.md
+    ?? backend/src/db/migrations/008_accounts.js
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/
+
+- 2026-04-18 13:14:16 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js, docs/ARCHITECTURE.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+     M docs/ARCHITECTURE.md
+     M docs/data-model.md
+    ?? backend/src/db/migrations/008_accounts.js
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/
+
+- 2026-04-18 13:18:02 [lifecycle]
+  - branch: main
+  - last_commit: 15a579c Include primary_workspace_id in OAuth strategy return object
+  - changed_files: AI_STATE.md, backend/.env.example, backend/src/db/knex.js, docs/ARCHITECTURE.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M backend/.env.example
+     M backend/src/db/knex.js
+     M docs/ARCHITECTURE.md
+     M docs/data-model.md
+    ?? backend/src/db/migrations/008_accounts.js
+    ?? docs/DESIGN-DISCUSSION.md
+    ?? docs/epics/

@@ -82,14 +82,63 @@ Role and permission assignment. Composite primary key: `(workspace_id, user_id)`
 
 ---
 
+### Accounts
+
+A flexible accounting container that bridges properties and transactions. An account is the unit of accounting — transactions belong to accounts, not directly to properties.
+
+**Simple case:** One property → one account (auto-created when the property is created). The user never has to think about accounts.
+
+**Complex case:** Multiple properties in the same building → one account covering all of them. Transactions are assigned to the account; property-level reporting joins through `account_properties`.
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed |
+| `name`               | varchar   | Display name, e.g. `VB77` or `Maple Street Building` |
+| `notes`              | text      | Free text |
+| `active`             | boolean   | Whether the account is in use; default `true` |
+| `is_default`         | boolean   | True for the workspace's default catch-all account; default `false` |
+| `created_at`         | timestamp | Set on creation; default `now()` |
+| `created_by`         | UUID      | FK → users.id; nullable |
+| `last_modified_at`   | timestamp | Updated on any change; default `now()` |
+| `last_modified_by`   | UUID      | FK → users.id; nullable |
+
+**Indexes:** `(workspace_id)`
+
+**Unique constraint:** `(workspace_id) WHERE is_default = true` — at most one default account per workspace (partial unique index).
+
+**Default account rule:** When a workspace is created, one account is automatically created with `is_default = true` and named after the workspace. This account is the fallback used wherever an account is required but the user has not yet set up specific accounts or assigned a transaction to one. Every subsequent decision that needs "which account?" should resolve to this default when nothing more specific is available — not to null, not to an error.
+
+---
+
+### Account_properties
+
+Join table linking accounts to properties. Composite primary key: `(account_id, property_id)`.
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `account_id`         | UUID      | Composite PK; FK → accounts.id (CASCADE delete) |
+| `property_id`        | UUID      | Composite PK; FK → properties.id (CASCADE delete) |
+
+**To look up all transactions for a specific property:**
+```sql
+SELECT t.*
+FROM transactions t
+JOIN account_properties ap ON ap.account_id = t.account_id
+WHERE ap.property_id = :property_id
+  AND t.workspace_id = :workspace_id
+```
+
+---
+
 ### Transactions
 
 | Field                | Type      | Description |
 |----------------------|-----------|-------------|
 | `id`                 | UUID      | Primary key |
-| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed with date and property_id |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed with date and account_id |
 | `date`               | date      | ISO 8601 date of the transaction |
-| `property_id`        | UUID      | FK → properties.id; nullable (allows transactions without a property) |
+| `account_id`         | UUID      | FK → accounts.id; nullable (allows workspace-level transactions not tied to any account) |
 | `type`               | varchar   | Top-level type: `income`, `expense`, `deposit`, `transfer` |
 | `category`           | varchar   | Subcategory (see taxonomy below) |
 | `amount`             | decimal(12,2) | Absolute value in local currency (always positive) |
@@ -105,7 +154,7 @@ Role and permission assignment. Composite primary key: `(workspace_id, user_id)`
 | `last_modified_at`   | timestamp | Updated on any edit; default `now()` |
 | `last_modified_by`   | UUID      | FK → users.id; who made the last change; nullable |
 
-**Indexes:** `(workspace_id)`, `(workspace_id, date)`, `(workspace_id, property_id)`, `(import_batch)`
+**Indexes:** `(workspace_id)`, `(workspace_id, date)`, `(workspace_id, account_id)`, `(import_batch)`
 
 ### Sign convention
 
