@@ -49,6 +49,7 @@ describe('POST /api/properties', () => {
     expect(res.body.model).toBe('longterm');
     expect(res.body.active).toBe(true);
     expect(res.body.workspace_id).toBe(WORKSPACE_ID);
+    expect(res.body.account_id).toBeDefined(); // auto-created account
   });
 
   it('auto-creates a matching account', async () => {
@@ -122,7 +123,9 @@ describe('GET /api/properties', () => {
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(2);
     expect(res.body[0].name).toBe('AAA Property');
+    expect(res.body[0].account_id).toBeDefined(); // includes linked account_id
     expect(res.body[1].name).toBe('ZZZ Property');
+    expect(res.body[1].account_id).toBeDefined();
   });
 
   it('returns 401 without a token', async () => {

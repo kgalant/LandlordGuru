@@ -47,6 +47,7 @@ describe('POST /api/transactions', () => {
     expect(res.body.currency).toBe('DKK');
     expect(res.body.workspace_id).toBe(WORKSPACE_ID);
     expect(res.body.source).toBe('manual');
+    expect(res.body.hasOwnProperty('property_id')).toBe(true); // includes property_id (null if no account)
   });
 
   it('defaults source to manual when not provided', async () => {
@@ -158,7 +159,9 @@ describe('GET /api/transactions', () => {
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(2);
     expect(res.body[0].date).toBe('2026-03-01');
+    expect(res.body[0].hasOwnProperty('property_id')).toBe(true); // includes property_id
     expect(res.body[1].date).toBe('2026-01-01');
+    expect(res.body[1].hasOwnProperty('property_id')).toBe(true);
   });
 
   it('filters by type', async () => {

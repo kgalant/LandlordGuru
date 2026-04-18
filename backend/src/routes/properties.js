@@ -46,13 +46,16 @@ function validateFields(body, requireAll) {
 
 // GET /api/properties
 // Returns all active properties in the workspace, sorted by name
+// Each property includes its linked account_id (via account_properties)
 router.get('/', requireAuth, async (req, res) => {
   try {
     await req.logger.info('property.list.started');
 
-    const properties = await db('properties')
-      .where({ workspace_id: req.workspace_id, active: true })
-      .orderBy('name', 'asc');
+    const properties = await db('properties as p')
+      .leftJoin('account_properties as ap', 'ap.property_id', 'p.id')
+      .where({ 'p.workspace_id': req.workspace_id, 'p.active': true })
+      .select('p.*', 'ap.account_id')
+      .orderBy('p.name', 'asc');
 
     await req.logger.info('property.list.success', { property_count: properties.length });
     res.json(properties);
@@ -82,7 +85,8 @@ router.post('/', requireAuth, async (req, res) => {
       model,
     });
 
-    const result = await db.transaction(async (trx) => {
+    let resultWithAccount;
+    await db.transaction(async (trx) => {
       // 1. Insert property
       const [property] = await trx('properties')
         .insert({
@@ -121,15 +125,15 @@ router.post('/', requireAuth, async (req, res) => {
         property_id: property.id,
       });
 
-      return property;
+      resultWithAccount = { ...property, account_id: account.id };
     });
 
     await req.logger.info('property.create.success', {
-      property_id: result.id,
-      name: result.name,
-      country: result.country,
+      property_id: resultWithAccount.id,
+      name: resultWithAccount.name,
+      country: resultWithAccount.country,
     });
-    res.status(201).json(result);
+    res.status(201).json(resultWithAccount);
   } catch (err) {
     await req.logger.error('property.create.failed', { error: err.message });
     console.error('POST /api/properties error:', err.message);
@@ -190,11 +194,17 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .update(updates)
       .returning('*');
 
+    // Fetch account_id via LEFT JOIN
+    const [withAccount] = await db('properties as p')
+      .leftJoin('account_properties as ap', 'ap.property_id', 'p.id')
+      .where({ 'p.id': id, 'p.workspace_id': req.workspace_id })
+      .select('p.*', 'ap.account_id');
+
     await req.logger.info('property.update.success', {
       property_id: updated.id,
       name: updated.name,
     });
-    res.json(updated);
+    res.json(withAccount);
   } catch (err) {
     await req.logger.error('property.update.failed', { property_id: id, error: err.message });
     console.error('PATCH /api/properties/:id error:', err.message);

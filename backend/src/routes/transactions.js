@@ -20,6 +20,15 @@ function formatDate(tx) {
 
 const VALID_TYPES = ['income', 'expense', 'deposit', 'transfer'];
 
+// Helper: fetch a single transaction with property_id via JOIN
+async function fetchTransactionWithProperty(txId, workspaceId) {
+  const [tx] = await db('transactions as t')
+    .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+    .where({ 't.id': txId, 't.workspace_id': workspaceId })
+    .select('t.*', 'ap.property_id');
+  return tx;
+}
+
 const VALID_CATEGORIES = {
   income:   ['rent', 'heating_aconto', 'heating_settlement'],
   expense:  ['maintenance_repair', 'property_tax', 'insurance', 'utilities',
@@ -79,34 +88,41 @@ function validateFields(body, requireAll) {
 
 // GET /api/transactions
 // Returns transactions for the workspace, newest first.
-// Optional query params: account_id, type, from (date), to (date)
+// Each transaction includes property_id (via account_properties join).
+// Optional query params: account_id, property_id, type, from (date), to (date)
 router.get('/', requireAuth, async (req, res) => {
   try {
     await req.logger.info('transaction.list.started', {
       filters: {
         account_id: req.query.account_id || null,
+        property_id: req.query.property_id || null,
         type: req.query.type || null,
         from: req.query.from || null,
         to: req.query.to || null,
       },
     });
 
-    let query = db('transactions')
-      .where('workspace_id', req.workspace_id)
-      .orderBy('date', 'desc')
-      .orderBy('created_at', 'desc');
+    let query = db('transactions as t')
+      .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+      .where('t.workspace_id', req.workspace_id)
+      .select('t.*', 'ap.property_id')
+      .orderBy('t.date', 'desc')
+      .orderBy('t.created_at', 'desc');
 
     if (req.query.account_id) {
-      query = query.where('account_id', req.query.account_id);
+      query = query.where('t.account_id', req.query.account_id);
+    }
+    if (req.query.property_id) {
+      query = query.where('ap.property_id', req.query.property_id);
     }
     if (req.query.type) {
-      query = query.where('type', req.query.type);
+      query = query.where('t.type', req.query.type);
     }
     if (req.query.from) {
-      query = query.where('date', '>=', req.query.from);
+      query = query.where('t.date', '>=', req.query.from);
     }
     if (req.query.to) {
-      query = query.where('date', '<=', req.query.to);
+      query = query.where('t.date', '<=', req.query.to);
     }
 
     const transactions = await query;
@@ -171,13 +187,16 @@ router.post('/', requireAuth, async (req, res) => {
       })
       .returning('*');
 
+    // Fetch with property_id via JOIN
+    const txWithProperty = await fetchTransactionWithProperty(tx.id, workspace_id);
+
     await req.logger.info('transaction.create.success', {
       transaction_id: tx.id,
       type: tx.type,
       category: tx.category,
       amount: tx.amount,
     });
-    res.status(201).json(formatDate(tx));
+    res.status(201).json(formatDate(txWithProperty));
   } catch (err) {
     await req.logger.error('transaction.create.failed', { error: err.message });
     console.error('POST /api/transactions error:', err.message);
@@ -243,12 +262,15 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .update(updates)
       .returning('*');
 
+    // Fetch with property_id via JOIN
+    const txWithProperty = await fetchTransactionWithProperty(id, req.workspace_id);
+
     await req.logger.info('transaction.update.success', {
       transaction_id: updated.id,
       type: updated.type,
       category: updated.category,
     });
-    res.json(formatDate(updated));
+    res.json(formatDate(txWithProperty));
   } catch (err) {
     await req.logger.error('transaction.update.failed', { transaction_id: id, error: err.message });
     console.error('PATCH /api/transactions/:id error:', err.message);
