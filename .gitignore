@@ -1,5 +1,5 @@
 # Credentials — never commit
-frontend/config.js
+# (none needed in v2 — config.js is now checked into git)
 
 # Dependencies (for when backend is added)
 node_modules/
