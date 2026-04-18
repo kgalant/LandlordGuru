@@ -270,9 +270,11 @@ const I18n = (() => {
           tenant:       'Tenant',
         },
         toast: {
-          saved:      'Property saved.',
-          saveFailed: 'Save failed: {error}',
-          nameReq:    'Name is required.',
+          saved:          'Property saved.',
+          saveFailed:     'Save failed: {error}',
+          nameReq:        'Name is required.',
+          archiveConfirm: 'Archive this property? It will be hidden but its transaction history is preserved.',
+          archived:       'Property archived.',
         },
       },
       rules: {

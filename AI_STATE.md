@@ -107,11 +107,21 @@ v2 backend development — Milestone 4 (Properties API + test infrastructure)
 - Test DB: landlordguru_test on homedev; access via SSH tunnel (ssh -N -L 5432:localhost:5432 kim@homedev)
 - Fixed UUIDs for test workspace + user — FK constraints satisfied without mocking
 
+### v2 Feature 2.2 — Property list UI ✅
+- Created frontend/js/api.js: REST client wrapping /api/properties (GET/POST/PATCH/DELETE)
+- boot() now branches on window.AUTH_TOKEN: v2 mode skips SheetsAPI.initSheets()
+- refreshAll() in v2 mode: properties from Api.getProperties(); transactions/rules = [] until M5/M6
+- savePropertyModal() in v2 mode: Api.createProperty() for new, Api.updateProperty() for edits
+- archiveProperty() added: calls Api.deleteProperty() with confirm dialog
+- Archive button added to property cards (v2 mode only)
+- New strings: property.toast.archiveConfirm, property.toast.archived
+- Version bumped 2.2.0 → 2.3.0
+
 ## In progress
 -
 
 ## Next step
-Milestone 4 continued: Feature 2.2 — Property list UI (frontend view showing active properties)
+Milestone 5: Transactions API (GET/POST/PATCH/DELETE /api/transactions)
 
 ## Milestone plan (v2)
 ```
@@ -1301,3 +1311,32 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
      M AI_STATE.md
      M backend/src/index.js
     ?? backend/src/routes/properties.js
+
+- 2026-04-18 14:02:38 [lifecycle]
+  - branch: main
+  - last_commit: fcc27d3 Milestone 4: Properties API + Jest/Supertest test infrastructure (v2.2.0)
+
+- 2026-04-18 14:07:19 [lifecycle]
+  - branch: main
+  - last_commit: 9172639 Add test hygiene rule to CLAUDE.md
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 14:08:35 [lifecycle]
+  - branch: main
+  - last_commit: 9172639 Add test hygiene rule to CLAUDE.md
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-18 14:13:40 [lifecycle]
+  - branch: main
+  - last_commit: 9172639 Add test hygiene rule to CLAUDE.md
+  - changed_files: AI_STATE.md, frontend/index.html, frontend/js/strings.js, frontend/version.json
+  - git_status:
+     M AI_STATE.md
+     M frontend/index.html
+     M frontend/js/strings.js
+     M frontend/version.json
+    ?? frontend/js/api.js

@@ -679,6 +679,7 @@ initAuth();
 <script src="js/importer.js"></script>
 <script src="js/reports.js"></script>
 <script src="js/debug.js"></script>
+<script src="js/api.js"></script>
 <script>
 // ============================================================
 //  APP — main UI controller
@@ -700,10 +701,16 @@ let State = {
 async function boot() {
   setLoading(true, t('status.connecting'));
   try {
-    await SheetsAPI.initSheets();
-    const stringRows = await DB.getStrings();
-    I18n.initStrings(stringRows);
-    await refreshAll();
+    if (window.AUTH_TOKEN) {
+      // v2 mode: authenticated via JWT — use backend API
+      await refreshAll();
+    } else {
+      // v1 mode: use Google Sheets (NAS deployment)
+      await SheetsAPI.initSheets();
+      const stringRows = await DB.getStrings();
+      I18n.initStrings(stringRows);
+      await refreshAll();
+    }
   } catch(e) {
     setStatus(t('status.error', { message: e.message }));
     toast(t('status.connFailed', { error: e.message }), 'error');
@@ -715,14 +722,22 @@ async function boot() {
 async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
-    const [props, txs, rules] = await Promise.all([
-      DB.getProperties(),
-      DB.getTransactions(),
-      DB.getRules(),
-    ]);
-    State.properties  = props;
-    State.transactions = txs;
-    State.rules        = rules;
+    if (window.AUTH_TOKEN) {
+      // v2 mode: properties from API; transactions/rules pending later milestones
+      State.properties   = await Api.getProperties();
+      State.transactions = [];
+      State.rules        = [];
+    } else {
+      // v1 mode: all data from Google Sheets
+      const [props, txs, rules] = await Promise.all([
+        DB.getProperties(),
+        DB.getTransactions(),
+        DB.getRules(),
+      ]);
+      State.properties  = props;
+      State.transactions = txs;
+      State.rules        = rules;
+    }
     populateAllDropdowns();
     renderCurrentPage();
     setStatus(t('status.synced', { time: new Date().toLocaleTimeString() }));
@@ -1665,6 +1680,7 @@ function renderPropertyList() {
           <div style="font-size:12px;color:var(--text2)">${p.address}</div>
         </div>
         <button class="btn btn-sm btn-secondary" onclick="openPropertyModal('${p.id}')">${t('common.edit')}</button>
+          ${window.AUTH_TOKEN ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="archiveProperty('${p.id}')">${t('common.delete')}</button>` : ''}
       </div>
       <div class="metric-grid" style="margin-top:1rem;margin-bottom:0">
         <div class="metric"><div class="m-label">${t('property.metric.rent')}</div><div class="m-value" style="font-size:16px">${p.rent   ? Reports.fmt(p.rent, p.currency) : '—'}</div></div>
@@ -1713,8 +1729,7 @@ function closePropertyModal() { document.getElementById('modal-apt').style.displ
 async function savePropertyModal() {
   const name = document.getElementById('apt-m-name').value.trim();
   if (!name) { toast(t('property.toast.nameReq'), 'error'); return; }
-  const prop = {
-    id:          State.editingAptId || '',
+  const data = {
     name,
     address:     document.getElementById('apt-m-addr').value.trim(),
     country:     document.getElementById('apt-m-country').value,
@@ -1729,10 +1744,33 @@ async function savePropertyModal() {
   };
   setLoading(true, t('status.saving'));
   try {
-    await DB.saveProperty(prop);
+    if (window.AUTH_TOKEN) {
+      // v2 mode: use backend API
+      if (State.editingAptId) {
+        await Api.updateProperty(State.editingAptId, data);
+      } else {
+        await Api.createProperty(data);
+      }
+    } else {
+      // v1 mode: use Google Sheets
+      await DB.saveProperty({ id: State.editingAptId || '', ...data });
+    }
     await refreshAll();
     closePropertyModal();
     toast(t('property.toast.saved'), 'success');
+  } catch(e) {
+    toast(t('property.toast.saveFailed', { error: e.message }), 'error');
+  }
+  setLoading(false);
+}
+
+async function archiveProperty(id) {
+  if (!confirm(t('property.toast.archiveConfirm'))) return;
+  setLoading(true, t('status.saving'));
+  try {
+    await Api.deleteProperty(id);
+    await refreshAll();
+    toast(t('property.toast.archived'), 'success');
   } catch(e) {
     toast(t('property.toast.saveFailed', { error: e.message }), 'error');
   }
