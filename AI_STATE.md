@@ -9,8 +9,8 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: bug
-- Epic: M9 E2E Testing & Bug Fixes
-- ID: BUG-9.1
+- Epic: E2 Account and Property Management
+- ID: B2-2-1
 - Title: Dashboard property card display issues
 - Short summary: Fix `null`/`NaN` values in dashboard property card rendering (address showing "null", monthly showing "DKKNaN" due to parseFloat failures).
 
@@ -24,7 +24,7 @@ None
 
 ## Completed work this session
 
-- ✅ **BUG-9.1**: Fixed dashboard property card null/NaN display issues
+- ✅ **B2-2-1**: Fixed dashboard property card null/NaN display issues
   - Address field now shows "no address registered" (grayed italic) instead of "null"
   - Monthly rent calculation fixed with parseFloat conversions
   - Deployed to dev server, tested in browser, all tests passing (60/60)
@@ -41,8 +41,8 @@ None
 
 ## Backlog pointers
 
-- Next candidate features: F2.2, F3.1, F5.4
-- Known bugs: BUG-2.1, BUG-3.1
+- Next candidate features: F2-2, F3-1, F5-4
+- Known bugs: B2-1-1, B3-1-1
 
 Relevant epic docs:
 
@@ -55,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Review backlog and select next candidate feature (F2.2, F3.1, or F5.4) or known bug (BUG-2.1, BUG-3.1) to work on.
+Review backlog and select next candidate feature (F2-2, F3-1, or F5-4) or known bug (B2-1-1, B3-1-1) to work on.
 
 ---
 
@@ -67,7 +67,7 @@ Review backlog and select next candidate feature (F2.2, F3.1, or F5.4) or known 
 
 - Last result:
   - Date/time: 2026-04-18 22:40:00
-  - Outcome: ✅ BUG-9.1 complete. All 60 tests passing. Dashboard fix deployed and verified in browser.
+  - Outcome: ✅ B2-2-1 complete. All 60 tests passing. Dashboard fix deployed and verified in browser.
 
 ---
 
@@ -82,59 +82,15 @@ Review backlog and select next candidate feature (F2.2, F3.1, or F5.4) or known 
 
 ## Automation log (latest only)
 
-- 2026-04-18 22:40:00 BUG-9.1 complete
+- 2026-04-18 22:40:00 B2-2-1 complete
   - branch: main
-  - lastcommit: 0a763df
-  - changedfiles: frontend/index.html, deploy.ps1, deploy.sh, AI_STATE.md
-  - gitstatus: M AI_STATE.md (plus untracked deploy scripts)
+  - lastcommit: 69c228f
+  - changedfiles: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md, AI_STATE-GUIDE.md, PROJECT_LANDLORDGURU.md
+  - gitstatus: M AI_STATE.md, M CLAUDE.md, M docs/epics/00-index.md (plus untracked: AI_STATE-GUIDE.md, PROJECT_LANDLORDGURU.md)
 
-- 2026-04-18 21:28:15 [lifecycle]
+- 2026-04-18 22:17:21 [lifecycle]
   - branch: main
-  - last_commit: 0a763df BUG-9.1: Fix dashboard property card null/NaN display issues
-  - changed_files: AI_STATE.md, CLAUDE.md
-  - git_status:
-     M AI_STATE.md
-     M CLAUDE.md
-    ?? AI_STATE-GUIDE.md
-    ?? PROJECT_LANDLORDGURU.md
-    ?? deploy.ps1
-
-- 2026-04-18 21:28:16 [lifecycle]
-  - branch: main
-  - last_commit: 0a763df BUG-9.1: Fix dashboard property card null/NaN display issues
-  - changed_files: AI_STATE.md, CLAUDE.md
-  - git_status:
-     M AI_STATE.md
-     M CLAUDE.md
-    ?? AI_STATE-GUIDE.md
-    ?? PROJECT_LANDLORDGURU.md
-    ?? deploy.ps1
-
-- 2026-04-18 21:28:37 [lifecycle]
-  - branch: main
-  - last_commit: 0a763df BUG-9.1: Fix dashboard property card null/NaN display issues
-  - changed_files: AI_STATE.md, CLAUDE.md
-  - git_status:
-     M AI_STATE.md
-     M CLAUDE.md
-    ?? AI_STATE-GUIDE.md
-    ?? PROJECT_LANDLORDGURU.md
-    ?? deploy.ps1
-
-- 2026-04-18 21:31:12 [lifecycle]
-  - branch: main
-  - last_commit: 0a763df BUG-9.1: Fix dashboard property card null/NaN display issues
-  - changed_files: AI_STATE.md, CLAUDE.md
-  - git_status:
-     M AI_STATE.md
-     M CLAUDE.md
-    ?? AI_STATE-GUIDE.md
-    ?? PROJECT_LANDLORDGURU.md
-    ?? deploy.ps1
-
-- 2026-04-18 22:11:10 [lifecycle]
-  - branch: main
-  - last_commit: 0a763df BUG-9.1: Fix dashboard property card null/NaN display issues
+  - last_commit: 69c228f Add PowerShell deployment automation script
   - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
   - git_status:
      M AI_STATE.md
@@ -142,11 +98,10 @@ Review backlog and select next candidate feature (F2.2, F3.1, or F5.4) or known 
      M docs/epics/00-index.md
     ?? AI_STATE-GUIDE.md
     ?? PROJECT_LANDLORDGURU.md
-    ?? deploy.ps1
 
-- 2026-04-18 22:11:56 [lifecycle]
+- 2026-04-18 22:19:00 [lifecycle]
   - branch: main
-  - last_commit: 0a763df BUG-9.1: Fix dashboard property card null/NaN display issues
+  - last_commit: 69c228f Add PowerShell deployment automation script
   - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
   - git_status:
      M AI_STATE.md
@@ -154,4 +109,14 @@ Review backlog and select next candidate feature (F2.2, F3.1, or F5.4) or known 
      M docs/epics/00-index.md
     ?? AI_STATE-GUIDE.md
     ?? PROJECT_LANDLORDGURU.md
-    ?? deploy.ps1
+
+- 2026-04-18 22:21:04 [lifecycle]
+  - branch: main
+  - last_commit: 69c228f Add PowerShell deployment automation script
+  - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
+  - git_status:
+     M AI_STATE.md
+     M CLAUDE.md
+     M docs/epics/00-index.md
+    ?? AI_STATE-GUIDE.md
+    ?? PROJECT_LANDLORDGURU.md
