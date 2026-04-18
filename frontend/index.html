@@ -674,8 +674,6 @@ async function logout() {
 // Run on page load
 initAuth();
 </script>
-<script src="js/sheets.js"></script>
-<script src="js/data.js"></script>
 <script src="js/importer.js"></script>
 <script src="js/reports.js"></script>
 <script src="js/debug.js"></script>
@@ -701,16 +699,8 @@ let State = {
 async function boot() {
   setLoading(true, t('status.connecting'));
   try {
-    if (window.AUTH_TOKEN) {
-      // v2 mode: authenticated via JWT — use backend API
-      await refreshAll();
-    } else {
-      // v1 mode: use Google Sheets (NAS deployment)
-      await SheetsAPI.initSheets();
-      const stringRows = await DB.getStrings();
-      I18n.initStrings(stringRows);
-      await refreshAll();
-    }
+    // v2 mode: authenticated via JWT — use backend API
+    await refreshAll();
   } catch(e) {
     setStatus(t('status.error', { message: e.message }));
     toast(t('status.connFailed', { error: e.message }), 'error');
@@ -722,27 +712,15 @@ async function boot() {
 async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
-    if (window.AUTH_TOKEN) {
-      // v2 mode: data from backend API
-      const [props, txs, rules] = await Promise.all([
-        Api.getProperties(),
-        Api.getTransactions(),
-        Api.getRules(),
-      ]);
-      State.properties  = props;
-      State.transactions = txs;
-      State.rules        = rules;
-    } else {
-      // v1 mode: all data from Google Sheets
-      const [props, txs, rules] = await Promise.all([
-        DB.getProperties(),
-        DB.getTransactions(),
-        DB.getRules(),
-      ]);
-      State.properties  = props;
-      State.transactions = txs;
-      State.rules        = rules;
-    }
+    // v2 mode: data from backend API
+    const [props, txs, rules] = await Promise.all([
+      Api.getProperties(),
+      Api.getTransactions(),
+      Api.getRules(),
+    ]);
+    State.properties  = props;
+    State.transactions = txs;
+    State.rules        = rules;
     populateAllDropdowns();
     renderCurrentPage();
     setStatus(t('status.synced', { time: new Date().toLocaleTimeString() }));
@@ -1012,25 +990,13 @@ async function saveTxModal() {
       reconciled: false,
     };
 
-    if (window.AUTH_TOKEN) {
-      // v2 mode: use backend API (account_id is optional, defaults to workspace default)
-      if (State.editingTxId) {
-        await Api.updateTransaction(State.editingTxId, data);
-        toast(t('tx.toast.updated'), 'success');
-      } else {
-        await Api.createTransaction(data);
-        toast(t('tx.toast.saved'), 'success');
-      }
+    // v2 mode: use backend API (account_id is optional, defaults to workspace default)
+    if (State.editingTxId) {
+      await Api.updateTransaction(State.editingTxId, data);
+      toast(t('tx.toast.updated'), 'success');
     } else {
-      // v1 mode: use Google Sheets
-      data.property_id = propId;
-      if (State.editingTxId) {
-        await DB.updateTransaction(State.editingTxId, data);
-        toast(t('tx.toast.updated'), 'success');
-      } else {
-        await DB.saveSingleTransaction(data);
-        toast(t('tx.toast.saved'), 'success');
-      }
+      await Api.createTransaction(data);
+      toast(t('tx.toast.saved'), 'success');
     }
     await refreshAll();
     closeTxModal();
@@ -1044,14 +1010,8 @@ async function deleteTxModal() {
   if (!confirm(t('tx.confirmDelete'))) return;
   setLoading(true, t('status.deleting'));
   try {
-    if (window.AUTH_TOKEN) {
-      // v2 mode: hard delete via API
-      await Api.deleteTransaction(State.editingTxId);
-    } else {
-      // v1 mode: soft delete by marking as deleted
-      const tx = State.transactions.find(tx => tx.id === State.editingTxId);
-      await DB.updateTransaction(State.editingTxId, { description: '[DELETED] ' + tx.description, category: 'other_expense' });
-    }
+    // v2 mode: hard delete via API
+    await Api.deleteTransaction(State.editingTxId);
     await refreshAll();
     closeTxModal();
     toast(t('tx.toast.deleted'), 'success');
@@ -1650,25 +1610,18 @@ async function doImport(saveMappings) {
 
   setLoading(true, t('status.importing'));
   try {
-    let batchId;
-    if (window.AUTH_TOKEN) {
-      // v2 mode: resolve property_id → account_id and create via backend API
-      const toSave = activeRows.map(row => {
-        const prop = State.properties.find(p => p.id === row.property_id);
-        return {
-          ...row,
-          property_id: undefined, // remove field — backend uses account_id
-          account_id: prop?.account_id ?? null,
-        };
-      });
-      const result = await Api.createTransactionBatch(toSave);
-      batchId = result.batchId;
-      // Backend doesn't return all transactions, so we'll refresh after import
-    } else {
-      // v1 mode: Google Sheets path (unchanged)
-      batchId = await DB.saveImportBatch(activeRows);
-      State.transactions.push(...activeRows);
-    }
+    // v2 mode: resolve property_id → account_id and create via backend API
+    const toSave = activeRows.map(row => {
+      const prop = State.properties.find(p => p.id === row.property_id);
+      return {
+        ...row,
+        property_id: undefined, // remove field — backend uses account_id
+        account_id: prop?.account_id ?? null,
+      };
+    });
+    const result = await Api.createTransactionBatch(toSave);
+    const batchId = result.batchId;
+    // Backend doesn't return all transactions, so we'll refresh after import
     toast(t('import.toast.done', { count: activeRows.length, batchId }), 'success');
     State.importRows = [];
     clearImport();
@@ -1815,16 +1768,11 @@ async function savePropertyModal() {
   };
   setLoading(true, t('status.saving'));
   try {
-    if (window.AUTH_TOKEN) {
-      // v2 mode: use backend API
-      if (State.editingAptId) {
-        await Api.updateProperty(State.editingAptId, data);
-      } else {
-        await Api.createProperty(data);
-      }
+    // v2 mode: use backend API
+    if (State.editingAptId) {
+      await Api.updateProperty(State.editingAptId, data);
     } else {
-      // v1 mode: use Google Sheets
-      await DB.saveProperty({ id: State.editingAptId || '', ...data });
+      await Api.createProperty(data);
     }
     await refreshAll();
     closePropertyModal();
@@ -1873,21 +1821,15 @@ function renderRules() {
 }
 
 async function deleteRule(idx) {
-  if (window.AUTH_TOKEN) {
-    // v2 mode: call Api.deleteRule()
-    const rule = State.rules[idx];
-    try {
-      await Api.deleteRule(rule.id);
-      State.rules.splice(idx, 1);
-      renderRules();
-      toast(t('rules.toast.saved'), 'success');
-    } catch(e) {
-      toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
-    }
-  } else {
-    // v1 mode: in-memory only (user must click Save Order to persist)
+  // v2 mode: call Api.deleteRule()
+  const rule = State.rules[idx];
+  try {
+    await Api.deleteRule(rule.id);
     State.rules.splice(idx, 1);
     renderRules();
+    toast(t('rules.toast.saved'), 'success');
+  } catch(e) {
+    toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
   }
 }
 
@@ -1911,40 +1853,26 @@ async function saveRuleModal() {
     property_id:  document.getElementById('rule-m-apt').value || null,
   };
 
-  if (window.AUTH_TOKEN) {
-    // v2 mode: create via Api.createRule()
-    try {
-      const rule = await Api.createRule(ruleData);
-      State.rules.push(rule);
-      renderRules();
-      closeRuleModal();
-      toast(t('rules.toast.saved'), 'success');
-    } catch(e) {
-      toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
-    }
-  } else {
-    // v1 mode: in-memory, then save all rules
-    State.rules.push(ruleData);
+  // v2 mode: create via Api.createRule()
+  try {
+    const rule = await Api.createRule(ruleData);
+    State.rules.push(rule);
     renderRules();
     closeRuleModal();
-    await saveRules();
+    toast(t('rules.toast.saved'), 'success');
+  } catch(e) {
+    toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
   }
 }
 
 async function saveRules() {
   setLoading(true, t('status.savingRules'));
   try {
-    if (window.AUTH_TOKEN) {
-      // v2 mode: update sort_order on each rule
-      await Promise.all(State.rules.map((r, i) =>
-        Api.updateRule(r.id, { sort_order: i })
-      ));
-      toast(t('rules.toast.saved'), 'success');
-    } else {
-      // v1 mode: full overwrite
-      await DB.saveRules(State.rules);
-      toast(t('rules.toast.saved'), 'success');
-    }
+    // v2 mode: update sort_order on each rule
+    await Promise.all(State.rules.map((r, i) =>
+      Api.updateRule(r.id, { sort_order: i })
+    ));
+    toast(t('rules.toast.saved'), 'success');
   } catch(e) {
     toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
   }

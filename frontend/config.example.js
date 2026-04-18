@@ -7,19 +7,15 @@
 //  See docs/SETUP.md for step-by-step instructions.
 // ============================================================
 
+// ============================================================
+//  LANDLORDGURU v2 — FRONTEND CONFIGURATION
+//
+//  This file is kept for reference only. v2 uses backend API.
+//  No configuration is needed on the frontend — authentication
+//  is handled via Google OAuth at /auth/google.
+// ============================================================
+
 const CONFIG = {
-
-  // Your Google Sheets spreadsheet ID.
-  // Found in the URL: docs.google.com/spreadsheets/d/YOUR_ID_HERE/edit
-  SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE',
-
-  // Service account email — not secret, just an identifier.
-  // Found in your JSON key file as client_email.
-  SERVICE_ACCOUNT_EMAIL: 'your-service-account@landlord-guru.iam.gserviceaccount.com',
-
-  // Path to the PHP key fetcher — do not change unless you move key.php.
-  KEY_FETCHER_URL: 'key.php',
-
   // App display settings
   APP_NAME: 'LandlordGuru',
   BASE_CURRENCY: 'DKK',
@@ -32,15 +28,6 @@ const CONFIG = {
     PLN: 0.44,
     EUR: 7.46,
     USD: 6.89,
-  },
-
-  // Sheet tab names — change only if you rename tabs in Google Sheets
-  SHEETS: {
-    PROPERTIES:   'properties',
-    TRANSACTIONS: 'transactions',
-    RULES:        'rules',
-    FX_LOG:       'fx_log',
-    STRINGS:      'strings',
   }
 };
 

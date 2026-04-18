@@ -8,10 +8,10 @@ Frontend served by Express (no NAS dependency). Google Sheets retired when backe
 v2 backend development — Milestone 7 (Frontend cut-over) complete
 
 ## In progress
-(None — stopping for next session)
+M8: Retire Google Sheets credentials and test end-to-end
 
 ## Next step
-Milestone 8: Retire Google Sheets credentials and test end-to-end (Phase 7 path chosen)
+Manual e2e test: npm start, login via Google OAuth, test CRUD operations (properties, transactions, rules)
 
 ### M8 Scope:
 1. Remove v1 code paths: strip sheets.js, data.js, and Google Sheets auth from frontend
@@ -132,8 +132,24 @@ efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
 
 ---
 
+## Files touched this session
+- frontend/index.html (removed sheets.js + data.js script tags; removed all !AUTH_TOKEN fallback paths from boot, refreshAll, saveTx, deleteTxModal, processImportFile, savePropertyModal, deleteRule, saveRuleModal, saveRules)
+- frontend/config.example.js (removed all Google Sheets config; kept only BANK_PROFILES, CATEGORIES, FX_RATES display config)
+- frontend/js/sheets.js (DELETED)
+- frontend/js/data.js (DELETED)
+- frontend/version.json (v2.8.0 → v2.9.0)
+
 ## Session notes
-(Use this space for decisions, blockers, or clarifications made in the current session)
+✅ npm test: 60/60 tests passing (no broken references from v1 code removal)
+- Confirmed all v1 fallback paths successfully removed from index.html
+- sheets.js and data.js deleted
+- config.example.js now v2-only
+
+✅ App boot test: npm start succeeds cleanly
+- No references to sheets.js, data.js, Google Sheets config
+- Database connects successfully
+- Frontend served by Express on port 3000
+- Ready for manual e2e in browser (login → CRUD)
 
 ## Automation log
 (Latest entry only; previous entries in `.claude/ai_state_archive.json`)
@@ -144,3 +160,14 @@ efd126d Milestone 7: Frontend cut-over to backend API (v2.7.0 → v2.8.0)
   - changed_files: backend/src/routes/properties.js, backend/src/routes/transactions.js, backend/tests/properties.test.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/index.html, frontend/version.json, CLAUDE.md, AI_STATE.md
   - session_work: M7 complete (frontend cut-over v2.7.0→v2.8.0); added checkpoint infrastructure for resumable workflow
   - git_status: committed; ready for M8
+
+- 2026-04-18 19:04:09 [lifecycle]
+  - branch: main
+  - last_commit: 21b5bc5 Prepare M8: document scope and stopping point for next session
+
+- 2026-04-18 19:06:31 [lifecycle]
+  - branch: main
+  - last_commit: 21b5bc5 Prepare M8: document scope and stopping point for next session
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
