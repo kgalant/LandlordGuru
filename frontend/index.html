@@ -826,14 +826,17 @@ function renderDashboard() {
     : props.map(p => {
         const ptxs    = txs.filter(tx => tx.property_id === p.id);
         const income  = ptxs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
-        const monthly = p.rent + p.aconto;
+        const rent    = parseFloat(p.rent) || 0;
+        const aconto  = parseFloat(p.aconto) || 0;
+        const monthly = rent + aconto;
+        const addr    = p.address || '<span style="color:#999;font-style:italic">no address registered</span>';
         return `<div class="apt-card">
           <span class="badge badge-${p.country.toLowerCase()}">${t('country.' + p.country)} · ${p.currency}</span>
           <span class="badge badge-model" style="margin-left:6px">${t('property.model.' + (p.model || 'longterm'))}</span>
           <div class="apt-name">${p.name}</div>
-          <div class="apt-addr">${p.address}</div>
+          <div class="apt-addr">${addr}</div>
           <div class="apt-stats">
-            <div class="stat"><strong>${monthly ? Reports.fmt(monthly, p.currency) : '—'}</strong>${t('common.monthly')}</div>
+            <div class="stat"><strong>${monthly > 0 ? Reports.fmt(monthly, p.currency) : '—'}</strong>${t('common.monthly')}</div>
             <div class="stat"><strong>${income  ? Reports.fmt(income,  p.currency) : '—'}</strong>${t('common.totalIncome')}</div>
             <div class="stat"><strong>${p.tenant || '—'}</strong>${t('property.metric.tenant')}</div>
           </div>
