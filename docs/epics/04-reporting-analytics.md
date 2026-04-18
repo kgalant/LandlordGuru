@@ -20,7 +20,9 @@ Reports are not hardcoded layouts. They are driven by a pivot table approach:
 
 ## Features
 
-### 4.1 Income statement (P&L) report `[MVP]`
+### F4-1 Income statement (P&L) report `[MVP]`
+**Status:** Planned
+
 Summarise income and expenses for a date range, grouped by category.
 
 **Acceptance criteria:**
@@ -35,7 +37,9 @@ Summarise income and expenses for a date range, grouped by category.
 
 ---
 
-### 4.2 P&L report UI `[MVP]`
+### F4-2 P&L report UI `[MVP]`
+**Status:** Planned
+
 Frontend view of the income statement.
 
 **Acceptance criteria:**
@@ -48,7 +52,9 @@ Frontend view of the income statement.
 
 ---
 
-### 4.3 Per-property breakdown `[MVP]`
+### F4-3 Per-property breakdown `[MVP]`
+**Status:** Planned
+
 P&L broken out by property within a date range.
 
 **Acceptance criteria:**
@@ -56,11 +62,13 @@ P&L broken out by property within a date range.
 - Properties with no transactions in the period still appear (zero values)
 - UI: stacked table or expandable rows per property
 
-**Dependencies:** 4.1 must be complete first.
+**Dependencies:** F4-1 must be complete first.
 
 ---
 
-### 4.4 Monthly trend view `[MVP]`
+### F4-4 Monthly trend view `[MVP]`
+**Status:** Planned
+
 Income and expense totals by month across a year.
 
 **Acceptance criteria:**
@@ -70,7 +78,9 @@ Income and expense totals by month across a year.
 
 ---
 
-### 4.5 Tax report `[MVP]`
+### F4-5 Tax report `[MVP]`
+**Status:** Planned
+
 Annual summary formatted for tax filing purposes.
 
 **Acceptance criteria:**
@@ -83,7 +93,9 @@ Annual summary formatted for tax filing purposes.
 
 ---
 
-### 4.6 Data export `[MVP]`
+### F4-6 Data export `[MVP]`
+**Status:** Planned
+
 Download transaction data as a file for use in Excel or other tools.
 
 **Acceptance criteria:**
@@ -94,7 +106,9 @@ Download transaction data as a file for use in Excel or other tools.
 
 ---
 
-### 4.7 Pivot table UI `[Future]`
+### F4-7 Pivot table UI `[Future]`
+**Status:** Future
+
 Interactive pivot table allowing users to group and filter by any available dimension.
 
 **Acceptance criteria:**
@@ -104,11 +118,13 @@ Interactive pivot table allowing users to group and filter by any available dime
 - Cell values: sum of amounts; click-through to filtered transaction list
 - Export pivot result as CSV
 
-**Dependencies:** 4.1–4.4, Epic 2 accounts (2.4), optionally Epic 2 tenants (2.5).
+**Dependencies:** F4-1–F4-4, F2-4 (account CRUD), optionally F2-5 (tenant and lease management).
 
 ---
 
-### 4.8 Google Sheets / Excel export `[Future]`
+### F4-8 Google Sheets / Excel export `[Future]`
+**Status:** Future
+
 Export a formatted report directly to a Google Sheet or `.xlsx` file.
 
 **Acceptance criteria:**
@@ -117,11 +133,17 @@ Export a formatted report directly to a Google Sheet or `.xlsx` file.
 
 ---
 
+## Bugs
+
+None recorded.
+
+---
+
 ## Dependencies
-- Transaction API (Epic 3, feature 3.1) — all reports query transactions
-- Properties API (Epic 2, feature 2.1) — for per-property breakdowns
+- Transaction API (F3-1) — all reports query transactions
+- Properties API (F2-1) — for per-property breakdowns
 - Auth middleware (M3)
-- Accounts schema (Epic 2, feature 2.3) — needed before account-level pivoting
+- Accounts schema (F2-3) — needed before account-level pivoting
 
 ## Notes
 - The existing `js/reports.js` contains working P&L logic (filtering, aggregation). The backend API can be modelled on this logic.

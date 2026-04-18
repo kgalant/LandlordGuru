@@ -4,7 +4,7 @@
 Make bulk import of bank transaction exports a first-class, low-friction workflow. Support multiple bank CSV formats, column mapping, and auto-categorisation rules.
 
 ## Status
-Partially done. The frontend (`js/importer.js`) contains a complete CSV parsing pipeline with column mapping and bank profiles. This logic stays client-side. What's missing is the backend-side rules API and the import endpoint (covered in Epic 3, feature 3.4).
+Partially done. The frontend (`js/importer.js`) contains a complete CSV parsing pipeline with column mapping and bank profiles. This logic stays client-side. What's missing is the backend-side rules API and the import endpoint (covered in Epic 3, feature F3-4).
 
 ---
 
@@ -21,7 +21,9 @@ This split means users see a preview of all rows before anything is written to t
 
 ## Features
 
-### 5.1 CSV parsing and column mapping `[MVP] [Done — frontend]`
+### F5-1 CSV parsing and column mapping `[MVP]`
+**Status:** Done (frontend)
+
 Parse a bank-exported CSV file and map its columns to transaction fields.
 
 **Acceptance criteria:**
@@ -34,7 +36,9 @@ Parse a bank-exported CSV file and map its columns to transaction fields.
 
 ---
 
-### 5.2 Bank profiles `[MVP] [Done — frontend]`
+### F5-2 Bank profiles `[MVP]`
+**Status:** Done (frontend)
+
 Named presets for known bank export formats to reduce manual column mapping.
 
 **Supported profiles (current):**
@@ -54,7 +58,9 @@ Named presets for known bank export formats to reduce manual column mapping.
 
 ---
 
-### 5.3 Auto-categorisation rules `[MVP]`
+### F5-3 Auto-categorisation rules `[MVP]`
+**Status:** Planned (backend)
+
 Apply saved rules to automatically assign category and property to imported rows.
 
 **Current state (frontend):**
@@ -78,7 +84,9 @@ Apply saved rules to automatically assign category and property to imported rows
 
 ---
 
-### 5.4 Description mappings `[MVP]`
+### F5-4 Description mappings `[MVP]`
+**Status:** Planned (backend)
+
 User-captured mappings from a specific description string to a category + property. Finer-grained than keyword rules.
 
 **Current state:** Stored in `localStorage` under `lg_desc_mappings_v1`. Applied before rules during preview.
@@ -93,12 +101,14 @@ User-captured mappings from a specific description string to a category + proper
 - Priority at preview time:
   1. User-specific description mapping
   2. Global (workspace-wide) description mapping
-  3. Auto-categorisation rules (5.3)
+  3. Auto-categorisation rules (F5-3)
   4. Default: `rent` if amount positive, `other_expense` if negative
 
 ---
 
-### 5.5 Import preview `[MVP] [Done — frontend]`
+### F5-5 Import preview `[MVP]`
+**Status:** Done (frontend)
+
 Show the user all parsed rows with their proposed category and property before committing.
 
 **Acceptance criteria:**
@@ -106,25 +116,29 @@ Show the user all parsed rows with their proposed category and property before c
 - Columns: date, description, amount, proposed category, proposed property
 - Rows with errors (unparseable date/amount) are shown in red and excluded from the import
 - User can override category and property per-row before importing
-- "Import N rows" button submits the validated rows to `POST /api/transactions/import` (Epic 3, feature 3.4)
+- "Import N rows" button submits the validated rows to `POST /api/transactions/import` (F3-4)
 - Duplicate rows (same date + amount + description already in workspace) are highlighted with a warning
 
 ---
 
-### 5.6 Import history `[MVP]`
+### F5-6 Import history `[MVP]`
+**Status:** Planned
+
 View and roll back previous import batches.
 
 **Acceptance criteria:**
 - UI section shows recent import batches: date of import, bank profile used, number of rows, user who imported
-- Each batch has an "Undo" action that calls `DELETE /api/transactions/import/:batch_id` (Epic 3, feature 3.5)
+- Each batch has an "Undo" action that calls `DELETE /api/transactions/import/:batch_id` (F3-5)
 - Undo is only available for the importing user or workspace owners
 - After undo, the batch disappears from history
 
-**Dependencies:** Epic 3, feature 3.5 (import batch rollback).
+**Dependencies:** F3-5 (import batch rollback).
 
 ---
 
-### 5.7 FX rate logging `[MVP — passive]`
+### F5-7 FX rate logging `[MVP — passive]`
+**Status:** Planned
+
 Record the exchange rates in use at the time of import for audit purposes.
 
 **Acceptance criteria:**
@@ -134,10 +148,12 @@ Record the exchange rates in use at the time of import for audit purposes.
 
 ---
 
-### 5.8 Direct bank connection `[Future]`
+### F5-8 Direct bank connection `[Future]`
+**Status:** Future
+
 Connect to a bank's open banking API to pull transactions automatically.
 
-**Acceptance criteria (future):**
+**Acceptance criteria:**
 - User authorises access to their bank via OAuth (PSD2 / open banking)
 - Transactions are pulled on a schedule and appear in the import preview (same flow as CSV)
 - Supported initially for Danish banks (Jyske Bank, Nordea) via a PSD2 aggregator
@@ -146,11 +162,17 @@ Connect to a bank's open banking API to pull transactions automatically.
 
 ---
 
+## Bugs
+
+None recorded.
+
+---
+
 ## Dependencies
 - Rules table (created in M2 migrations)
 - Auth middleware (M3)
-- `POST /api/transactions/import` endpoint (Epic 3, feature 3.4)
-- `DELETE /api/transactions/import/:batch_id` endpoint (Epic 3, feature 3.5)
+- `POST /api/transactions/import` endpoint (F3-4)
+- `DELETE /api/transactions/import/:batch_id` endpoint (F3-5)
 
 ## Notes
 - The existing `js/importer.js` is the reference implementation for the client-side pipeline. Do not move parsing logic to the backend — it belongs in the browser where the file lives.

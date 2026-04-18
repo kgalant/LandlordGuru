@@ -10,7 +10,9 @@ Planned. The `transactions` table exists in the schema. The backend API routes a
 
 ## Features
 
-### 3.1 Transaction CRUD API `[MVP]`
+### F3-1 Transaction CRUD API `[MVP]`
+**Status:** Planned
+
 Backend REST endpoints for reading and writing transactions.
 
 **Acceptance criteria:**
@@ -34,7 +36,9 @@ Backend REST endpoints for reading and writing transactions.
 
 ---
 
-### 3.2 Transaction list UI `[MVP]`
+### F3-2 Transaction list UI `[MVP]`
+**Status:** Planned
+
 Frontend view showing transactions with filtering and sorting.
 
 **Acceptance criteria:**
@@ -42,13 +46,15 @@ Frontend view showing transactions with filtering and sorting.
 - Columns: date, property, type, category, description, amount, currency
 - Filter controls: property, type, date range
 - Sortable by date (default: newest first) and amount
-- Clicking a row opens an edit form (3.1 PATCH)
+- Clicking a row opens an edit form (F3-1 PATCH)
 - "Add transaction" button opens a new transaction form
 - Bulk select + delete for removing imported rows
 
 ---
 
-### 3.3 Category validation `[MVP]`
+### F3-3 Category validation `[MVP]`
+**Status:** Planned
+
 Enforce the category taxonomy on the backend.
 
 **Acceptance criteria:**
@@ -68,7 +74,9 @@ Enforce the category taxonomy on the backend.
 
 ---
 
-### 3.4 Bulk CSV import endpoint `[MVP]`
+### F3-4 Bulk CSV import endpoint `[MVP]`
+**Status:** Planned
+
 Accept a parsed list of transactions from the frontend and insert them as a batch.
 
 **Acceptance criteria:**
@@ -79,11 +87,13 @@ Accept a parsed list of transactions from the frontend and insert them as a batc
 - Duplicate detection: rows with identical `(date, amount, raw_description, property_id)` within the same workspace are flagged (not blocked — user decides)
 - `source` field is set from the bank profile name provided by the client
 
-**Dependencies:** Epic 5 (CSV parsing) produces the validated row array that this endpoint receives.
+**Dependencies:** F5-1 (CSV parsing) produces the validated row array that this endpoint receives.
 
 ---
 
-### 3.5 Import batch rollback `[MVP]`
+### F3-5 Import batch rollback `[MVP]`
+**Status:** Planned
+
 Allow users to undo an entire import batch.
 
 **Acceptance criteria:**
@@ -94,7 +104,9 @@ Allow users to undo an entire import batch.
 
 ---
 
-### 3.6 Reconciliation marking `[MVP]`
+### F3-6 Reconciliation marking `[MVP]`
+**Status:** Planned
+
 Let users mark transactions as verified against a bank statement.
 
 **Acceptance criteria:**
@@ -104,7 +116,9 @@ Let users mark transactions as verified against a bank statement.
 
 ---
 
-### 3.7 Tenant linking on transactions `[Future]`
+### F3-7 Tenant linking on transactions `[Future]`
+**Status:** Future
+
 Optionally associate a transaction with a specific tenant (when tenant tracking is enabled).
 
 **Acceptance criteria:**
@@ -113,16 +127,22 @@ Optionally associate a transaction with a specific tenant (when tenant tracking 
 - When tenant tracking is not enabled in a workspace, the field is hidden in the UI
 - No requirement to retroactively tag existing transactions
 
-**Dependencies:** Epic 2 feature 2.5 (tenant and lease management).
+**Dependencies:** F2-5 (tenant and lease management).
+
+---
+
+## Bugs
+
+None recorded.
 
 ---
 
 ## Dependencies
 - `transactions` table (created in M2 migrations)
 - Auth middleware (M3)
-- Properties API (Epic 2, feature 2.1) — needed to associate transactions with properties
-- CSV import pipeline (Epic 5) feeds into 3.4
+- Properties API (F2-1) — needed to associate transactions with properties
+- CSV import pipeline (F5-1) feeds into F3-4
 
 ## Notes
-- The frontend's `js/importer.js` contains the existing CSV parsing logic. It will move to the client-side only (parsing step), with the resulting row array sent to `POST /api/transactions/import`.
+- The frontend's `js/importer.js` contains the existing CSV parsing logic. It will stay client-side (parsing step only), with the resulting row array sent to `POST /api/transactions/import`.
 - `transfer` / `inter_account` transactions are excluded from P&L reporting by convention.

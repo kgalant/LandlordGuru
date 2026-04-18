@@ -11,6 +11,8 @@ In progress.
 ## Features
 
 ### F6-1 Deployment automation `[Done]`
+**Status:** Done
+
 Automated scripts to push code, pull on the server, run migrations, and restart PM2.
 
 **Acceptance criteria:**
@@ -18,11 +20,11 @@ Automated scripts to push code, pull on the server, run migrations, and restart 
 - `deploy.sh`: Bash equivalent for Linux/WSL users
 - Both scripts source NVM to ensure `npm` and `pm2` are available in the remote shell
 
-**Status:** Done (committed 2026-04-18)
-
 ---
 
 ### F6-2 Database migration discipline `[Planned]`
+**Status:** Planned
+
 Ensure all schema changes are captured as numbered Knex migrations and applied consistently across environments.
 
 **Acceptance criteria:**
@@ -34,6 +36,8 @@ Ensure all schema changes are captured as numbered Knex migrations and applied c
 ---
 
 ### F6-3 API security hardening `[Planned]`
+**Status:** Planned
+
 Apply standard HTTP security practices to the Express backend.
 
 **Acceptance criteria:**
@@ -45,6 +49,8 @@ Apply standard HTTP security practices to the Express backend.
 ---
 
 ### F6-4 Observability and log management `[Planned]`
+**Status:** Planned
+
 Ensure the app's runtime behaviour is inspectable in production.
 
 **Acceptance criteria:**
@@ -55,12 +61,20 @@ Ensure the app's runtime behaviour is inspectable in production.
 ---
 
 ### F6-5 Environment and secrets management `[Planned]`
+**Status:** Planned
+
 Formalise how environment configuration is managed across local and server environments.
 
 **Acceptance criteria:**
 - `backend/.env.example` is kept in sync with all required vars
 - A documented checklist exists for provisioning a new environment (server setup, OAuth credentials, DB connection)
 - No secrets ever appear in git history (verified by a tool such as `git-secrets` or equivalent)
+
+---
+
+## Bugs
+
+None recorded.
 
 ---
 
