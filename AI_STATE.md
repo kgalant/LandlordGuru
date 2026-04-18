@@ -129,11 +129,20 @@ v2 backend development — Milestone 4 (Properties API + test infrastructure)
 - 23 tests in backend/tests/transactions.test.js — all passing (36 total across both suites)
 - Version bumped 2.3.0 → 2.4.0
 
+### v2 Feature 5.2 — Transactions list UI wired to API ✅
+- Added getTransactions(), createTransaction(), updateTransaction(), deleteTransaction() to Api module
+- refreshAll() v2 mode now loads real transactions from Api.getTransactions()
+- saveTxModal() v2 mode uses Api.createTransaction() or Api.updateTransaction()
+- deleteTxModal() v2 mode uses Api.deleteTransaction() (hard delete, not soft)
+- Added deleteTxWithConfirm() for inline delete button from transaction rows
+- Transaction rows now show delete button in v2 mode
+- Version bumped 2.4.0 → 2.5.0
+
 ## In progress
 -
 
 ## Next step
-Feature 5.2 — wire transactions GET to frontend (refreshAll v2 mode loads real transactions)
+Milestone 6: Rules API (GET/POST/PATCH/DELETE /api/rules)
 
 ## Milestone plan (v2)
 ```
@@ -1372,3 +1381,14 @@ Documentation: ✅ docs/data-model.md matches all 6 migration files (001-006)
      M AI_STATE.md
      M backend/src/app.js
     ?? backend/src/routes/transactions.js
+
+- 2026-04-18 14:20:28 [lifecycle]
+  - branch: main
+  - last_commit: 64273bd Milestone 5: Transactions API + tests (v2.3.0 ΓåÆ v2.4.0)
+
+- 2026-04-18 14:20:31 [lifecycle]
+  - branch: main
+  - last_commit: 64273bd Milestone 5: Transactions API + tests (v2.3.0 ΓåÆ v2.4.0)
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md

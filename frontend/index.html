@@ -723,9 +723,9 @@ async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
     if (window.AUTH_TOKEN) {
-      // v2 mode: properties from API; transactions/rules pending later milestones
+      // v2 mode: data from backend API; rules pending Milestone 6
       State.properties   = await Api.getProperties();
-      State.transactions = [];
+      State.transactions = await Api.getTransactions();
       State.rules        = [];
     } else {
       // v1 mode: all data from Google Sheets
@@ -901,6 +901,10 @@ function txRow(tx, showEditBtn) {
   const editBtn = showEditBtn
     ? `<button class="btn btn-sm btn-secondary" onclick="openTxModal('${tx.id}')">${t('common.edit')}</button>`
     : '';
+  const deleteBtn = showEditBtn && window.AUTH_TOKEN
+    ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="deleteTxWithConfirm('${tx.id}')" data-i18n="common.delete"></button>`
+    : '';
+  const actions = (editBtn || deleteBtn) ? `<td>${editBtn}${deleteBtn}</td>` : '';
   return `<tr>
     <td>${tx.date}</td>
     <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
@@ -908,7 +912,7 @@ function txRow(tx, showEditBtn) {
     <td><span class="tag tag-${tx.type}">${catLbl}</span></td>
     ${showEditBtn ? `<td><span class="muted" style="font-size:11px">${srcLbl}</span></td>` : ''}
     <td class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, prop?.currency || tx.currency)}</td>
-    ${showEditBtn ? `<td>${editBtn}</td>` : ''}
+    ${actions}
   </tr>`;
 }
 
@@ -991,12 +995,37 @@ async function saveTxModal() {
 
   setLoading(true, t('status.saving'));
   try {
-    if (State.editingTxId) {
-      await DB.updateTransaction(State.editingTxId, { date, property_id: propId, type, category: cat, amount, currency: prop?.currency || '', description: desc, notes });
-      toast(t('tx.toast.updated'), 'success');
+    const data = {
+      date,
+      type,
+      category: cat,
+      amount,
+      currency: prop?.currency || 'DKK',
+      description: desc,
+      notes: notes || null,
+      source: 'manual',
+      reconciled: false,
+    };
+
+    if (window.AUTH_TOKEN) {
+      // v2 mode: use backend API (account_id is optional, defaults to workspace default)
+      if (State.editingTxId) {
+        await Api.updateTransaction(State.editingTxId, data);
+        toast(t('tx.toast.updated'), 'success');
+      } else {
+        await Api.createTransaction(data);
+        toast(t('tx.toast.saved'), 'success');
+      }
     } else {
-      await DB.saveSingleTransaction({ date, property_id: propId, type, category: cat, amount, currency: prop?.currency || '', description: desc, notes, source: 'manual', reconciled: false });
-      toast(t('tx.toast.saved'), 'success');
+      // v1 mode: use Google Sheets
+      data.property_id = propId;
+      if (State.editingTxId) {
+        await DB.updateTransaction(State.editingTxId, data);
+        toast(t('tx.toast.updated'), 'success');
+      } else {
+        await DB.saveSingleTransaction(data);
+        toast(t('tx.toast.saved'), 'success');
+      }
     }
     await refreshAll();
     closeTxModal();
@@ -1010,10 +1039,29 @@ async function deleteTxModal() {
   if (!confirm(t('tx.confirmDelete'))) return;
   setLoading(true, t('status.deleting'));
   try {
-    const tx = State.transactions.find(tx => tx.id === State.editingTxId);
-    await DB.updateTransaction(State.editingTxId, { description: '[DELETED] ' + tx.description, category: 'other_expense' });
+    if (window.AUTH_TOKEN) {
+      // v2 mode: hard delete via API
+      await Api.deleteTransaction(State.editingTxId);
+    } else {
+      // v1 mode: soft delete by marking as deleted
+      const tx = State.transactions.find(tx => tx.id === State.editingTxId);
+      await DB.updateTransaction(State.editingTxId, { description: '[DELETED] ' + tx.description, category: 'other_expense' });
+    }
     await refreshAll();
     closeTxModal();
+    toast(t('tx.toast.deleted'), 'success');
+  } catch(e) {
+    toast(t('tx.toast.delFailed', { error: e.message }), 'error');
+  }
+  setLoading(false);
+}
+
+async function deleteTxWithConfirm(txId) {
+  if (!confirm(t('tx.confirmDelete'))) return;
+  setLoading(true, t('status.deleting'));
+  try {
+    await Api.deleteTransaction(txId);
+    await refreshAll();
     toast(t('tx.toast.deleted'), 'success');
   } catch(e) {
     toast(t('tx.toast.delFailed', { error: e.message }), 'error');

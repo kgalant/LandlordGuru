@@ -41,5 +41,33 @@ const Api = (() => {
     return request('DELETE', `/properties/${id}`);
   }
 
-  return { getProperties, createProperty, updateProperty, deleteProperty };
+  // ── Transactions ────────────────────────────────────────────
+
+  async function getTransactions(filters = {}) {
+    let path = '/transactions';
+    const params = new URLSearchParams();
+    if (filters.account_id) params.append('account_id', filters.account_id);
+    if (filters.type) params.append('type', filters.type);
+    if (filters.from) params.append('from', filters.from);
+    if (filters.to) params.append('to', filters.to);
+    if (params.toString()) path += '?' + params.toString();
+    return request('GET', path);
+  }
+
+  async function createTransaction(data) {
+    return request('POST', '/transactions', data);
+  }
+
+  async function updateTransaction(id, data) {
+    return request('PATCH', `/transactions/${id}`, data);
+  }
+
+  async function deleteTransaction(id) {
+    return request('DELETE', `/transactions/${id}`);
+  }
+
+  return {
+    getProperties, createProperty, updateProperty, deleteProperty,
+    getTransactions, createTransaction, updateTransaction, deleteTransaction,
+  };
 })();
