@@ -29,6 +29,15 @@ Static HTML/JS frontend, Google Sheets as database, served from a Synology NAS.
 - Tweaking existing features = increment z (x.y.z); new major feature = increment y - confirm explicitly
 - Never suggest incrementing x — the user will prompt for that explicitly
 
+## Test hygiene
+- After any task that adds a feature, modifies an API, or would cause a version number to increment,
+  review existing tests and determine whether they need updating or new tests need to be added:
+  - New endpoint or route → add a test file in `backend/tests/`
+  - Changed validation rules, response shape, or behaviour → update the relevant test
+  - New edge case or bug fix → add a regression test
+- Include test changes in the same commit as the feature, not a separate one
+- Run `npm test` (from `backend/`) before committing to confirm all tests pass
+
 ## Documentation hygiene
 - After any task that adds a feature, renames something, or changes how a system works,
   check whether documentation needs updating or creating before committing:
