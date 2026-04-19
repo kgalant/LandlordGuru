@@ -70,7 +70,7 @@ Select next feature from Wave 2 (F2-1 Property CRUD, F2-4 Account CRUD, or F2-9 
 - `frontend/index.html` (added Settings button onclick, settings page div, renderSettings and saveSettings functions)
 - `frontend/js/api.js` (added getWorkspaceSettings and updateWorkspaceSettings functions)
 - `frontend/js/strings.js` (added settings i18n strings)
-- `docs/epics/01-workspace-user-management.md` (added F1-10 backlog item: currency dropdown with labels)
+- `docs/epics/01-workspace-user-management.md` (added F1-10 backlog item: currency dropdown with labels, marked F1-6 as Done)
 - `AI_STATE.md` (marked F1-6 complete, added Next step for Wave 2 features)
 
 ---

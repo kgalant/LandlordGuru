@@ -127,7 +127,7 @@ The top-right application chrome (user identifier, last-sync timestamp, refresh 
 ---
 
 ### F1-6 Workspace settings `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Workspace-level configuration parameters that control system behaviour across
 all features.
