@@ -149,6 +149,68 @@ all features.
 
 ---
 
+### F1-8 Workspace administration `[Future]`
+**Status:** Future
+
+System-level workspace management interface for users with the `workspace_manager` role. The workspace manager role is global and not tied to any specific workspace; users with this role can create, view, edit, and delete workspaces across the entire system.
+
+**Workspace manager role:**
+- A new role type in the system (distinct from workspace-scoped roles like `owner`, `editor`, `viewer`)
+- Not tied to any specific workspace; confers system-wide workspace administration privileges
+- Users with this role see a "Workspace Management" option in their avatar menu (see F1-7)
+
+**Workspace Management UI page:**
+
+The page is accessible only to users with the `workspace_manager` role and provides:
+
+1. **Create workspace form:**
+   - Input field for workspace name
+   - Input field for default admin email (mandatory)
+   - On submission:
+     - Creates a new `workspaces` row with the provided name
+     - Creates a default account (`is_default = true`) in that workspace
+     - Adds the provided email as the owner of the workspace (creates a `workspace_users` row with role `owner`)
+     - Handles any other initial workspace setup tasks (e.g. setting default currency, max account depth)
+   - Confirmation message on success
+
+2. **View all workspaces:**
+   - List all workspaces in the system (not filtered by the current user's access)
+   - Display workspace name, creation date, owner email(s), number of users
+   - Sortable and filterable by name or date
+
+3. **Edit workspace details:**
+   - Update workspace name and other metadata
+   - Only admins can perform this action
+   - Changes are persisted and immediately reflected in the system
+
+4. **Delete workspace:**
+   - Option to delete a workspace
+   - Should prompt for confirmation (destructive operation)
+   - Deletion cascades appropriately (deletes associated accounts, transactions, data)
+   - Only admins can perform this action
+
+**Acceptance criteria:**
+- The `workspace_manager` role exists in the database and can be assigned to users
+- Users with `workspace_manager` role see "Workspace Management" in their avatar menu (via F1-7)
+- Create workspace form validates inputs (name required, email required, email format valid)
+- Creating a workspace creates the workspace record, default account, and workspace_users owner entry in a single transaction
+- The default account for a new workspace is correctly initialized with the same defaults as in F1-1
+- View all workspaces displays all system workspaces with accurate metadata
+- Edit and delete operations require the `workspace_manager` role (enforced on backend)
+- Delete operation is reversible via database restore only (no soft-delete UI recovery)
+- Workspace manager actions are logged (for future audit trail work)
+
+**Dependencies:**
+- F1-1 (auth and workspace creation logic — done)
+- F1-7 (avatar menu, which includes the "Workspace Management" link — planned)
+- Database schema: `users` and `workspaces` tables must support the `workspace_manager` role
+
+**Notes:**
+- Sending an email invitation to the default admin email is explicitly NOT part of this feature; that will be a separate future feature
+- Workspace managers have no special access to the data within workspaces they create; they are purely administrative
+
+---
+
 ## Bugs
 
 None recorded.

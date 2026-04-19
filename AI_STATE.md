@@ -26,7 +26,7 @@ N/A — ready for next focus
 
 ## Backlog pointers
 
-- Next candidate features: F1-7, F6-6, F2-1, F2-2, F2-4, F3-1, F5-3, F5-4
+- Next candidate features: F1-7, F1-8, F6-6, F2-1, F2-2, F2-4, F3-1, F5-3, F5-4
 - Known bugs: B2-1-1, B3-1-1
 
 Relevant epic docs:
@@ -42,7 +42,7 @@ Relevant epic docs:
 
 ## Next step
 
-Select next feature from backlog to implement (F1-7, F6-6, F2-1, F2-2, F2-4, or others as discussed).
+Select next feature from backlog to implement (F1-7, F1-8, F6-6, F2-1, F2-2, F2-4, or others as discussed).
 
 ---
 
@@ -69,15 +69,8 @@ Select next feature from backlog to implement (F1-7, F6-6, F2-1, F2-2, F2-4, or 
 
 ## Automation log (latest only)
 
-- 2026-04-19 09:16:00 document F1-7 app header menu and F6-6 debug panel in epic docs
+- 2026-04-19 09:22:00 document UI features: F1-7 app header menu, F6-6 debug panel, F1-8 workspace admin
   - branch: main
-  - lastcommit: f56fb21
-  - changedfiles: docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md, .claude/ai_state_archive.json, AI_STATE.md
-  - gitstatus: M .claude/ai_state_archive.json, M docs/epics/01-workspace-user-management.md, M docs/epics/06-architecture-backend.md
-
-- 2026-04-19 08:56:31 [lifecycle]
-  - branch: main
-  - last_commit: f56fb21 Add F1-7 app header menu and F6-6 debug panel feature specs
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+  - lastcommit: d259ca1
+  - changedfiles: docs/epics/01-workspace-user-management.md, AI_STATE.md
+  - gitstatus: M docs/epics/01-workspace-user-management.md, M AI_STATE.md
