@@ -8,7 +8,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-None (F1-6 complete and tested on dev server; ready to select next feature)
+None (F2-1 complete; ready to select next feature — F2-4 Account CRUD or F2-9 Currency rates)
 
 ---
 
@@ -20,7 +20,7 @@ None
 
 ## Task breakdown (current focus)
 
-N/A — F1-6 complete (all subtasks done, E2E tested on dev server)
+N/A — F2-1 complete (all subtasks done, 81 tests passing)
 
 ---
 
@@ -43,7 +43,7 @@ Relevant epic docs:
 
 ## Next step
 
-Select next feature from Wave 2 (F2-1 Property CRUD, F2-4 Account CRUD, or F2-9 Currency rates) and set up task breakdown. Note: F1-10 (currency dropdown labels) added to E1 backlog for future work.
+Select next Wave 2 feature: F2-4 Account CRUD or F2-9 Currency rate management. F2-1 is done and unblocks F3-1.
 
 ---
 
@@ -52,33 +52,36 @@ Select next feature from Wave 2 (F2-1 Property CRUD, F2-4 Account CRUD, or F2-9 
 - Commands to run:
   - `npm test` (from backend/) — 81 tests, all passing
   - Manual browser test on dev server (http://localhost:3000)
-  - Test steps: Navigate to avatar menu → Settings; verify form loads with current currency/depth; change values; save; refresh page to confirm persistence
 
 - Last result:
-  - Date/time: 2026-04-19 15:30:00
-  - Outcome: All backend tests pass (81 passed, 5 suites, 0 failures). F1-6 complete: settings form loads, updates persist across page refresh, currency/depth values save correctly. Dev server tested and working.
+  - Date/time: 2026-04-19 08:35:00
+  - Outcome: All 81 tests pass (5 suites, 0 failures). workspace.test.js seed-wipe bug fixed. F2-1 all acceptance criteria verified.
 
 ---
 
 ## Files touched this session
 
-- `backend/src/db/migrations/013_workspace_settings.js` (created)
-- `backend/src/routes/workspace.js` (created with GET and PATCH endpoints)
-- `backend/src/app.js` (registered workspace route)
-- `backend/tests/workspace.test.js` (created with 12 comprehensive tests)
-- `docs/data-model.md` (added reporting_currency and max_account_depth fields to Workspaces table)
-- `frontend/index.html` (added Settings button onclick, settings page div, renderSettings and saveSettings functions)
-- `frontend/js/api.js` (added getWorkspaceSettings and updateWorkspaceSettings functions)
-- `frontend/js/strings.js` (added settings i18n strings)
-- `docs/epics/01-workspace-user-management.md` (added F1-10 backlog item: currency dropdown with labels, marked F1-6 as Done)
-- `AI_STATE.md` (marked F1-6 complete, added Next step for Wave 2 features)
+- `AI_STATE.md`
+- `backend/tests/workspace.test.js` (fixed: scope cleanup to non-seed data; added dotenv load and setupAppWithDb)
+- `docs/epics/02-account-property-management.md` (F2-1 marked Done)
+- `docs/roadmap.md` (F2-1 marked Done)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-19 15:35:00 F1-6 session end: workspace settings complete and tested
+- 2026-04-19 16:57:37 [lifecycle]
   - branch: main
-  - lastcommit: 80b337a
-  - changedfiles: docs/epics/01-workspace-user-management.md, AI_STATE.md
-  - gitstatus: M AI_STATE.md
+  - last_commit: 1a3444a Update E1 epic: mark F1-6 workspace settings as Done
+  - changed_files: AI_STATE.md, backend/tests/workspace.test.js
+  - git_status: M AI_STATE.md, M backend/tests/workspace.test.js
+
+- 2026-04-19 17:01:14 [lifecycle]
+  - branch: main
+  - last_commit: 1a3444a Update E1 epic: mark F1-6 workspace settings as Done
+  - changed_files: AI_STATE.md, backend/tests/workspace.test.js, docs/epics/02-account-property-management.md, docs/roadmap.md
+  - git_status:
+     M AI_STATE.md
+     M backend/tests/workspace.test.js
+     M docs/epics/02-account-property-management.md
+     M docs/roadmap.md

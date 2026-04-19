@@ -68,7 +68,7 @@ automatically.
 ## Features
 
 ### F2-1 Property CRUD `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Create, view, edit, and archive properties.
 
@@ -87,6 +87,17 @@ Create, view, edit, and archive properties.
 **Fields (see `docs/data-model.md` for full schema):**
 `name`, `address`, `country`, `currency`, `model` (`longterm` or `airbnb`),
 `rent`, `aconto`, `tenant`, `lease_start`, `notes`, `active`
+
+**Implementation notes:**
+- Route: `backend/src/routes/properties.js`
+- Tests: `backend/tests/properties.test.js` (13 tests, all passing)
+- Migration: `backend/src/db/migrations/002_properties.js`
+- `POST /api/properties` auto-creates a matching account and links it via
+  `account_properties` in a single transaction (per F2-3 spec). The
+  auto-created account has `is_default = false` and the same name as the
+  property.
+- `GET /api/properties` returns each property with its linked `account_id`
+  via a LEFT JOIN on `account_properties`.
 
 ---
 

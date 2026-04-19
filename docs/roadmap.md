@@ -18,7 +18,7 @@ Start these three in parallel once F1-6 is complete. All depend only on F1-6.
 
 | Priority | Feature | Epic | Status | Notes |
 |----------|---------|------|--------|-------|
-| **1** | **F2-1** Property CRUD | E2 | Planned | Highest priority — unblocks F3-1 (Transaction CRUD). |
+| **1** | **F2-1** Property CRUD | E2 | Done | Highest priority — unblocks F3-1 (Transaction CRUD). |
 | **2** | **F2-4** Account CRUD | E2 | Planned | Unblocks account management UI. F2-3 (Account schema) is complete. |
 | **3** | **F2-9** Currency rate management | E2 | Planned | Required by F3-1 for multi-currency transactions. Can be parallel to F2-1. |
 

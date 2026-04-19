@@ -1,7 +1,14 @@
+require('dotenv').config({ path: require('path').join(__dirname, '../.env.test') });
+
 const request = require('supertest');
 const app = require('../src/app');
 const db = require('../src/db/knex');
 const jwt = require('jsonwebtoken');
+const { WORKSPACE_ID, USER_ID, setupAppWithDb } = require('./helpers');
+
+beforeAll(() => {
+  setupAppWithDb(app, db);
+});
 
 describe('Workspace Settings API', () => {
   let testWorkspaceId;
@@ -10,10 +17,10 @@ describe('Workspace Settings API', () => {
   let memberToken;
 
   beforeEach(async () => {
-    // Clean up test data
-    await db('workspace_users').del();
-    await db('workspaces').del();
-    await db('users').del();
+    // Clean up only non-seed test data so globalSetup's seed workspace/user survive
+    await db('workspace_users').whereNot('workspace_id', WORKSPACE_ID).del();
+    await db('workspaces').whereNot('id', WORKSPACE_ID).del();
+    await db('users').whereNot('id', USER_ID).del();
 
     // Create test user
     const [user] = await db('users')
@@ -84,9 +91,9 @@ describe('Workspace Settings API', () => {
   });
 
   afterEach(async () => {
-    await db('workspace_users').del();
-    await db('workspaces').del();
-    await db('users').del();
+    await db('workspace_users').whereNot('workspace_id', WORKSPACE_ID).del();
+    await db('workspaces').whereNot('id', WORKSPACE_ID).del();
+    await db('users').whereNot('id', USER_ID).del();
   });
 
   describe('GET /api/workspace/settings', () => {
