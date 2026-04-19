@@ -98,7 +98,7 @@ Fine-grained per-user permission control within a workspace.
 ---
 
 ### F1-7 App header user menu `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 The top-right application chrome (user identifier, last-sync timestamp, refresh button, and sign-out link) is replaced by a single avatar icon. Clicking the icon opens a dropdown menu containing all session-related actions. This declutters the header and aligns with standard web application conventions.
 
