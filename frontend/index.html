@@ -32,9 +32,15 @@
       <button onclick="showPage('rules',this)"                        data-i18n="nav.rules"></button>
     </nav>
     <div class="header-right">
-      <span id="sync-status">Loading…</span>
-      <button class="btn btn-sm btn-secondary" onclick="refreshAll()" data-i18n="common.refresh"></button>
-      <button class="btn btn-sm btn-secondary" onclick="logout()" id="logout-btn" style="display:none">Sign out</button>
+      <div class="user-menu-wrapper">
+        <button id="user-avatar" class="user-avatar" onclick="toggleUserMenu()" title="User menu"></button>
+        <div id="user-menu" class="user-menu">
+          <button class="user-menu-item" onclick="logout()">Sign out</button>
+          <button class="user-menu-item" onclick="closeUserMenu(); refreshAll();">Refresh</button>
+          <button class="user-menu-item" disabled title="Not implemented">Settings</button>
+          <div class="user-menu-item info" id="sync-info">Synced 0 min ago</div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -646,13 +652,12 @@ function initAuth() {
     // Authenticated — show app, hide login
     document.getElementById('app').style.display = '';
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('logout-btn').style.display = '';
     window.AUTH_TOKEN = token;
+    initUserAvatar();
   } else {
     // Not authenticated — hide app, show login
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('logout-btn').style.display = 'none';
     window.AUTH_TOKEN = null;
   }
 }
@@ -670,6 +675,52 @@ async function logout() {
     console.error('Logout failed:', e);
   }
 }
+
+// User menu functions
+function initUserAvatar() {
+  const token = window.AUTH_TOKEN;
+  if (!token) return;
+
+  const payload = decodeToken(token);
+  if (!payload || !payload.name) return;
+
+  // Extract initials from name (first letter of given name + first letter of family name)
+  const parts = payload.name.trim().split(/\s+/);
+  let initials = '';
+  if (parts.length >= 2) {
+    initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  } else if (parts.length === 1) {
+    initials = parts[0].substring(0, 2).toUpperCase();
+  }
+
+  const avatarBtn = document.getElementById('user-avatar');
+  if (avatarBtn) {
+    avatarBtn.textContent = initials || '?';
+  }
+}
+
+function toggleUserMenu() {
+  const menu = document.getElementById('user-menu');
+  if (menu) {
+    menu.classList.toggle('open');
+  }
+}
+
+function closeUserMenu() {
+  const menu = document.getElementById('user-menu');
+  if (menu) {
+    menu.classList.remove('open');
+  }
+}
+
+// Close user menu when clicking outside
+document.addEventListener('click', function(event) {
+  const avatar = document.getElementById('user-avatar');
+  const menu = document.getElementById('user-menu');
+  if (avatar && menu && !avatar.contains(event.target) && !menu.contains(event.target)) {
+    menu.classList.remove('open');
+  }
+});
 
 // Run on page load
 initAuth();
@@ -1941,7 +1992,12 @@ function setLoading(on, msg) {
   else    { el.classList.add('hidden'); }
 }
 
-function setStatus(msg) { document.getElementById('sync-status').textContent = msg; }
+function setStatus(msg) {
+  const syncInfo = document.getElementById('sync-info');
+  if (syncInfo) {
+    syncInfo.textContent = msg;
+  }
+}
 
 // ── Init ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', boot);
