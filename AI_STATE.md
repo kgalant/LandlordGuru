@@ -9,10 +9,10 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: chore
-- Epic: E2 Account and Property Management
-- ID: F2-3
-- Title: Deepen account management design in epic docs
-- Short summary: Review and expand the account management design in E2 (and related epics as needed), going deeper on account structure, resolution logic, and edge cases before implementation begins.
+- Epic: E1 + E6
+- ID: F1-7 + F6-6
+- Title: Document app header user menu and frontend debug panel in epic docs
+- Short summary: Add F1-7 (avatar/profile dropdown in top-right header) to E1 and F6-6 (debug panel behind version label) to E6 before implementation begins.
 
 ---
 
@@ -24,14 +24,15 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Review E2 account model (F2-3, F2-4) and identify gaps or open questions in the current design.
-- [x] S2: Update E2 (and cross-references in E1, E3, E4, E5, E6 and DESIGN-DISCUSSION) with deeper account management decisions.
+- [x] S1: Write F1-7 (app header user menu) into E1 epic doc
+- [x] S2: Write F6-6 (frontend debug panel) into E6 epic doc
+- [-] S3: Commit changes
 
 ---
 
 ## Backlog pointers
 
-- Next candidate features: F2-1, F2-2, F2-4, F3-1, F5-3, F5-4
+- Next candidate features: F1-7, F6-6, F2-1, F2-2, F2-4, F3-1, F5-3, F5-4
 - Known bugs: B2-1-1, B3-1-1
 
 Relevant epic docs:
@@ -47,7 +48,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit the account management deep-dive changes, then select the next feature to implement from the backlog.
+Commit the F1-7 and F6-6 epic documentation changes.
 
 ---
 
@@ -65,35 +66,47 @@ Commit the account management deep-dive changes, then select the next feature to
 
 ## Files touched this session
 
-- docs/DESIGN-DISCUSSION.md
-- docs/epics/01-workspace-user-management.md
-- docs/epics/02-account-property-management.md
-- docs/epics/03-transaction-management.md
-- docs/epics/04-reporting-analytics.md
-- docs/epics/05-integrations-data-import.md
-- docs/epics/06-architecture-backend.md
-- AI_STATE.md
+- `docs/epics/01-workspace-user-management.md`
+- `docs/epics/06-architecture-backend.md`
+- `.claude/ai_state_archive.json`
+- `AI_STATE.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-18 23:30:00 account management deep-dive — hierarchy, currency rates, versioning
+- 2026-04-19 09:15:00 document F1-7 app header menu and F6-6 debug panel in epic docs
   - branch: main
-  - lastcommit: 46f2322
-  - changedfiles: docs/DESIGN-DISCUSSION.md, docs/epics/01-workspace-user-management.md, docs/epics/02-account-property-management.md, docs/epics/03-transaction-management.md, docs/epics/04-reporting-analytics.md, docs/epics/05-integrations-data-import.md, docs/epics/06-architecture-backend.md, AI_STATE.md
-  - gitstatus: M AI_STATE.md, M docs/DESIGN-DISCUSSION.md, M docs/epics/01-workspace-user-management.md, M docs/epics/02-account-property-management.md, M docs/epics/03-transaction-management.md, M docs/epics/04-reporting-analytics.md, M docs/epics/05-integrations-data-import.md, M docs/epics/06-architecture-backend.md
+  - lastcommit: 86dce8f
+  - changedfiles: docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md, .claude/ai_state_archive.json, AI_STATE.md
+  - gitstatus: M AI_STATE.md, M docs/epics/01-workspace-user-management.md, M docs/epics/06-architecture-backend.md, M .claude/ai_state_archive.json
 
-- 2026-04-18 23:20:13 [lifecycle]
+- 2026-04-19 08:54:53 [lifecycle]
   - branch: main
-  - last_commit: 46f2322 Standardise epic feature IDs to F<epic>-<n> convention
-  - changed_files: AI_STATE.md, docs/DESIGN-DISCUSSION.md, docs/epics/01-workspace-user-management.md, docs/epics/02-account-property-management.md, docs/epics/03-transaction-management.md, docs/epics/04-reporting-analytics.md, docs/epics/05-integrations-data-import.md, docs/epics/06-architecture-backend.md
+  - last_commit: 86dce8f Deepen account management design across all epics
+  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md
   - git_status:
+     M .claude/ai_state_archive.json
      M AI_STATE.md
-     M docs/DESIGN-DISCUSSION.md
      M docs/epics/01-workspace-user-management.md
-     M docs/epics/02-account-property-management.md
-     M docs/epics/03-transaction-management.md
-     M docs/epics/04-reporting-analytics.md
-     M docs/epics/05-integrations-data-import.md
+     M docs/epics/06-architecture-backend.md
+
+- 2026-04-19 08:54:54 [lifecycle]
+  - branch: main
+  - last_commit: 86dce8f Deepen account management design across all epics
+  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md
+  - git_status:
+     M .claude/ai_state_archive.json
+     M AI_STATE.md
+     M docs/epics/01-workspace-user-management.md
+     M docs/epics/06-architecture-backend.md
+
+- 2026-04-19 08:55:45 [lifecycle]
+  - branch: main
+  - last_commit: 86dce8f Deepen account management design across all epics
+  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md
+  - git_status:
+     M .claude/ai_state_archive.json
+     M AI_STATE.md
+     M docs/epics/01-workspace-user-management.md
      M docs/epics/06-architecture-backend.md

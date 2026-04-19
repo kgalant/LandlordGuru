@@ -97,6 +97,35 @@ Fine-grained per-user permission control within a workspace.
 
 ---
 
+### F1-7 App header user menu `[MVP]`
+**Status:** Planned
+
+The top-right application chrome (user identifier, last-sync timestamp, refresh button, and sign-out link) is replaced by a single avatar icon. Clicking the icon opens a dropdown menu containing all session-related actions. This declutters the header and aligns with standard web application conventions.
+
+**Avatar display:**
+- A circle containing the user's initials (first letter of given name + first letter of family name, derived from the authenticated Google profile)
+- Future enhancement: replace initials with the Google profile picture once profile-picture fetching is added to the auth flow
+
+**Dropdown menu items (top to bottom):**
+- **Sign out** — ends the session, clears the JWT cookie, and redirects to the login page
+- **Refresh** — triggers a manual data sync, equivalent to the current standalone refresh button
+- **Settings** — navigation link to the workspace settings page (F1-6); renders as disabled with a "Not implemented" tooltip until F1-6 is built
+- **Sync info** — non-interactive row showing the last-synced timestamp in muted, small text (e.g. "Synced 3 min ago"); informational only
+
+**Acceptance criteria:**
+- The existing SIG/user text, standalone timestamp display, refresh button, and sign-out link are removed from the top-right header area
+- An avatar icon (circle with initials) appears in the top-right corner of the authenticated layout
+- Clicking the avatar opens the dropdown; clicking anywhere outside the dropdown closes it
+- Sign out calls the existing logout endpoint and redirects to the login page
+- Refresh triggers the same data refresh as the removed standalone button
+- Settings item is visible but non-functional (disabled state + "Not implemented" tooltip) until F1-6 is implemented
+- Sync info row shows the last-synced timestamp and is not clickable
+- Initials are derived from the logged-in user's display name at runtime
+
+**Dependencies:** F1-1 (auth — done)
+
+---
+
 ### F1-6 Workspace settings `[MVP]`
 **Status:** Planned
 

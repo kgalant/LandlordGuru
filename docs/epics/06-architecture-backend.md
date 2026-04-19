@@ -72,6 +72,49 @@ Formalise how environment configuration is managed across local and server envir
 
 ---
 
+### F6-6 Frontend debug panel `[Planned]`
+**Status:** Planned
+
+A discreet debug panel accessible via a version label in the bottom-right corner of every authenticated page. Intended for developers and operators checking runtime state; it is deliberately low-visibility and does not draw attention in normal use.
+
+**Entry point:**
+- A version string (e.g. `v0.1.0`) is rendered in the bottom-right corner of the authenticated layout on every page
+- Style: very small font, low-contrast muted colour (intentionally unobtrusive — reads as a footnote, not a button)
+- Clicking the label toggles the debug panel open; clicking it again or pressing Escape closes it
+
+**Debug panel contents:**
+
+| Field | Description |
+|---|---|
+| Frontend version | Semver string + short git commit hash, injected at build time via an environment variable |
+| Backend version | Fetched from `GET /api/version`; shows "unavailable" if the request fails |
+| Environment | `development` or `production`, derived from `NODE_ENV` or equivalent |
+| Authenticated user | Display name, email address, and workspace ID of the current session |
+| Auth token expiry | Remaining TTL of the JWT in human-readable form (e.g. "expires in 4 h 12 m") |
+| Last sync | Timestamp of the most recent data refresh |
+| API health | Status and latency of the most recent API call or a dedicated health ping (e.g. "OK — 42 ms") |
+
+**Backend endpoint — `GET /api/version`:**
+- Returns `{ version, environment, commit }`:
+  - `version` — value of `version` field from `backend/package.json`
+  - `environment` — value of `NODE_ENV`
+  - `commit` — value of `GIT_COMMIT` env var, injected at deploy time by `deploy.ps1` / `deploy.sh`; falls back to `"unknown"` if not set
+- No authentication required (safe to call before session is established)
+- Must not expose secrets, internal paths, or stack traces
+
+**Acceptance criteria:**
+- The version label is visible in the bottom-right corner on every page after login
+- The label is intentionally low-visibility and does not draw the eye in normal use
+- Clicking the label opens the debug panel; clicking it again or pressing Escape closes it
+- The panel displays all fields in the table above
+- If `GET /api/version` fails or times out, the backend version row shows "unavailable" — the panel does not crash or hide
+- `GET /api/version` is implemented on the backend and returns the correct `{ version, environment, commit }` shape
+- The panel is shown only to authenticated users; the version label itself may be visible to unauthenticated pages but the panel requires a valid session to open
+
+**Dependencies:** F6-4 (observability — planned); the `GIT_COMMIT` injection must be added to `deploy.ps1` and `deploy.sh` as part of this feature.
+
+---
+
 ## Bugs
 
 None recorded.
