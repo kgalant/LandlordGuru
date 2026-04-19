@@ -276,6 +276,22 @@ The system will be built to support any enum; which enums are actually configura
 
 ---
 
+### F1-10 Workspace currency dropdown with labels `[Future]`
+**Status:** Backlog
+
+Enhance F1-6 workspace settings with a currency selection dropdown that displays formatted labels (e.g., "USD - US Dollars", "SGD - Singapore Dollars") while storing only the three-letter ISO 4217 code.
+
+**Acceptance criteria:**
+- Workspace settings currency field displays a dropdown instead of a text input
+- Each option shows `<CODE> - <COUNTRY/DESCRIPTION>` (e.g., "USD - US Dollars")
+- Selection stores only the ISO code in `workspaces.reporting_currency`
+- Dropdown list includes all common currencies (at minimum: USD, EUR, GBP, JPY, CAD, AUD, DKK, SEK, NOK, PLN, SGD, etc.)
+- Field validation ensures only valid ISO codes are accepted
+
+**Dependencies:** F1-6 (workspace settings — done)
+
+---
+
 ## Bugs
 
 None recorded.

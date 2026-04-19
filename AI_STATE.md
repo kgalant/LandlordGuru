@@ -8,11 +8,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
-- Epic: E1 Workspace and User Management
-- ID: F1-6
-- Title: Workspace settings
-- Short summary: Build workspace settings endpoints (GET/PATCH) and UI for reporting_currency and max_account_depth configuration.
+None (F1-6 complete and tested on dev server; ready to select next feature)
 
 ---
 
@@ -24,12 +20,7 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Create migration to add reporting_currency and max_account_depth columns to workspaces table
-- [x] S2: Implement GET /api/workspace/settings and PATCH /api/workspace/settings backend routes
-- [x] S3: Add tests for backend settings routes and authorization
-- [x] S4: Create frontend workspace settings page UI
-- [x] S5: Wire up Settings link from avatar menu to settings page
-- [ ] S6: End-to-end test in browser (requires dev server start and manual testing)
+N/A — F1-6 complete (all subtasks done, E2E tested on dev server)
 
 ---
 
@@ -52,7 +43,7 @@ Relevant epic docs:
 
 ## Next step
 
-Start dev server (npm start in backend/), verify migration 013 runs, navigate to Settings from avatar menu, load and update settings, verify changes persist and are logged.
+Select next feature from Wave 2 (F2-1 Property CRUD, F2-4 Account CRUD, or F2-9 Currency rates) and set up task breakdown. Note: F1-10 (currency dropdown labels) added to E1 backlog for future work.
 
 ---
 
@@ -64,8 +55,8 @@ Start dev server (npm start in backend/), verify migration 013 runs, navigate to
   - Test steps: Navigate to avatar menu → Settings; verify form loads with current currency/depth; change values; save; refresh page to confirm persistence
 
 - Last result:
-  - Date/time: 2026-04-19 12:00:00
-  - Outcome: All backend tests pass (81 passed, 5 suites, 0 failures). New workspace settings migration 013, API routes, and frontend UI complete. Ready for browser E2E test.
+  - Date/time: 2026-04-19 15:30:00
+  - Outcome: All backend tests pass (81 passed, 5 suites, 0 failures). F1-6 complete: settings form loads, updates persist across page refresh, currency/depth values save correctly. Dev server tested and working.
 
 ---
 
@@ -79,14 +70,15 @@ Start dev server (npm start in backend/), verify migration 013 runs, navigate to
 - `frontend/index.html` (added Settings button onclick, settings page div, renderSettings and saveSettings functions)
 - `frontend/js/api.js` (added getWorkspaceSettings and updateWorkspaceSettings functions)
 - `frontend/js/strings.js` (added settings i18n strings)
-- `AI_STATE.md` (updated task breakdown, mark S1-S5 complete)
+- `docs/epics/01-workspace-user-management.md` (added F1-10 backlog item: currency dropdown with labels)
+- `AI_STATE.md` (marked F1-6 complete, added Next step for Wave 2 features)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-19 12:05:00 F1-6 implementation complete: workspace settings (API + UI)
+- 2026-04-19 15:35:00 F1-6 session end: workspace settings complete and tested
   - branch: main
-  - lastcommit: 51b9572
-  - changedfiles: backend/src/db/migrations/013_workspace_settings.js, backend/src/routes/workspace.js, backend/tests/workspace.test.js, backend/src/app.js, docs/data-model.md, frontend/index.html, frontend/js/api.js, frontend/js/strings.js, AI_STATE.md
+  - lastcommit: 80b337a
+  - changedfiles: docs/epics/01-workspace-user-management.md, AI_STATE.md
   - gitstatus: M AI_STATE.md
