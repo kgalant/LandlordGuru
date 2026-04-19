@@ -8,11 +8,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
-- Epic: E1 Workspace and User Management
-- ID: F1-7
-- Title: App header user menu (avatar + dropdown)
-- Short summary: Replace top-right header chrome (user text, timestamp, buttons) with avatar icon; clicking avatar opens dropdown menu with sign out, refresh, settings (disabled), and sync info.
+None (F1-7 complete and committed; ready to select next feature from backlog)
 
 ---
 
@@ -24,14 +20,7 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Review current header implementation (`.header-right` div); extract user display name/initials source from auth state
-- [x] S2: Create CSS for avatar icon (circle, user initials) and dropdown menu styling
-- [x] S3: Implement avatar markup and populate with user initials dynamically
-- [x] S4: Implement dropdown menu markup and toggle on avatar click (open/close)
-- [x] S5: Wire dropdown menu actions (sign out, refresh, settings link, sync info display)
-- [x] S6: Manual browser test (avatar display, dropdown toggle, all actions work, settings shows disabled state)
-- [x] S7: Verify backward compatibility (logout, refreshAll still work); run npm test
-- [-] S8: Final validation and commit
+N/A — F1-7 implementation complete and committed (all subtasks done)
 
 ---
 
@@ -53,7 +42,7 @@ Relevant epic docs:
 
 ## Next step
 
-Prepare and execute commit for F1-7: stage frontend/index.html, frontend/css/style.css, and AI_STATE.md; commit with message including "version: X.Y.Z → X.Y.(Z+1)" and feature summary; optionally push to remote.
+Select next feature from backlog (F1-8, F1-9, F6-6, F2-1, F2-2, etc.) and set up task breakdown, or deploy F1-7 to test server (ssh kim@homedev, pull changes, restart PM2).
 
 ---
 
@@ -75,16 +64,16 @@ Prepare and execute commit for F1-7: stage frontend/index.html, frontend/css/sty
 - `frontend/css/style.css`
 - `backend/package.json`
 - `version.json`
-- `AI_STATE.md`
+- `AI_STATE.md` (final state update)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-19 10:00:00 start F1-7 implementation: app header user menu
+- 2026-04-19 10:25:00 complete F1-7 implementation: app header user menu
   - branch: main
-  - lastcommit: ffea815
-  - changedfiles: AI_STATE.md
+  - lastcommit: bd8b4aa
+  - changedfiles: frontend/index.html, frontend/css/style.css, backend/package.json, version.json, AI_STATE.md
   - gitstatus: M AI_STATE.md
 
 - 2026-04-19 09:15:57 [lifecycle]
