@@ -105,7 +105,7 @@ Frontend view showing all active properties with key fields.
 ---
 
 ### F2-3 Account model `[MVP]`
-**Status:** Schema done (partial — hierarchy and status fields not yet added)
+**Status:** Done
 
 Accounts and their relationship to properties are defined in
 `008_accounts.js`. The schema requires updates to support hierarchy.
