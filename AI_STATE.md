@@ -8,7 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-None (F1-7 complete and committed; ready to select next feature from backlog)
+- Type: feature
+- Epic: E2 Account and Property Management
+- ID: F2-3
+- Title: Account model schema (needs completion)
+- Short summary: Complete accounts table schema in migration 008_accounts.js. Add missing hierarchy, status fields, and constraints.
 
 ---
 
@@ -20,7 +24,11 @@ None
 
 ## Task breakdown (current focus)
 
-N/A — F1-7 implementation complete and committed (all subtasks done)
+- [x] S1: Review current migration 008_accounts.js to see what already exists
+- [x] S2: Create migration 009 to add parent_account_id, rename active to is_active, add constraints
+- [x] S3: Update docs/data-model.md with account schema details
+- [x] S4: Add/verify schema tests in backend/tests/
+- [x] S5: Run npm test and verify all tests pass
 
 ---
 
@@ -42,7 +50,7 @@ Relevant epic docs:
 
 ## Next step
 
-Select next feature from backlog (F1-8, F1-9, F6-6, F2-1, F2-2, etc.) and set up task breakdown, or deploy F1-7 to test server (ssh kim@homedev, pull changes, restart PM2).
+Commit all F2-3 changes (migration, tests, docs, code fix) to main branch.
 
 ---
 
@@ -53,18 +61,17 @@ Select next feature from backlog (F1-8, F1-9, F6-6, F2-1, F2-2, etc.) and set up
   - Manual browser test on dev server (http://localhost:3000)
 
 - Last result:
-  - Date/time: 2026-04-19 10:15:00
-  - Outcome: Frontend loads successfully with avatar and dropdown menu HTML/CSS. Dev server running on port 3000. Avatar and dropdown elements present and styled. Ready for manual browser testing and backend test verification.
+  - Date/time: 2026-04-19 09:50:00
+  - Outcome: All tests pass (69 passed, 4 suites, 0 failures). Migration 009 creates accounts hierarchy schema. New accounts.test.js validates schema fields, constraints, and hierarchy. Properties route fixed to use is_active.
 
 ---
 
 ## Files touched this session
 
-- `frontend/index.html`
-- `frontend/css/style.css`
-- `backend/package.json`
-- `version.json`
-- `docs/epics/01-workspace-user-management.md`
+- `backend/src/db/migrations/009_accounts_hierarchy.js`
+- `docs/data-model.md`
+- `backend/tests/accounts.test.js`
+- `backend/src/routes/properties.js` (fixed accounts.active → accounts.is_active)
 - `AI_STATE.md`
 
 ---
@@ -98,3 +105,94 @@ Select next feature from backlog (F1-8, F1-9, F6-6, F2-1, F2-2, etc.) and set up
 - 2026-04-19 09:22:06 [lifecycle]
   - branch: main
   - last_commit: a987b0f Update AI_STATE: F1-7 implementation complete
+
+- 2026-04-19 09:25:19 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+
+- 2026-04-19 09:31:39 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:32:12 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:33:27 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:34:39 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:35:55 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:36:23 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:37:16 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:38:10 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-19 09:42:27 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M docs/data-model.md
+    ?? backend/src/db/migrations/009_accounts_hierarchy.js
+    ?? backend/tests/accounts.test.js
+
+- 2026-04-19 09:43:33 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M docs/data-model.md
+    ?? backend/src/db/migrations/009_accounts_hierarchy.js
+    ?? backend/tests/accounts.test.js
+
+- 2026-04-19 09:50:52 [lifecycle]
+  - branch: main
+  - last_commit: d40590c Update AI_STATE: F1-7 implementation complete
+  - changed_files: AI_STATE.md, backend/src/routes/properties.js, docs/data-model.md
+  - git_status:
+     M AI_STATE.md
+     M backend/src/routes/properties.js
+     M docs/data-model.md
+    ?? backend/src/db/migrations/009_accounts_hierarchy.js
+    ?? backend/tests/accounts.test.js

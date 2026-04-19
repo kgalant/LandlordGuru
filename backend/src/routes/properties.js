@@ -112,7 +112,7 @@ router.post('/', requireAuth, async (req, res) => {
         .insert({
           workspace_id,
           name: name.trim(),
-          active: true,
+          is_active: true,
           is_default: false,
           created_by: user_id,
           last_modified_by: user_id,

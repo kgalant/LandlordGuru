@@ -100,16 +100,23 @@ A flexible accounting container that bridges properties and transactions. An acc
 | `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete); indexed |
 | `name`               | varchar   | Display name, e.g. `VB77` or `Maple Street Building` |
 | `notes`              | text      | Free text |
-| `active`             | boolean   | Whether the account is in use; default `true` |
+| `parent_account_id`  | UUID      | FK → accounts.id (SET NULL on delete); nullable; for account hierarchy. Must be NULL when `is_default = true` |
+| `is_active`          | boolean   | Whether the account is in use; `true` = active, `false` = archived; default `true` |
 | `is_default`         | boolean   | True for the workspace's default catch-all account; default `false` |
 | `created_at`         | timestamp | Set on creation; default `now()` |
 | `created_by`         | UUID      | FK → users.id; nullable |
 | `last_modified_at`   | timestamp | Updated on any change; default `now()` |
 | `last_modified_by`   | UUID      | FK → users.id; nullable |
 
-**Indexes:** `(workspace_id)`
+**Indexes:** `(workspace_id)`, `(parent_account_id)` (for hierarchy traversal)
 
 **Unique constraint:** `(workspace_id) WHERE is_default = true` — at most one default account per workspace (partial unique index).
+
+**Check constraint:** `parent_account_id IS NULL when is_default = true` — default accounts cannot have a parent.
+
+**Hierarchy:** Accounts form a parent-child tree using `parent_account_id`. To query an account and all descendants, use a recursive CTE. To prevent cycles, the API must validate that reparenting does not create cycles and that the resulting depth does not exceed the workspace's `max_account_depth` setting (see workspace settings).
+
+**Status (active vs archived):** Archived accounts (`is_active = false`) remain queryable for historical reporting but cannot accept new properties or transactions. Account rows are never hard-deleted.
 
 **Default account rule:** When a workspace is created, one account is automatically created with `is_default = true` and named after the workspace. This account is the fallback used wherever an account is required but the user has not yet set up specific accounts or assigned a transaction to one. Every subsequent decision that needs "which account?" should resolve to this default when nothing more specific is available — not to null, not to an error.
 
