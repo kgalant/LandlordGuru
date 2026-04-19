@@ -29,7 +29,7 @@ None
 - [x] S3: Add tests for backend settings routes and authorization
 - [x] S4: Create frontend workspace settings page UI
 - [x] S5: Wire up Settings link from avatar menu to settings page
-- [-] S6: End-to-end test in browser
+- [ ] S6: End-to-end test in browser (requires dev server start and manual testing)
 
 ---
 
@@ -59,12 +59,13 @@ Start dev server (npm start in backend/), verify migration 013 runs, navigate to
 ## Validation
 
 - Commands to run:
-  - `npm test` (from backend/)
+  - `npm test` (from backend/) — 81 tests, all passing
   - Manual browser test on dev server (http://localhost:3000)
+  - Test steps: Navigate to avatar menu → Settings; verify form loads with current currency/depth; change values; save; refresh page to confirm persistence
 
 - Last result:
-  - Date/time: 2026-04-19 09:50:00
-  - Outcome: All tests pass (69 passed, 4 suites, 0 failures). Migration 009 creates accounts hierarchy schema. New accounts.test.js validates schema fields, constraints, and hierarchy. Properties route fixed to use is_active.
+  - Date/time: 2026-04-19 12:00:00
+  - Outcome: All backend tests pass (81 passed, 5 suites, 0 failures). New workspace settings migration 013, API routes, and frontend UI complete. Ready for browser E2E test.
 
 ---
 
@@ -84,10 +85,10 @@ Start dev server (npm start in backend/), verify migration 013 runs, navigate to
 
 ## Automation log (latest only)
 
-- 2026-04-19 10:30:00 F1-6 session start: workspace settings
+- 2026-04-19 12:05:00 F1-6 implementation complete: workspace settings (API + UI)
   - branch: main
-  - lastcommit: d12bd36
-  - changedfiles: AI_STATE.md
+  - lastcommit: f302866
+  - changedfiles: backend/src/db/migrations/013_workspace_settings.js, backend/src/routes/workspace.js, backend/tests/workspace.test.js, backend/src/app.js, docs/data-model.md, frontend/index.html, frontend/js/api.js, frontend/js/strings.js, AI_STATE.md
   - gitstatus: M AI_STATE.md
 
 - 2026-04-19 10:26:03 [lifecycle]
