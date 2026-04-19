@@ -26,7 +26,7 @@ N/A — ready for next focus
 
 ## Backlog pointers
 
-- Next candidate features: F1-7, F1-8, F6-6, F2-1, F2-2, F2-4, F3-1, F5-3, F5-4
+- Next candidate features: F1-7, F1-8, F1-9, F6-6, F2-1, F2-2, F2-4, F3-1, F5-3, F5-4
 - Known bugs: B2-1-1, B3-1-1
 
 Relevant epic docs:
@@ -42,7 +42,7 @@ Relevant epic docs:
 
 ## Next step
 
-Select next feature from backlog to implement (F1-7, F1-8, F6-6, F2-1, F2-2, F2-4, or others as discussed).
+Select next feature from backlog to implement (F1-7, F1-8, F1-9, F6-6, F2-1, F2-2, F2-4, or others as discussed).
 
 ---
 
@@ -69,8 +69,8 @@ Select next feature from backlog to implement (F1-7, F1-8, F6-6, F2-1, F2-2, F2-
 
 ## Automation log (latest only)
 
-- 2026-04-19 09:22:00 document UI features: F1-7 app header menu, F6-6 debug panel, F1-8 workspace admin
+- 2026-04-19 09:28:00 document UI features: F1-7 app header, F6-6 debug panel, F1-8 workspace admin, F1-9 custom enums
   - branch: main
-  - lastcommit: d259ca1
+  - lastcommit: ffea815
   - changedfiles: docs/epics/01-workspace-user-management.md, AI_STATE.md
   - gitstatus: M docs/epics/01-workspace-user-management.md, M AI_STATE.md

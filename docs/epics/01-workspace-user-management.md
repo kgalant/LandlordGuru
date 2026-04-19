@@ -211,6 +211,71 @@ The page is accessible only to users with the `workspace_manager` role and provi
 
 ---
 
+### F1-9 Custom dropdown value management `[Future]`
+**Status:** Future
+
+A workspace-level configuration interface for managing custom enumerated values (dropdowns) across the system. This allows workspace owners to add, remove, replace, and set defaults for any configurable enum list (e.g., property models, transaction categories, account types, etc.), with constraints to ensure data integrity.
+
+**Access & Permissions:**
+- Accessible from the workspace settings page (F1-6) under a "Custom Values" or "Enums" section
+- Restricted to users with the `owner` role in the workspace (enforced on backend)
+- Workspace isolation: custom values are workspace-scoped; different workspaces have independent enum configurations
+
+**Per-enum list capabilities:**
+
+1. **View all values** — lists all values for the enum with metadata:
+   - Value name / label
+   - Default indicator (if set)
+   - Count of records currently using this value
+   - Status (active / archived, if applicable)
+
+2. **Add a new value** — form to create a new enum value; value name is required and must be unique within that enum list for the workspace
+
+3. **Set as default** — designate one value as the workspace default for this enum; only applies to *new* records created after the change (existing records retain their current value)
+
+4. **Delete a value** — remove a value from the enum list; deletion is only allowed if no records currently use that value
+   - If records exist using the value, show an atomic reassignment prompt:
+     - Display count of affected records
+     - Require user to select a replacement value from the remaining values
+     - On confirmation, reassign all records to the replacement value in a single transaction, then delete the original value
+     - If reassignment fails, abort the delete
+
+5. **Mass-replace a value** — atomic operation to change all instances of one value to another:
+   - User selects the source value (value to replace) and the target value (replacement)
+   - Display confirmation with count of records affected
+   - On confirmation, update all records using the source value to the target value in a single transaction
+   - Cannot replace with a value that has already been deleted; can replace the default value, but designate a new default if necessary
+
+**Enum scope:**
+At feature definition time, the scope is deliberately open-ended: *any enum list in the system can potentially be made configurable*. As new enumerated fields are added (e.g., property models, transaction categories, account types), a decision is made per-field (at implementation time of that field's feature) whether it should support custom workspace values. Once decided, the field is wired into this custom enum management system.
+
+**Initial enums (at launch of F1-9):**
+The system will be built to support any enum; which enums are actually configurable by users will be determined as individual features (F2-1, F3-x, etc.) are specified and implemented.
+
+**Acceptance criteria:**
+- Workspace owners can view, add, delete, and replace custom enum values in the workspace
+- Enum values are isolated per workspace
+- Default value behavior affects only new records created after the change
+- Deleting a value with linked records requires mandatory reassignment before deletion can proceed
+- Mass-replace shows affected record count and is atomic (all-or-nothing)
+- Both delete and mass-replace operations are logged (for audit purposes)
+- Non-owner users cannot access the custom enum management UI (permission enforced on backend and frontend)
+- Enum values cannot be deleted without reassignment if records exist
+- Reassignment and mass-replace operations fail gracefully if any record update fails (transaction rollback)
+
+**Dependencies:**
+- F1-1 (auth — done)
+- F1-6 (workspace settings page — must exist to host this UI)
+- Individual enum-owning features (e.g., F2-1 for property models) must be built to support custom values for each field
+
+**Notes:**
+- This feature is built once and reused by all features that have configurable enums
+- Each time a new enum is added to the system (e.g., a new transaction category enum), we decide whether it's workspace-configurable and wire it into this system
+- The API must support querying the current enum values for any given list (e.g., `GET /api/workspace/enums/property-models`)
+- Archived values (if applicable) should be hidden from dropdown UIs by default but remain queryable for reporting on historical records
+
+---
+
 ## Bugs
 
 None recorded.
