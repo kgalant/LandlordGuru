@@ -8,11 +8,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: chore
-- Epic: E1 + E6
-- ID: F1-7 + F6-6
-- Title: Document app header user menu and frontend debug panel in epic docs
-- Short summary: Add F1-7 (avatar/profile dropdown in top-right header) to E1 and F6-6 (debug panel behind version label) to E6 before implementation begins.
+None (documentation phase complete; ready to select next feature from backlog)
 
 ---
 
@@ -24,9 +20,7 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Write F1-7 (app header user menu) into E1 epic doc
-- [x] S2: Write F6-6 (frontend debug panel) into E6 epic doc
-- [-] S3: Commit changes
+N/A — ready for next focus
 
 ---
 
@@ -48,7 +42,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit the F1-7 and F6-6 epic documentation changes.
+Select next feature from backlog to implement (F1-7, F6-6, F2-1, F2-2, F2-4, or others as discussed).
 
 ---
 
@@ -75,38 +69,15 @@ Commit the F1-7 and F6-6 epic documentation changes.
 
 ## Automation log (latest only)
 
-- 2026-04-19 09:15:00 document F1-7 app header menu and F6-6 debug panel in epic docs
+- 2026-04-19 09:16:00 document F1-7 app header menu and F6-6 debug panel in epic docs
   - branch: main
-  - lastcommit: 86dce8f
+  - lastcommit: f56fb21
   - changedfiles: docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md, .claude/ai_state_archive.json, AI_STATE.md
-  - gitstatus: M AI_STATE.md, M docs/epics/01-workspace-user-management.md, M docs/epics/06-architecture-backend.md, M .claude/ai_state_archive.json
+  - gitstatus: M .claude/ai_state_archive.json, M docs/epics/01-workspace-user-management.md, M docs/epics/06-architecture-backend.md
 
-- 2026-04-19 08:54:53 [lifecycle]
+- 2026-04-19 08:56:31 [lifecycle]
   - branch: main
-  - last_commit: 86dce8f Deepen account management design across all epics
-  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md
+  - last_commit: f56fb21 Add F1-7 app header menu and F6-6 debug panel feature specs
+  - changed_files: AI_STATE.md
   - git_status:
-     M .claude/ai_state_archive.json
      M AI_STATE.md
-     M docs/epics/01-workspace-user-management.md
-     M docs/epics/06-architecture-backend.md
-
-- 2026-04-19 08:54:54 [lifecycle]
-  - branch: main
-  - last_commit: 86dce8f Deepen account management design across all epics
-  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md
-  - git_status:
-     M .claude/ai_state_archive.json
-     M AI_STATE.md
-     M docs/epics/01-workspace-user-management.md
-     M docs/epics/06-architecture-backend.md
-
-- 2026-04-19 08:55:45 [lifecycle]
-  - branch: main
-  - last_commit: 86dce8f Deepen account management design across all epics
-  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/06-architecture-backend.md
-  - git_status:
-     M .claude/ai_state_archive.json
-     M AI_STATE.md
-     M docs/epics/01-workspace-user-management.md
-     M docs/epics/06-architecture-backend.md
