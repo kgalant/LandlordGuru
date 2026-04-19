@@ -89,6 +89,8 @@ Never keep more than one Automation log entry in `AI_STATE.md`.
 
 We always have exactly one Current focus in `AI_STATE.md`.
 
+**Feature priority:** The MVP feature ordering and dependency graph are defined in `docs/roadmap.md`. Consult this document when selecting the next feature to work on.
+
 When a new idea, feature, or bug appears while working on the Current focus:
 
 1. Ask the user:

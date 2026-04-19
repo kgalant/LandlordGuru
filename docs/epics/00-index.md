@@ -9,6 +9,8 @@
 | E5 | [Integrations and Data Import](05-integrations-data-import.md) | Partially done (frontend) | Yes |
 | E6 | [Architecture and Backend](06-architecture-backend.md) | In progress | No |
 
+**For the recommended MVP implementation order, see [`../roadmap.md`](../roadmap.md).**
+
 ## Numbering/naming convention
 
 - Epic: Ex - E.g. E1 or E17 - number of the epic. Always prefixed with capital E and referred to using E and the number, e.g. E1 - and the Epic name if relevant

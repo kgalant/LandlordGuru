@@ -26,7 +26,8 @@ N/A — F2-3 implementation complete and committed (all subtasks done)
 
 ## Backlog pointers
 
-- Next candidate features: F1-7, F1-8, F1-9, F6-6, F2-1, F2-2, F2-4, F3-1, F5-3, F5-4
+**For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
+
 - Known bugs: B2-1-1, B3-1-1
 
 Relevant epic docs:
@@ -42,7 +43,7 @@ Relevant epic docs:
 
 ## Next step
 
-Select next feature from backlog (F1-8, F1-9, F6-6, F2-1, F2-2, F2-4, etc.) and set up task breakdown.
+Consult `docs/roadmap.md` and select next feature to work on. Start with Wave 1 (F1-6) or one of the Wave 2 features (F2-1, F2-4, F2-9).
 
 ---
 
@@ -60,45 +61,27 @@ Select next feature from backlog (F1-8, F1-9, F6-6, F2-1, F2-2, F2-4, etc.) and 
 
 ## Files touched this session
 
-- `backend/src/db/migrations/009_accounts_hierarchy.js`
-- `docs/data-model.md`
-- `backend/tests/accounts.test.js`
-- `backend/src/routes/properties.js` (fixed accounts.active → accounts.is_active)
-- `docs/epics/02-account-property-management.md` (marked F2-3 as done)
-- `version.json`
-- `AI_STATE.md`
+- `docs/roadmap.md` (created)
+- `docs/epics/00-index.md` (added reference to roadmap)
+- `CLAUDE.md` (added reference to roadmap in backlog discipline section)
+- `AI_STATE.md` (updated backlog pointers and next step)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-19 09:50:00 F2-3 complete: account model schema with hierarchy
+- 2026-04-19 10:25:00 MVP roadmap and planning documentation
   - branch: main
-  - lastcommit: 05978ae
-  - changedfiles: backend/src/db/migrations/009_accounts_hierarchy.js, backend/tests/accounts.test.js, backend/src/routes/properties.js, docs/data-model.md, version.json, AI_STATE.md
-  - gitstatus: M backend/src/routes/properties.js, M docs/data-model.md, M version.json, M AI_STATE.md, ?? backend/src/db/migrations/009_accounts_hierarchy.js, ?? backend/tests/accounts.test.js
+  - lastcommit: 50f49aa
+  - changedfiles: docs/roadmap.md, docs/epics/00-index.md, CLAUDE.md, AI_STATE.md
+  - gitstatus: M AI_STATE.md, M CLAUDE.md, M docs/epics/00-index.md, ?? docs/roadmap.md
 
-- 2026-04-19 09:54:59 [lifecycle]
+- 2026-04-19 10:25:12 [lifecycle]
   - branch: main
-  - last_commit: 50f49aa Update AI_STATE: F2-3 implementation complete; archive old automation log entries
-
-- 2026-04-19 09:55:41 [lifecycle]
-  - branch: main
-  - last_commit: 50f49aa Update AI_STATE: F2-3 implementation complete; archive old automation log entries
-  - changed_files: AI_STATE.md
+  - last_commit: f1a4438 Update AI_STATE: F2-3 implementation complete; archive old automation log entries
+  - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
   - git_status:
      M AI_STATE.md
-
-- 2026-04-19 09:56:58 [lifecycle]
-  - branch: main
-  - last_commit: 50f49aa Update AI_STATE: F2-3 implementation complete; archive old automation log entries
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-19 09:58:12 [lifecycle]
-  - branch: main
-  - last_commit: 50f49aa Update AI_STATE: F2-3 implementation complete; archive old automation log entries
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
+     M CLAUDE.md
+     M docs/epics/00-index.md
+    ?? docs/roadmap.md
