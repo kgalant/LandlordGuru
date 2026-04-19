@@ -16,6 +16,8 @@ Multi-tenant isolation: each workspace is a completely isolated portfolio.
 |----------------------|-----------|-------------|
 | `id`                 | UUID      | Primary key |
 | `name`               | varchar   | Workspace display name |
+| `reporting_currency` | varchar(3) | ISO 4217 currency code (e.g., `USD`, `DKK`); used for multi-currency reporting; default `USD` |
+| `max_account_depth`  | integer   | Maximum allowed depth of the account hierarchy; default `5` |
 | `log_level`          | varchar(10) | Log verbosity override: `error`, `info`, or `debug`; null = use global default |
 | `log_level_expires_at` | timestamp | When the override expires and falls back to global default; null = permanent |
 | `created_at`         | timestamp | Set on creation, default `now()` |

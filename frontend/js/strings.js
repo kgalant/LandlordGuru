@@ -311,6 +311,17 @@ const I18n = (() => {
           defaultLoaded: 'Default rules loaded. Click "Save rules order" to persist.',
         },
       },
+      settings: {
+        title:             'Workspace Settings',
+        reportingCurrency: 'Reporting Currency',
+        currencyDesc:      'ISO 4217 currency code (e.g., USD, DKK, EUR) used for multi-currency reporting.',
+        maxAccountDepth:   'Max Account Hierarchy Depth',
+        maxDepthDesc:      'Maximum allowed depth for the account hierarchy (default: 5).',
+        loadFailed:        'Failed to load settings: {error}',
+        saveFailed:        'Save failed: {error}',
+        validationError:   'Please check your inputs.',
+        savedSuccess:      'Settings saved successfully.',
+      },
       country: {
         DK:    'Denmark',
         PL:    'Poland',

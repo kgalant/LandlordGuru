@@ -36,8 +36,8 @@
         <button id="user-avatar" class="user-avatar" onclick="toggleUserMenu()" title="User menu"></button>
         <div id="user-menu" class="user-menu">
           <button class="user-menu-item" onclick="logout()">Sign out</button>
+          <button class="user-menu-item" onclick="closeUserMenu(); showPage('settings', null);">Settings</button>
           <button class="user-menu-item" onclick="closeUserMenu(); refreshAll();">Refresh</button>
-          <button class="user-menu-item" disabled title="Not implemented">Settings</button>
           <div class="user-menu-item info" id="sync-info">Synced 0 min ago</div>
         </div>
       </div>
@@ -415,6 +415,33 @@
         <div class="card-header"><span class="card-title" data-i18n="rules.defaultTitle"></span></div>
         <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="rules.defaultDesc"></p>
         <button class="btn btn-secondary btn-sm" onclick="loadDefaultRules()" data-i18n="rules.loadDefault"></button>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div id="page-settings" class="page">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" data-i18n="settings.title"></span>
+        </div>
+        <form id="settings-form" onsubmit="saveSettings(event)">
+          <div class="form-group">
+            <label for="settings-currency" data-i18n="settings.reportingCurrency"></label>
+            <input type="text" id="settings-currency" maxlength="3" placeholder="USD" required>
+            <small data-i18n="settings.currencyDesc"></small>
+          </div>
+          <div class="form-group">
+            <label for="settings-max-depth" data-i18n="settings.maxAccountDepth"></label>
+            <input type="number" id="settings-max-depth" min="1" value="5" required>
+            <small data-i18n="settings.maxDepthDesc"></small>
+          </div>
+          <div class="btn-row" style="margin-top:1.5rem">
+            <button type="submit" class="btn btn-primary btn-sm" data-i18n="common.save"></button>
+          </div>
+        </form>
+        <div id="settings-loading" class="loading-state" style="display:none;text-align:center;padding:1rem">
+          <small data-i18n="common.loading"></small>
+        </div>
       </div>
     </div>
 
@@ -802,6 +829,7 @@ function renderCurrentPage() {
   if (currentPage === 'reports')      renderReports();
   if (currentPage === 'properties')   renderPropertyList();
   if (currentPage === 'rules')        renderRules();
+  if (currentPage === 'settings')     renderSettings();
 }
 
 // ── Populate dropdowns ────────────────────────────────────
@@ -1971,6 +1999,51 @@ async function loadDefaultRules() {
     State.rules = [...State.rules, ...defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword))];
     renderRules();
     toast(t('rules.toast.defaultLoaded'), 'info');
+  }
+}
+
+// ── Settings ──────────────────────────────────────────────
+
+async function renderSettings() {
+  const form = document.getElementById('settings-form');
+  const loading = document.getElementById('settings-loading');
+
+  try {
+    loading.style.display = 'block';
+    form.style.display = 'none';
+
+    const settings = await Api.getWorkspaceSettings();
+    document.getElementById('settings-currency').value = settings.reporting_currency || 'USD';
+    document.getElementById('settings-max-depth').value = settings.max_account_depth || 5;
+
+    loading.style.display = 'none';
+    form.style.display = 'block';
+  } catch(e) {
+    loading.style.display = 'none';
+    form.style.display = 'block';
+    toast(t('settings.loadFailed', { error: e.message }), 'error');
+  }
+}
+
+async function saveSettings(event) {
+  event.preventDefault();
+
+  const currency = document.getElementById('settings-currency').value.trim().toUpperCase();
+  const maxDepth = parseInt(document.getElementById('settings-max-depth').value, 10);
+
+  if (!currency || isNaN(maxDepth) || maxDepth < 1) {
+    toast(t('settings.validationError'), 'error');
+    return;
+  }
+
+  try {
+    await Api.updateWorkspaceSettings({
+      reporting_currency: currency,
+      max_account_depth: maxDepth,
+    });
+    toast(t('settings.savedSuccess'), 'success');
+  } catch(e) {
+    toast(t('settings.saveFailed', { error: e.message }), 'error');
   }
 }
 

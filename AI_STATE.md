@@ -8,7 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-None (F2-3 complete and committed; ready to select next feature from backlog)
+- Type: feature
+- Epic: E1 Workspace and User Management
+- ID: F1-6
+- Title: Workspace settings
+- Short summary: Build workspace settings endpoints (GET/PATCH) and UI for reporting_currency and max_account_depth configuration.
 
 ---
 
@@ -20,7 +24,12 @@ None
 
 ## Task breakdown (current focus)
 
-N/A — F2-3 implementation complete and committed (all subtasks done)
+- [x] S1: Create migration to add reporting_currency and max_account_depth columns to workspaces table
+- [x] S2: Implement GET /api/workspace/settings and PATCH /api/workspace/settings backend routes
+- [x] S3: Add tests for backend settings routes and authorization
+- [x] S4: Create frontend workspace settings page UI
+- [x] S5: Wire up Settings link from avatar menu to settings page
+- [-] S6: End-to-end test in browser
 
 ---
 
@@ -43,7 +52,7 @@ Relevant epic docs:
 
 ## Next step
 
-Consult `docs/roadmap.md` and select next feature to work on. Start with Wave 1 (F1-6) or one of the Wave 2 features (F2-1, F2-4, F2-9).
+Start dev server (npm start in backend/), verify migration 013 runs, navigate to Settings from avatar menu, load and update settings, verify changes persist and are logged.
 
 ---
 
@@ -61,27 +70,29 @@ Consult `docs/roadmap.md` and select next feature to work on. Start with Wave 1 
 
 ## Files touched this session
 
-- `docs/roadmap.md` (created)
-- `docs/epics/00-index.md` (added reference to roadmap)
-- `CLAUDE.md` (added reference to roadmap in backlog discipline section)
-- `AI_STATE.md` (updated backlog pointers and next step)
+- `backend/src/db/migrations/013_workspace_settings.js` (created)
+- `backend/src/routes/workspace.js` (created with GET and PATCH endpoints)
+- `backend/src/app.js` (registered workspace route)
+- `backend/tests/workspace.test.js` (created with 12 comprehensive tests)
+- `docs/data-model.md` (added reporting_currency and max_account_depth fields to Workspaces table)
+- `frontend/index.html` (added Settings button onclick, settings page div, renderSettings and saveSettings functions)
+- `frontend/js/api.js` (added getWorkspaceSettings and updateWorkspaceSettings functions)
+- `frontend/js/strings.js` (added settings i18n strings)
+- `AI_STATE.md` (updated task breakdown, mark S1-S5 complete)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-19 10:25:00 MVP roadmap and planning documentation
+- 2026-04-19 10:30:00 F1-6 session start: workspace settings
   - branch: main
-  - lastcommit: 50f49aa
-  - changedfiles: docs/roadmap.md, docs/epics/00-index.md, CLAUDE.md, AI_STATE.md
-  - gitstatus: M AI_STATE.md, M CLAUDE.md, M docs/epics/00-index.md, ?? docs/roadmap.md
+  - lastcommit: d12bd36
+  - changedfiles: AI_STATE.md
+  - gitstatus: M AI_STATE.md
 
-- 2026-04-19 10:25:12 [lifecycle]
+- 2026-04-19 10:26:03 [lifecycle]
   - branch: main
-  - last_commit: f1a4438 Update AI_STATE: F2-3 implementation complete; archive old automation log entries
-  - changed_files: AI_STATE.md, CLAUDE.md, docs/epics/00-index.md
+  - last_commit: d12bd36 Add MVP feature roadmap and update AI_STATE documentation
+  - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
-     M CLAUDE.md
-     M docs/epics/00-index.md
-    ?? docs/roadmap.md

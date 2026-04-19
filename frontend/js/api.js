@@ -88,6 +88,16 @@ const Api = (() => {
     return request('DELETE', `/rules/${id}`);
   }
 
+  // ── Workspace Settings ────────────────────────────────────
+
+  async function getWorkspaceSettings() {
+    return request('GET', '/workspace/settings');
+  }
+
+  async function updateWorkspaceSettings(data) {
+    return request('PATCH', '/workspace/settings', data);
+  }
+
   // ── Batch import ────────────────────────────────────────────
   // Creates multiple transactions with a shared import_batch ID
 
@@ -105,6 +115,7 @@ const Api = (() => {
     getProperties, createProperty, updateProperty, deleteProperty,
     getTransactions, createTransaction, updateTransaction, deleteTransaction,
     getRules, createRule, updateRule, deleteRule,
+    getWorkspaceSettings, updateWorkspaceSettings,
     createTransactionBatch,
   };
 })();
