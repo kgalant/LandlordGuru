@@ -276,7 +276,7 @@ historical data and reports.
 ---
 
 ### F2-9 Currency rate management `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Manage dated bilateral exchange rates at the workspace level.
 

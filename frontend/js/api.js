@@ -98,6 +98,20 @@ const Api = (() => {
     return request('PATCH', '/workspace/settings', data);
   }
 
+  // ── Currency Rates ───────────────────────────────────────────
+
+  async function getCurrencyRates() {
+    return request('GET', '/currency-rates');
+  }
+
+  async function createCurrencyRate(data) {
+    return request('POST', '/currency-rates', data);
+  }
+
+  async function deleteCurrencyRate(id) {
+    return request('DELETE', `/currency-rates/${id}`);
+  }
+
   // ── Batch import ────────────────────────────────────────────
   // Creates multiple transactions with a shared import_batch ID
 
@@ -116,6 +130,7 @@ const Api = (() => {
     getTransactions, createTransaction, updateTransaction, deleteTransaction,
     getRules, createRule, updateRule, deleteRule,
     getWorkspaceSettings, updateWorkspaceSettings,
+    getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     createTransactionBatch,
   };
 })();

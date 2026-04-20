@@ -1,6 +1,11 @@
 require('dotenv').config();
 const knex = require('knex');
 const path = require('path');
+const { types } = require('pg');
+
+// Return DATE columns as plain YYYY-MM-DD strings, not JS Date objects
+// (avoids timezone-shift when the pg client converts UTC midnight to local time)
+types.setTypeParser(1082, (val) => val);
 
 if (!process.env.DATABASE_URL) {
   console.error('Error: DATABASE_URL environment variable is not set.');

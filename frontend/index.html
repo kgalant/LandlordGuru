@@ -443,6 +443,43 @@
           <small data-i18n="common.loading"></small>
         </div>
       </div>
+
+      <!-- Currency Rates card -->
+      <div class="card" style="margin-top:1.5rem">
+        <div class="card-header">
+          <span class="card-title">Currency Rates</span>
+          <button class="btn btn-sm btn-primary" onclick="toggleAddRateForm()">+ Add rate</button>
+        </div>
+
+        <!-- Add rate form (hidden by default) -->
+        <div id="add-rate-form" style="display:none;padding:1rem 0 0.5rem">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>From currency</label>
+              <input type="text" id="rate-from" maxlength="3" placeholder="USD" style="text-transform:uppercase">
+            </div>
+            <div class="form-group">
+              <label>To currency</label>
+              <input type="text" id="rate-to" maxlength="3" placeholder="SGD" style="text-transform:uppercase">
+            </div>
+            <div class="form-group">
+              <label>Effective date</label>
+              <input type="date" id="rate-date">
+            </div>
+            <div class="form-group">
+              <label>Rate</label>
+              <input type="number" id="rate-value" min="0.000001" step="0.000001" placeholder="1.000000">
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:0.5rem">
+            <button class="btn btn-primary btn-sm" onclick="submitAddRate()">Save rate</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleAddRateForm()">Cancel</button>
+          </div>
+        </div>
+
+        <div id="rates-loading" style="display:none;text-align:center;padding:1rem"><small>Loading…</small></div>
+        <div id="rates-container"></div>
+      </div>
     </div>
 
   </main>
@@ -2023,6 +2060,8 @@ async function renderSettings() {
     form.style.display = 'block';
     toast(t('settings.loadFailed', { error: e.message }), 'error');
   }
+
+  renderCurrencyRates();
 }
 
 async function saveSettings(event) {
@@ -2044,6 +2083,110 @@ async function saveSettings(event) {
     toast(t('settings.savedSuccess'), 'success');
   } catch(e) {
     toast(t('settings.saveFailed', { error: e.message }), 'error');
+  }
+}
+
+// ── Currency Rates ────────────────────────────────────────
+
+let _ratesCache = [];
+
+async function renderCurrencyRates() {
+  const loading = document.getElementById('rates-loading');
+  const container = document.getElementById('rates-container');
+  loading.style.display = 'block';
+  container.innerHTML = '';
+
+  try {
+    _ratesCache = await Api.getCurrencyRates();
+  } catch(e) {
+    loading.style.display = 'none';
+    container.innerHTML = `<p style="padding:1rem;color:var(--danger)">Failed to load rates: ${e.message}</p>`;
+    return;
+  }
+
+  loading.style.display = 'none';
+
+  if (!_ratesCache.length) {
+    container.innerHTML = '<p style="padding:1rem;color:var(--text-muted)">No rates defined yet. Add a rate to get started.</p>';
+    return;
+  }
+
+  // Group by from→to pair
+  const groups = {};
+  for (const r of _ratesCache) {
+    const key = `${r.from_currency}→${r.to_currency}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  }
+
+  const html = Object.entries(groups).map(([pair, rates]) => `
+    <div style="margin-bottom:1.5rem">
+      <div style="font-weight:600;padding:0.5rem 0;border-bottom:1px solid var(--border)">${pair}</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding:0.4rem 0.5rem;font-size:12px;color:var(--text-muted)">Effective date</th>
+          <th style="text-align:right;padding:0.4rem 0.5rem;font-size:12px;color:var(--text-muted)">Rate</th>
+          <th style="text-align:center;padding:0.4rem 0.5rem;font-size:12px;color:var(--text-muted)">Source</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          ${rates.map(r => `
+            <tr>
+              <td style="padding:0.4rem 0.5rem">${r.effective_date}</td>
+              <td style="padding:0.4rem 0.5rem;text-align:right">${parseFloat(r.rate).toFixed(6)}</td>
+              <td style="padding:0.4rem 0.5rem;text-align:center"><span class="badge">${r.source}</span></td>
+              <td style="padding:0.4rem 0.5rem;text-align:right">
+                <button class="btn btn-danger btn-sm" onclick="deleteRate('${r.id}', '${pair}', '${r.effective_date}')">Delete</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`).join('');
+
+  container.innerHTML = html;
+}
+
+function toggleAddRateForm() {
+  const form = document.getElementById('add-rate-form');
+  const visible = form.style.display !== 'none';
+  form.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    document.getElementById('rate-from').value = '';
+    document.getElementById('rate-to').value = '';
+    document.getElementById('rate-date').value = '';
+    document.getElementById('rate-value').value = '';
+  }
+}
+
+async function submitAddRate() {
+  const from_currency = document.getElementById('rate-from').value.trim().toUpperCase();
+  const to_currency   = document.getElementById('rate-to').value.trim().toUpperCase();
+  const effective_date = document.getElementById('rate-date').value;
+  const rate = document.getElementById('rate-value').value;
+
+  if (!from_currency || from_currency.length !== 3) { toast('From currency must be a 3-letter ISO code', 'error'); return; }
+  if (!to_currency   || to_currency.length !== 3)   { toast('To currency must be a 3-letter ISO code', 'error'); return; }
+  if (!effective_date) { toast('Effective date is required', 'error'); return; }
+  if (!rate || parseFloat(rate) <= 0) { toast('Rate must be a positive number', 'error'); return; }
+
+  try {
+    await Api.createCurrencyRate({ from_currency, to_currency, effective_date, rate: parseFloat(rate) });
+    toggleAddRateForm();
+    await renderCurrencyRates();
+    toast('Rate added', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function deleteRate(id, pair, date) {
+  if (!confirm(`Delete rate for ${pair} on ${date}?`)) return;
+  try {
+    await Api.deleteCurrencyRate(id);
+    await renderCurrencyRates();
+    toast('Rate deleted', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
   }
 }
 

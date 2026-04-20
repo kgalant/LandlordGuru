@@ -144,6 +144,32 @@ WHERE ap.property_id = :property_id
 
 ---
 
+### Currency_rates
+
+Workspace-level bilateral exchange rates used for multi-currency reporting. Rates are immutable once entered — corrections are made by adding a new dated entry.
+
+| Field                | Type      | Description |
+|----------------------|-----------|-------------|
+| `id`                 | UUID      | Primary key |
+| `workspace_id`       | UUID      | FK → workspaces.id (CASCADE delete) |
+| `from_currency`      | varchar(3)| ISO 4217 source currency, e.g. `USD` |
+| `to_currency`        | varchar(3)| ISO 4217 target currency, e.g. `SGD` |
+| `effective_date`     | date      | Date from which this rate is valid |
+| `rate`               | decimal(18,6) | Exchange rate (`1 from_currency = rate to_currency`) |
+| `source`             | varchar(10)| `manual` (user-entered) or `auto` (future automated fetch, F2-10) |
+| `created_at`         | timestamp | Set on creation; default `now()` |
+| `created_by`         | UUID      | FK → users.id; nullable |
+
+**Rate validity:** A rate is valid from its `effective_date` until the next rate entered for the same pair. Rate lookup: most recent rate where `effective_date ≤ transaction date`.
+
+**Unique constraint:** `(workspace_id, from_currency, to_currency, effective_date)` — no two rates for the same pair on the same date.
+
+**Indexes:** `(workspace_id, from_currency, to_currency, effective_date DESC)` for rate-lookup queries.
+
+**Bilateral pairs:** USD→SGD and SGD→USD are stored as separate records.
+
+---
+
 ### Transactions
 
 | Field                | Type      | Description |
