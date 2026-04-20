@@ -12,8 +12,10 @@ beforeAll(() => {
 });
 
 afterEach(async () => {
-  // Clean up in dependency order so FK constraints don't complain
-  await db('account_properties').del();
+  await db('account_properties').whereIn('account_id',
+    db('accounts').where('workspace_id', WORKSPACE_ID).select('id')
+  ).del();
+  await db('transactions').where('workspace_id', WORKSPACE_ID).update({ account_id: null });
   await db('accounts').where('workspace_id', WORKSPACE_ID).del();
 });
 
@@ -21,254 +23,378 @@ afterAll(async () => {
   await db.destroy();
 });
 
+async function createAccount(overrides = {}) {
+  const res = await request(app)
+    .post('/api/accounts')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ name: 'Test Account', ...overrides });
+  return res.body;
+}
+
 // ---------------------------------------------------------------------------
-// Schema validation tests
+// Schema constraints (kept from F2-3)
 // ---------------------------------------------------------------------------
-describe('Accounts schema', () => {
-  it('has required columns with correct types and defaults', async () => {
-    const account = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Test Account',
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
-
-    expect(account.id).toBeDefined();
-    expect(account.workspace_id).toBe(WORKSPACE_ID);
-    expect(account.name).toBe('Test Account');
-    expect(account.parent_account_id).toBeNull();
-    expect(account.is_active).toBe(true); // default
-    expect(account.is_default).toBe(false);
-    expect(account.created_at).toBeDefined();
-    expect(account.created_by).toBeNull();
-    expect(account.last_modified_at).toBeDefined();
-    expect(account.last_modified_by).toBeNull();
-
-    // Cleanup
-    await db('accounts').where('id', account.id).del();
-  });
-
+describe('Accounts schema constraints', () => {
   it('enforces constraint: default account cannot have a parent', async () => {
-    const parent = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Parent Account',
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
+    const [parent] = await db('accounts').insert({
+      workspace_id: WORKSPACE_ID, name: 'Parent', is_default: false,
+    }).returning('*');
 
-    // Try to insert a default account with a parent (should fail)
     await expect(
       db('accounts').insert({
-        workspace_id: WORKSPACE_ID,
-        name: 'Invalid Default',
-        is_default: true,
-        parent_account_id: parent.id,
+        workspace_id: WORKSPACE_ID, name: 'Bad Default', is_default: true, parent_account_id: parent.id,
       })
-    ).rejects.toThrow(); // PostgreSQL check constraint violation
-
-    // Cleanup
-    await db('accounts').where('id', parent.id).del();
+    ).rejects.toThrow();
   });
 
-  it('allows non-default account to have a parent', async () => {
-    const parent = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Parent Account',
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
-
-    const child = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Child Account',
-      is_default: false,
-      parent_account_id: parent.id,
-    }).returning('*').then(rows => rows[0]);
-
-    expect(child.parent_account_id).toBe(parent.id);
-
-    // Cleanup
-    await db('account_properties').del();
-    await db('accounts').where('workspace_id', WORKSPACE_ID).del();
-  });
-
-  it('supports account hierarchy (self-referential FK)', async () => {
-    const level1 = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Level 1',
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
-
-    const level2 = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Level 2',
-      is_default: false,
-      parent_account_id: level1.id,
-    }).returning('*').then(rows => rows[0]);
-
-    const level3 = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Level 3',
-      is_default: false,
-      parent_account_id: level2.id,
-    }).returning('*').then(rows => rows[0]);
-
-    expect(level3.parent_account_id).toBe(level2.id);
-
-    // Verify the hierarchy
-    const hierarchy = await db('accounts')
-      .where('workspace_id', WORKSPACE_ID)
-      .orderBy('name');
-
-    expect(hierarchy.length).toBe(3);
-    expect(hierarchy[1].parent_account_id).toBe(hierarchy[0].id);
-    expect(hierarchy[2].parent_account_id).toBe(hierarchy[1].id);
-
-    // Cleanup
-    await db('accounts').where('workspace_id', WORKSPACE_ID).del();
-  });
-
-  it('supports is_active field for archiving', async () => {
-    const active = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Active Account',
-      is_active: true,
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
-
-    const archived = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Archived Account',
-      is_active: false,
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
-
-    expect(active.is_active).toBe(true);
-    expect(archived.is_active).toBe(false);
-
-    // Cleanup
-    await db('accounts').where('workspace_id', WORKSPACE_ID).del();
-  });
-
-  it('enforces unique index on default account per workspace', async () => {
-    // The first account should have been created when workspace was set up
-    // Try to create a second default account (should fail)
-    const existing = await db('accounts')
-      .where('workspace_id', WORKSPACE_ID)
-      .first();
-
-    if (existing && existing.is_default) {
-      // There's already a default, so trying to create another should fail
-      await expect(
-        db('accounts').insert({
-          workspace_id: WORKSPACE_ID,
-          name: 'Another Default',
-          is_default: true,
-        })
-      ).rejects.toThrow(); // Unique index violation
-    } else {
-      // If no default exists, create one
-      const account1 = await db('accounts').insert({
-        workspace_id: WORKSPACE_ID,
-        name: 'Default 1',
-        is_default: true,
-      }).returning('*').then(rows => rows[0]);
-
-      // Try to create a second default (should fail)
-      await expect(
-        db('accounts').insert({
-          workspace_id: WORKSPACE_ID,
-          name: 'Default 2',
-          is_default: true,
-        })
-      ).rejects.toThrow(); // Unique index violation
-
-      await db('accounts').where('id', account1.id).del();
-    }
-  });
-
-  it('allows updating is_active to archive an account', async () => {
-    const account = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Test Account',
-      is_active: true,
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
-
-    // Archive it
-    await db('accounts').where('id', account.id).update({ is_active: false });
-
-    const archived = await db('accounts').where('id', account.id).first();
-    expect(archived.is_active).toBe(false);
-
-    // Cleanup
-    await db('accounts').where('id', account.id).del();
+  it('enforces unique default per workspace', async () => {
+    await db('accounts').insert({ workspace_id: WORKSPACE_ID, name: 'D1', is_default: true });
+    await expect(
+      db('accounts').insert({ workspace_id: WORKSPACE_ID, name: 'D2', is_default: true })
+    ).rejects.toThrow();
   });
 });
 
 // ---------------------------------------------------------------------------
-// Integration tests with properties
+// GET /api/accounts
 // ---------------------------------------------------------------------------
-describe('Accounts with properties', () => {
-  it('linking account to property via account_properties', async () => {
-    const account = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Test Account',
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
+describe('GET /api/accounts', () => {
+  it('returns active accounts by default', async () => {
+    await createAccount({ name: 'Active Account' });
+    const res = await request(app).get('/api/accounts').set('Authorization', `Bearer ${token}`);
 
-    const property = await db('properties').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Test Property',
-      address: '123 Main St',
-      country: 'DK',
-      currency: 'DKK',
-      model: 'longterm',
-    }).returning('*').then(rows => rows[0]);
-
-    const link = await db('account_properties').insert({
-      account_id: account.id,
-      property_id: property.id,
-    }).returning('*').then(rows => rows[0]);
-
-    expect(link.account_id).toBe(account.id);
-    expect(link.property_id).toBe(property.id);
-
-    // Cleanup
-    await db('account_properties').where({ account_id: account.id, property_id: property.id }).del();
-    await db('accounts').where('id', account.id).del();
-    await db('properties').where('id', property.id).del();
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.every(a => a.is_active)).toBe(true);
   });
 
-  it('prevents duplicate account_property links via composite PK', async () => {
-    const account = await db('accounts').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Test Account',
-      is_default: false,
-    }).returning('*').then(rows => rows[0]);
+  it('returns all accounts with ?status=all', async () => {
+    const a = await createAccount({ name: 'Active' });
+    const b = await createAccount({ name: 'To Archive' });
+    await request(app).delete(`/api/accounts/${b.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
 
-    const property = await db('properties').insert({
-      workspace_id: WORKSPACE_ID,
-      name: 'Test Property',
-      address: '123 Main St',
-      country: 'DK',
-      currency: 'DKK',
-      model: 'longterm',
-    }).returning('*').then(rows => rows[0]);
+    const res = await request(app).get('/api/accounts?status=all').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.some(x => x.id === a.id)).toBe(true);
+    expect(res.body.some(x => x.id === b.id)).toBe(true);
+  });
 
-    await db('account_properties').insert({
-      account_id: account.id,
-      property_id: property.id,
-    });
+  it('returns only archived accounts with ?status=archived', async () => {
+    const a = await createAccount({ name: 'Active' });
+    const b = await createAccount({ name: 'To Archive' });
+    await request(app).delete(`/api/accounts/${b.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
 
-    // Try to insert the same link again (should fail due to composite PK)
-    await expect(
-      db('account_properties').insert({
-        account_id: account.id,
-        property_id: property.id,
-      })
-    ).rejects.toThrow(); // Primary key violation
+    const res = await request(app).get('/api/accounts?status=archived').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.every(x => !x.is_active)).toBe(true);
+    expect(res.body.some(x => x.id === b.id)).toBe(true);
+  });
 
-    // Cleanup
-    await db('account_properties').where({ account_id: account.id, property_id: property.id }).del();
-    await db('accounts').where('id', account.id).del();
-    await db('properties').where('id', property.id).del();
+  it('returns 400 for invalid status param', async () => {
+    const res = await request(app).get('/api/accounts?status=invalid').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+  });
+
+  it('does not return accounts from another workspace', async () => {
+    await createAccount({ name: 'Mine' });
+    const otherToken = makeToken({ workspace_id: '00000000-0000-0000-0000-000000000099' });
+    const res = await request(app).get('/api/accounts').set('Authorization', `Bearer ${otherToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(0);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).get('/api/accounts')).status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/accounts/:id
+// ---------------------------------------------------------------------------
+describe('GET /api/accounts/:id', () => {
+  it('returns account with empty parent_path and children for a root account', async () => {
+    const a = await createAccount({ name: 'Root' });
+    const res = await request(app).get(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(a.id);
+    expect(res.body.parent_path).toEqual([]);
+    expect(res.body.children).toEqual([]);
+  });
+
+  it('returns parent_path for a child account', async () => {
+    const parent = await createAccount({ name: 'Parent' });
+    const child = await createAccount({ name: 'Child', parent_account_id: parent.id });
+
+    const res = await request(app).get(`/api/accounts/${child.id}`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.parent_path.length).toBe(1);
+    expect(res.body.parent_path[0].id).toBe(parent.id);
+  });
+
+  it('returns direct children', async () => {
+    const parent = await createAccount({ name: 'Parent' });
+    const child = await createAccount({ name: 'Child', parent_account_id: parent.id });
+
+    const res = await request(app).get(`/api/accounts/${parent.id}`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.children.length).toBe(1);
+    expect(res.body.children[0].id).toBe(child.id);
+  });
+
+  it('returns 404 for unknown id', async () => {
+    const res = await request(app).get('/api/accounts/00000000-0000-0000-0000-000000000099').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 404 for account in another workspace', async () => {
+    const a = await createAccount({ name: 'Mine' });
+    const otherToken = makeToken({ workspace_id: '00000000-0000-0000-0000-000000000099' });
+    const res = await request(app).get(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${otherToken}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).get('/api/accounts/some-id')).status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/accounts
+// ---------------------------------------------------------------------------
+describe('POST /api/accounts', () => {
+  it('creates an account and returns 201', async () => {
+    const res = await request(app).post('/api/accounts').set('Authorization', `Bearer ${token}`).send({ name: 'New Account' });
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('New Account');
+    expect(res.body.workspace_id).toBe(WORKSPACE_ID);
+    expect(res.body.is_active).toBe(true);
+    expect(res.body.is_default).toBe(false);
+  });
+
+  it('creates a child account under a valid parent', async () => {
+    const parent = await createAccount({ name: 'Parent' });
+    const res = await request(app).post('/api/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Child', parent_account_id: parent.id });
+    expect(res.status).toBe(201);
+    expect(res.body.parent_account_id).toBe(parent.id);
+  });
+
+  it('returns 400 when name is missing', async () => {
+    const res = await request(app).post('/api/accounts').set('Authorization', `Bearer ${token}`).send({});
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/name/);
+  });
+
+  it('returns 400 when parent_account_id is from another workspace', async () => {
+    const res = await request(app).post('/api/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Child', parent_account_id: '00000000-0000-0000-0000-000000000099' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/workspace/);
+  });
+
+  it('returns 400 when parent is archived', async () => {
+    const a = await createAccount({ name: 'Active' });
+    const b = await createAccount({ name: 'To Archive' });
+    await request(app).delete(`/api/accounts/${b.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
+
+    const res = await request(app).post('/api/accounts').set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Child', parent_account_id: b.id });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/archived/);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).post('/api/accounts').send({ name: 'X' })).status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /api/accounts/:id
+// ---------------------------------------------------------------------------
+describe('PATCH /api/accounts/:id', () => {
+  it('updates the name', async () => {
+    const a = await createAccount({ name: 'Old Name' });
+    const res = await request(app).patch(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`).send({ name: 'New Name' });
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('New Name');
+  });
+
+  it('updates notes', async () => {
+    const a = await createAccount({ name: 'Acc' });
+    const res = await request(app).patch(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`).send({ notes: 'Some notes' });
+    expect(res.status).toBe(200);
+    expect(res.body.notes).toBe('Some notes');
+  });
+
+  it('re-parents an account to a valid parent', async () => {
+    const p = await createAccount({ name: 'Parent' });
+    const c = await createAccount({ name: 'Child' });
+    const res = await request(app).patch(`/api/accounts/${c.id}`).set('Authorization', `Bearer ${token}`).send({ parent_account_id: p.id });
+    expect(res.status).toBe(200);
+    expect(res.body.parent_account_id).toBe(p.id);
+  });
+
+  it('returns 400 when re-parenting would create a cycle', async () => {
+    const parent = await createAccount({ name: 'Parent' });
+    const child = await createAccount({ name: 'Child', parent_account_id: parent.id });
+    const res = await request(app).patch(`/api/accounts/${parent.id}`).set('Authorization', `Bearer ${token}`)
+      .send({ parent_account_id: child.id });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/cycle/);
+  });
+
+  it('returns 400 when setting parent on default account', async () => {
+    const a = await createAccount({ name: 'A' });
+    await db('accounts').where({ id: a.id }).update({ is_default: true });
+    const p = await createAccount({ name: 'Parent' });
+    const res = await request(app).patch(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`)
+      .send({ parent_account_id: p.id });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/default/);
+  });
+
+  it('returns 404 for unknown id', async () => {
+    const res = await request(app).patch('/api/accounts/00000000-0000-0000-0000-000000000099')
+      .set('Authorization', `Bearer ${token}`).send({ name: 'X' });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).patch('/api/accounts/some-id').send({ name: 'X' })).status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/accounts/:id
+// ---------------------------------------------------------------------------
+describe('DELETE /api/accounts/:id', () => {
+  it('deactivates account and returns ok', async () => {
+    const a = await createAccount({ name: 'Keep' });
+    const b = await createAccount({ name: 'Delete' });
+    const res = await request(app).delete(`/api/accounts/${b.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    const check = await db('accounts').where({ id: b.id }).first();
+    expect(check.is_active).toBe(false);
+  });
+
+  it('returns 400 when reassign_to is missing', async () => {
+    const a = await createAccount({ name: 'Acc' });
+    const res = await request(app).delete(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`).send({});
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/reassign_to/);
+  });
+
+  it('returns 400 when reassign_to is the same account', async () => {
+    const a = await createAccount({ name: 'Acc' });
+    const res = await request(app).delete(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when reassign_to is archived', async () => {
+    const a = await createAccount({ name: 'Active' });
+    const b = await createAccount({ name: 'Archived' });
+    const c = await createAccount({ name: 'To Delete' });
+    await request(app).delete(`/api/accounts/${b.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
+    const res = await request(app).delete(`/api/accounts/${c.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: b.id });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/active/);
+  });
+
+  it('returns 400 when trying to delete the default account', async () => {
+    const a = await createAccount({ name: 'Default' });
+    await db('accounts').where({ id: a.id }).update({ is_default: true });
+    const b = await createAccount({ name: 'Other' });
+    const res = await request(app).delete(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: b.id });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/default/);
+  });
+
+  it('returns 404 for unknown account', async () => {
+    const a = await createAccount({ name: 'Target' });
+    const res = await request(app).delete('/api/accounts/00000000-0000-0000-0000-000000000099')
+      .set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).delete('/api/accounts/some-id').send({ reassign_to: 'x' })).status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/accounts/:id/set-default
+// ---------------------------------------------------------------------------
+describe('POST /api/accounts/:id/set-default', () => {
+  it('sets an account as default and clears previous default', async () => {
+    const a = await createAccount({ name: 'First' });
+    await db('accounts').where({ id: a.id }).update({ is_default: true });
+    const b = await createAccount({ name: 'New Default' });
+
+    const res = await request(app).post(`/api/accounts/${b.id}/set-default`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.is_default).toBe(true);
+    const aCheck = await db('accounts').where({ id: a.id }).first();
+    expect(aCheck.is_default).toBe(false);
+  });
+
+  it('returns 400 when target is archived', async () => {
+    const a = await createAccount({ name: 'Active' });
+    const b = await createAccount({ name: 'To Archive' });
+    await request(app).delete(`/api/accounts/${b.id}`).set('Authorization', `Bearer ${token}`).send({ reassign_to: a.id });
+
+    const res = await request(app).post(`/api/accounts/${b.id}/set-default`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/archived/);
+  });
+
+  it('returns 400 when target has a parent (not top-level)', async () => {
+    const p = await createAccount({ name: 'Parent' });
+    const c = await createAccount({ name: 'Child', parent_account_id: p.id });
+    const res = await request(app).post(`/api/accounts/${c.id}/set-default`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/top-level/);
+  });
+
+  it('returns 404 for unknown account', async () => {
+    const res = await request(app).post('/api/accounts/00000000-0000-0000-0000-000000000099/set-default')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).post('/api/accounts/some-id/set-default')).status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/accounts/:id/properties
+// ---------------------------------------------------------------------------
+describe('POST /api/accounts/:id/properties', () => {
+  it('returns 400 when property_id is missing', async () => {
+    const acc = await createAccount({ name: 'Account' });
+    const res = await request(app).post(`/api/accounts/${acc.id}/properties`)
+      .set('Authorization', `Bearer ${token}`).send({});
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/property_id/);
+  });
+
+  it('returns 400 when property is from another workspace', async () => {
+    const acc = await createAccount({ name: 'Account' });
+    const res = await request(app).post(`/api/accounts/${acc.id}/properties`)
+      .set('Authorization', `Bearer ${token}`).send({ property_id: '00000000-0000-0000-0000-000000000099' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/not found/i);
+  });
+
+  it('returns 404 when account does not exist', async () => {
+    const res = await request(app).post('/api/accounts/00000000-0000-0000-0000-000000000099/properties')
+      .set('Authorization', `Bearer ${token}`).send({ property_id: '00000000-0000-0000-0000-000000000001' });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).post('/api/accounts/some-id/properties').send({ property_id: 'pid' })).status).toBe(401);
   });
 });

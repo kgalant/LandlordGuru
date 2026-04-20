@@ -8,7 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-None (F2-9 complete; ready to select next feature — F2-4 Account CRUD or another Wave 2 item)
+- Type: feature
+- Epic: E2 Account and Property Management
+- ID: F2-4
+- Title: Account CRUD
+- Short summary: Backend REST API for creating, reading, updating, archiving, and deleting accounts with hierarchy support and atomic reassignment on delete.
 
 ---
 
@@ -20,7 +24,13 @@ None
 
 ## Task breakdown (current focus)
 
-N/A — F2-9 complete (all subtasks done, 101 tests passing)
+- [x] S1: Implement `GET /api/accounts` (list with `status` filter) and `GET /api/accounts/:id` (single account + hierarchy path + direct children)
+- [x] S2: Implement `POST /api/accounts` (create with depth/cycle validation against `max_account_depth`)
+- [x] S3: Implement `PATCH /api/accounts/:id` (update name/notes/parent with re-parent validation)
+- [x] S4: Implement `DELETE /api/accounts/:id` (atomic reassign transactions+properties then deactivate) and `POST /api/accounts/:id/set-default`
+- [x] S5: Implement `POST /api/accounts/:id/properties` (link a property to an account)
+- [x] S6: Write tests for all endpoints (happy path + key error cases)
+- [x] S7: Register route in `app.js`, run full test suite, verify no regressions
 
 ---
 
@@ -43,7 +53,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit F2-9 work (pending user confirmation), then select next Wave 2 feature (F2-4 Account CRUD is the likely next candidate).
+Commit F2-4 work (accounts route, tests, app.js registration) — confirm with user before executing.
 
 ---
 
@@ -54,32 +64,36 @@ Commit F2-9 work (pending user confirmation), then select next Wave 2 feature (F
   - Manual browser test on dev server (http://localhost:3000)
 
 - Last result:
-  - Date/time: 2026-04-20 17:30:00
-  - Outcome: All 101 tests pass (6 suites, 0 failures). F2-9 all acceptance criteria verified.
+  - Date/time: 2026-04-20 21:50:00
+  - Outcome: All 135 tests pass (7 suites, 0 failures). F2-4 all endpoints implemented and verified.
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `.claude/ai_state_archive.json`
-- `backend/src/db/migrations/014_currency_rates.js`
-- `backend/src/routes/currency-rates.js`
+- `backend/src/routes/accounts.js` (new)
+- `backend/tests/accounts.test.js` (updated)
 - `backend/src/app.js`
-- `backend/src/db/knex.js`
-- `backend/tests/currency-rates.test.js`
-- `frontend/js/api.js`
-- `frontend/index.html`
-- `docs/data-model.md`
-- `docs/epics/02-account-property-management.md`
-- `version.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-20 17:30:00 [F2-9 complete]
+- 2026-04-20 21:50:00 [F2-4 complete]
   - branch: main
-  - last_commit: 3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, backend/src/db/migrations/014_currency_rates.js, backend/src/routes/currency-rates.js, backend/src/app.js, backend/src/db/knex.js, backend/tests/currency-rates.test.js, frontend/js/api.js, frontend/index.html, docs/data-model.md, docs/epics/02-account-property-management.md, version.json
-  - git_status: M .claude/ai_state_archive.json, M AI_STATE.md, M backend/src/app.js, M backend/src/db/knex.js, M docs/data-model.md, M docs/epics/02-account-property-management.md, M frontend/index.html, M frontend/js/api.js, M version.json, ?? backend/src/db/migrations/014_currency_rates.js, ?? backend/src/routes/currency-rates.js, ?? backend/tests/currency-rates.test.js
+  - last_commit: 97b2bbf F2-9: Currency rate management — migration, API, tests, UI (v2.2.0 → v2.3.0)
+  - changed_files: AI_STATE.md, backend/src/routes/accounts.js, backend/tests/accounts.test.js, backend/src/app.js
+  - git_status: M AI_STATE.md, M backend/src/app.js, M backend/tests/accounts.test.js, M docs/roadmap.md, ?? backend/src/routes/accounts.js
+
+- 2026-04-20 20:34:04 [lifecycle]
+  - branch: main
+  - last_commit: 97b2bbf F2-9: Currency rate management ΓÇö migration, API, tests, UI (v2.2.0 ΓåÆ v2.3.0)
+  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, backend/src/app.js, backend/tests/accounts.test.js, docs/roadmap.md
+  - git_status:
+     M .claude/ai_state_archive.json
+     M AI_STATE.md
+     M backend/src/app.js
+     M backend/tests/accounts.test.js
+     M docs/roadmap.md
+    ?? backend/src/routes/accounts.js

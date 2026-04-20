@@ -37,6 +37,7 @@ app.use('/api/properties',   require('./routes/properties'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/rules',        require('./routes/rules'));
 app.use('/api/workspace',        require('./routes/workspace'));
+app.use('/api/accounts',        require('./routes/accounts'));
 app.use('/api/currency-rates',  require('./routes/currency-rates'));
 
 // Static files
