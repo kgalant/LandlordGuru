@@ -10,9 +10,9 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Type: feature
 - Epic: E3 Transaction Management
-- ID: F3-1
-- Title: Transaction CRUD API
-- Short summary: Backend REST endpoints for reading and writing transactions, with multi-currency rate validation, filtering, and pagination.
+- ID: F3-2
+- Title: Transaction List UI
+- Short summary: Frontend list view for transactions with filtering, sorting, and pagination wired to the F3-1 API.
 
 ---
 
@@ -24,13 +24,12 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Review existing transactions migration and data model; confirm schema matches F3-1 spec
-- [x] S2: Implement `GET /api/transactions` with filters (account_id, property_id, type, category, from/to, page/limit)
-- [x] S3: Implement `POST /api/transactions` with currency rate validation (HTTP 422 if no rate resolvable)
-- [x] S4: Implement `PATCH /api/transactions/:id` and `DELETE /api/transactions/:id`
-- [x] S5: Register route in `app.js` (already registered)
-- [x] S6: Write tests for all endpoints (happy path + key error cases incl. currency rate 422)
-- [x] S7: Run full test suite, verify no regressions
+- [ ] S1: Read F3-2 spec in E3 epic doc; confirm scope and UI requirements
+- [ ] S2: Build transaction list page (HTML/JS) with account/property/type/category/date filters
+- [ ] S3: Wire filters to `GET /api/transactions` with pagination controls
+- [ ] S4: Add sorting support (date, amount, category)
+- [ ] S5: Manual browser test; verify golden path and edge cases
+- [ ] S6: Run full test suite, verify no regressions
 
 ---
 
@@ -53,14 +52,14 @@ Relevant epic docs:
 
 ## Next step
 
-Commit F3-1 work (transactions.js enhancements + tests) — confirm with user before executing.
+Read `docs/epics/03-transaction-management.md` F3-2 spec to confirm scope before building the UI.
 
 ---
 
 ## Validation
 
 - Commands to run:
-  - `npm test` (from backend/) — 135 tests, all passing
+  - `npm test` (from backend/)
   - Manual browser test on dev server (http://localhost:3000)
 
 - Last result:
@@ -72,16 +71,14 @@ Commit F3-1 work (transactions.js enhancements + tests) — confirm with user be
 ## Files touched this session
 
 - `AI_STATE.md`
-- `docs/roadmap.md`
-- `backend/src/routes/transactions.js`
-- `backend/tests/transactions.test.js`
+- `.claude/ai_state_archive.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-21 20:30:00 [F3-1 complete]
+- 2026-04-21 22:00:00 [F3-1 done, F3-2 started]
   - branch: main
-  - last_commit: 60bc039 Switch focus to F3-1 Transaction CRUD API; mark F1-6 done in roadmap
-  - changed_files: AI_STATE.md, backend/src/routes/transactions.js, backend/tests/transactions.test.js
-  - git_status: M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js
+  - last_commit: b5e2cf5 F3-1: Transaction CRUD API — category filter, pagination, multi-currency rate validation
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json
