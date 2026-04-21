@@ -8,7 +8,7 @@ This document defines the recommended implementation order for MVP features, org
 
 | Feature | Epic | Status | Notes |
 |---------|------|--------|-------|
-| **F1-6** Workspace settings | E1 | Planned | Required by F2-1, F2-3, F2-9. Defines `reporting_currency` and `max_account_depth` settings. |
+| **F1-6** Workspace settings | E1 | Done | Defines `reporting_currency` and `max_account_depth` settings. Required by F2-9 and future features. |
 
 ---
 

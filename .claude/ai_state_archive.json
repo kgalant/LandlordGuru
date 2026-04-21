@@ -260,54 +260,6 @@
     "git_status": "M AI_STATE.md"
   },
   {
-    "timestamp": "2026-04-20 16:28:31",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": ["AI_STATE.md"],
-    "git_status": "M AI_STATE.md"
-  },
-  {
-    "timestamp": "2026-04-20 16:28:32",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": ["AI_STATE.md"],
-    "git_status": "M AI_STATE.md"
-  },
-  {
-    "timestamp": "2026-04-20 16:29:14",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": ["AI_STATE.md"],
-    "git_status": "M AI_STATE.md"
-  },
-  {
-    "timestamp": "2026-04-20 16:29:16",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": ["AI_STATE.md"],
-    "git_status": "M AI_STATE.md"
-  },
-  {
-    "timestamp": "2026-04-20 16:29:17",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": ["AI_STATE.md"],
-    "git_status": "M AI_STATE.md"
-  },
-  {
-    "timestamp": "2026-04-20 16:29:19",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": ["AI_STATE.md"],
-    "git_status": "M AI_STATE.md"
-  },
-  {
     "timestamp": "2026-04-20 16:33:24",
     "phase": "[lifecycle]",
     "branch": "main",
@@ -322,22 +274,6 @@
     "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
     "changed_files": ["docs/roadmap.md", "AI_STATE.md"],
     "git_status": "M docs/roadmap.md\nM AI_STATE.md"
-  },
-  {
-    "timestamp": "2026-04-20 16:35:11",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": [".claude/ai_state_archive.json", "AI_STATE.md", "docs/roadmap.md"],
-    "git_status": "M .claude/ai_state_archive.json\nM AI_STATE.md\nM docs/roadmap.md"
-  },
-  {
-    "timestamp": "2026-04-20 16:36:31",
-    "phase": "[lifecycle]",
-    "branch": "main",
-    "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": [".claude/ai_state_archive.json", "AI_STATE.md", "docs/roadmap.md"],
-    "git_status": "M .claude/ai_state_archive.json\nM AI_STATE.md\nM docs/roadmap.md"
   },
   {
     "timestamp": "2026-04-20 16:41:12",
@@ -362,5 +298,21 @@
     "last_commit": "97b2bbf F2-9: Currency rate management — migration, API, tests, UI (v2.2.0 → v2.3.0)",
     "changed_files": ["AI_STATE.md", "backend/src/routes/accounts.js", "backend/tests/accounts.test.js", "backend/src/app.js"],
     "git_status": "M AI_STATE.md\nM backend/src/app.js\nM backend/tests/accounts.test.js\nM docs/roadmap.md\n?? backend/src/routes/accounts.js"
+  },
+  {
+    "timestamp": "2026-04-21 17:43:45",
+    "phase": "[lifecycle]",
+    "branch": "main",
+    "last_commit": "ae56ae6 F2-4: Account CRUD — REST API with hierarchy, cycle detection, and atomic reassignment on delete",
+    "changed_files": ["AI_STATE.md", "docs/roadmap.md"],
+    "git_status": "M AI_STATE.md\nM docs/roadmap.md"
+  },
+  {
+    "timestamp": "2026-04-21 17:54:24",
+    "phase": "[lifecycle]",
+    "branch": "main",
+    "last_commit": "ae56ae6 F2-4: Account CRUD — REST API with hierarchy, cycle detection, and atomic reassignment on delete",
+    "changed_files": ["AI_STATE.md", "docs/roadmap.md"],
+    "git_status": "M AI_STATE.md\nM docs/roadmap.md"
   }
 ]
