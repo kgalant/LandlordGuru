@@ -24,13 +24,13 @@ None
 
 ## Task breakdown (current focus)
 
-- [ ] S1: Review existing transactions migration and data model; confirm schema matches F3-1 spec
-- [ ] S2: Implement `GET /api/transactions` with filters (account_id, property_id, type, category, from/to, page/limit)
-- [ ] S3: Implement `POST /api/transactions` with currency rate validation (HTTP 422 if no rate resolvable)
-- [ ] S4: Implement `PATCH /api/transactions/:id` and `DELETE /api/transactions/:id`
-- [ ] S5: Register route in `app.js`
-- [ ] S6: Write tests for all endpoints (happy path + key error cases incl. currency rate 422)
-- [ ] S7: Run full test suite, verify no regressions
+- [x] S1: Review existing transactions migration and data model; confirm schema matches F3-1 spec
+- [x] S2: Implement `GET /api/transactions` with filters (account_id, property_id, type, category, from/to, page/limit)
+- [x] S3: Implement `POST /api/transactions` with currency rate validation (HTTP 422 if no rate resolvable)
+- [x] S4: Implement `PATCH /api/transactions/:id` and `DELETE /api/transactions/:id`
+- [x] S5: Register route in `app.js` (already registered)
+- [x] S6: Write tests for all endpoints (happy path + key error cases incl. currency rate 422)
+- [x] S7: Run full test suite, verify no regressions
 
 ---
 
@@ -53,7 +53,7 @@ Relevant epic docs:
 
 ## Next step
 
-Start S1: read `backend/src/db/migrations/003_transactions.js` and `docs/data-model.md` transactions section to confirm the schema matches the F3-1 spec before writing any code.
+Commit F3-1 work (transactions.js enhancements + tests) — confirm with user before executing.
 
 ---
 
@@ -64,8 +64,8 @@ Start S1: read `backend/src/db/migrations/003_transactions.js` and `docs/data-mo
   - Manual browser test on dev server (http://localhost:3000)
 
 - Last result:
-  - Date/time: 2026-04-20 21:50:00
-  - Outcome: All 135 tests pass (7 suites, 0 failures). F2-4 fully committed.
+  - Date/time: 2026-04-21 18:30:00
+  - Outcome: All 142 tests pass (6 suites, 0 failures). F3-1 endpoints verified.
 
 ---
 
@@ -73,13 +73,15 @@ Start S1: read `backend/src/db/migrations/003_transactions.js` and `docs/data-mo
 
 - `AI_STATE.md`
 - `docs/roadmap.md`
+- `backend/src/routes/transactions.js`
+- `backend/tests/transactions.test.js`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-21 18:00:00 [F3-1 focus set]
+- 2026-04-21 20:30:00 [F3-1 complete]
   - branch: main
-  - last_commit: ae56ae6 F2-4: Account CRUD — REST API with hierarchy, cycle detection, and atomic reassignment on delete
-  - changed_files: AI_STATE.md, docs/roadmap.md
-  - git_status: M AI_STATE.md, M docs/roadmap.md
+  - last_commit: 60bc039 Switch focus to F3-1 Transaction CRUD API; mark F1-6 done in roadmap
+  - changed_files: AI_STATE.md, backend/src/routes/transactions.js, backend/tests/transactions.test.js
+  - git_status: M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js
