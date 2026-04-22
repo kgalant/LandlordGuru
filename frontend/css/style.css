@@ -194,6 +194,11 @@ tr:hover td { background: var(--bg2); }
 .positive { color: var(--green); }
 .negative { color: var(--red); }
 .muted { color: var(--text3); }
+.sortable { cursor: pointer; user-select: none; }
+.sortable:hover { color: var(--accent); }
+.sort-asc::after  { content: ' ↑'; color: var(--accent); }
+.sort-desc::after { content: ' ↓'; color: var(--accent); }
+.clickable-row { cursor: pointer; }
 
 /* ── Forms ────────────────────────────────────────────────── */
 

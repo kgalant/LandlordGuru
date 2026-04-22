@@ -24,12 +24,12 @@ None
 
 ## Task breakdown (current focus)
 
-- [ ] S1: Read F3-2 spec in E3 epic doc; confirm scope and UI requirements
-- [ ] S2: Build transaction list page (HTML/JS) with account/property/type/category/date filters
-- [ ] S3: Wire filters to `GET /api/transactions` with pagination controls
-- [ ] S4: Add sorting support (date, amount, category)
-- [ ] S5: Manual browser test; verify golden path and edge cases
-- [ ] S6: Run full test suite, verify no regressions
+- [x] S1: Read F3-2 spec; audit existing transaction list UI vs spec gaps
+- [x] S2: Add type + currency columns; sortable date/amount headers; row-click-to-edit
+- [x] S3: Add bulk select checkboxes + bulk delete action
+- [x] S4: Add multi-currency converted-amount toggle
+- [x] S5: Update E3 epic doc (F3-1 → Done, F3-2 → In Progress)
+- [x] S6: Run full test suite; verify no regressions
 
 ---
 
@@ -52,7 +52,7 @@ Relevant epic docs:
 
 ## Next step
 
-Read `docs/epics/03-transaction-management.md` F3-2 spec to confirm scope before building the UI.
+Start F3-3: read spec, implement category + type validation on the backend (POST/PATCH transactions).
 
 ---
 
@@ -63,8 +63,8 @@ Read `docs/epics/03-transaction-management.md` F3-2 spec to confirm scope before
   - Manual browser test on dev server (http://localhost:3000)
 
 - Last result:
-  - Date/time: 2026-04-21 18:30:00
-  - Outcome: All 142 tests pass (6 suites, 0 failures). F3-1 endpoints verified.
+  - Date/time: 2026-04-22 16:50:00
+  - Outcome: All 142 tests pass (6 suites, 0 failures). F3-2 frontend changes complete.
 
 ---
 
@@ -72,13 +72,18 @@ Read `docs/epics/03-transaction-management.md` F3-2 spec to confirm scope before
 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
+- `.claude/settings.json`
+- `frontend/index.html`
+- `frontend/css/style.css`
+- `frontend/js/strings.js`
+- `docs/epics/03-transaction-management.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-21 22:00:00 [F3-1 done, F3-2 started]
+- 2026-04-22 16:50:00 [F3-2 done]
   - branch: main
-  - last_commit: b5e2cf5 F3-1: Transaction CRUD API — category filter, pagination, multi-currency rate validation
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
-  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json
+  - last_commit: 0aecd4d F3-1 done: clean up AI_STATE, archive automation log, switch focus to F3-2
+  - changed_files: frontend/index.html, frontend/css/style.css, frontend/js/strings.js, docs/epics/03-transaction-management.md, .claude/settings.json, .claude/ai_state_archive.json, AI_STATE.md
+  - git_status: M frontend/index.html, M frontend/css/style.css, M frontend/js/strings.js, M docs/epics/03-transaction-management.md, M .claude/settings.json, M .claude/ai_state_archive.json, M AI_STATE.md

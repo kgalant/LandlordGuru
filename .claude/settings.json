@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(cd c:/dev/repos/LandlordGuru/backend && npm test *)",
+      "Bash(npm test --prefix backend *)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

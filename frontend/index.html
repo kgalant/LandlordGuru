@@ -75,7 +75,13 @@
       <div class="card">
         <div class="card-header">
           <span class="card-title" data-i18n="tx.title"></span>
-          <button class="btn btn-sm btn-primary" onclick="openTxModal()" data-i18n="tx.addBtn"></button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="tx-bulk-bar" style="display:none;gap:8px;align-items:center;display:none">
+              <span id="tx-bulk-count" style="font-size:13px;color:var(--text2)"></span>
+              <button class="btn btn-sm btn-danger" onclick="bulkDeleteTx()" data-i18n="tx.bulkDelete"></button>
+            </span>
+            <button class="btn btn-sm btn-primary" onclick="openTxModal()" data-i18n="tx.addBtn"></button>
+          </div>
         </div>
 
         <div class="filter-bar">
@@ -96,17 +102,23 @@
           <input type="date"   id="tx-filter-to"     onchange="renderTxTable()" data-i18n-title="tx.col.date">
           <input type="search" id="tx-filter-search" oninput="renderTxTable()"  data-i18n-placeholder="common.search">
           <button class="btn btn-sm btn-secondary" onclick="clearTxFilters()" data-i18n="common.clear"></button>
+          <label id="tx-converted-toggle-wrap" style="display:none;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--text2)">
+            <input type="checkbox" id="tx-show-converted" onchange="renderTxTable()">
+            <span id="tx-converted-label"></span>
+          </label>
         </div>
 
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th data-i18n="tx.col.date"></th>
+              <th style="width:32px"><input type="checkbox" id="tx-select-all" onchange="txSelectAll(this.checked)" title="Select all"></th>
+              <th class="sortable" onclick="setTxSort('date')" data-i18n="tx.col.date"></th>
               <th data-i18n="tx.col.property"></th>
-              <th data-i18n="tx.col.description"></th>
+              <th data-i18n="tx.col.type"></th>
               <th data-i18n="tx.col.category"></th>
+              <th data-i18n="tx.col.description"></th>
               <th data-i18n="tx.col.source"></th>
-              <th class="amount-cell" data-i18n="tx.col.amount"></th>
+              <th class="amount-cell sortable" onclick="setTxSort('amount')" data-i18n="tx.col.amount"></th>
               <th></th>
             </tr></thead>
             <tbody id="tx-table-body"></tbody>
@@ -828,14 +840,18 @@ async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
     // v2 mode: data from backend API
-    const [props, txs, rules] = await Promise.all([
+    const [props, txs, rules, wsSettings, rates] = await Promise.all([
       Api.getProperties(),
       Api.getTransactions(),
       Api.getRules(),
+      Api.getWorkspaceSettings(),
+      Api.getCurrencyRates(),
     ]);
-    State.properties  = props;
-    State.transactions = txs;
-    State.rules        = rules;
+    State.properties        = props;
+    State.transactions      = txs.data ?? txs;
+    State.rules             = rules;
+    State.workspaceSettings = wsSettings;
+    State.currencyRates     = rates;
     populateAllDropdowns();
     renderCurrentPage();
     setStatus(t('status.synced', { time: new Date().toLocaleTimeString() }));
@@ -967,6 +983,18 @@ function renderDashboard() {
 
 // ── Transactions table ────────────────────────────────────
 
+const TxSort = { col: 'date', dir: 'desc' };
+
+function setTxSort(col) {
+  if (TxSort.col === col) {
+    TxSort.dir = TxSort.dir === 'desc' ? 'asc' : 'desc';
+  } else {
+    TxSort.col = col;
+    TxSort.dir = col === 'amount' ? 'desc' : 'desc';
+  }
+  renderTxTable();
+}
+
 function renderTxTable() {
   const opts = {
     property_id: document.getElementById('tx-filter-apt')?.value,
@@ -977,7 +1005,21 @@ function renderTxTable() {
     search:      document.getElementById('tx-filter-search')?.value,
   };
   const filtered = Reports.filter(State.transactions, opts);
-  const sorted   = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
+
+  const sorted = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    if (TxSort.col === 'amount') cmp = a.amount - b.amount;
+    else cmp = a.date.localeCompare(b.date);
+    return TxSort.dir === 'asc' ? cmp : -cmp;
+  });
+
+  // Update sortable header indicators
+  document.querySelectorAll('#page-transactions th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  const hdrs = document.querySelectorAll('#page-transactions th.sortable');
+  const sortColIndex = TxSort.col === 'amount' ? 1 : 0;
+  if (hdrs[sortColIndex]) hdrs[sortColIndex].classList.add('sort-' + TxSort.dir);
 
   const body   = document.getElementById('tx-table-body');
   const empty  = document.getElementById('tx-empty');
@@ -989,8 +1031,20 @@ function renderTxTable() {
     footer.textContent  = '';
     return;
   }
+  // Show converted-amount toggle if workspace has multiple currencies in view
+  const reportingCurrency = State.workspaceSettings?.reporting_currency;
+  const hasMultiCurrency = reportingCurrency && sorted.some(tx => tx.currency !== reportingCurrency);
+  const toggleWrap = document.getElementById('tx-converted-toggle-wrap');
+  if (toggleWrap) {
+    toggleWrap.style.display = hasMultiCurrency ? 'flex' : 'none';
+    const lbl = document.getElementById('tx-converted-label');
+    if (lbl) lbl.textContent = t('tx.showConverted', { currency: reportingCurrency });
+  }
+
+  const showConverted = hasMultiCurrency && document.getElementById('tx-show-converted')?.checked;
+
   empty.style.display = 'none';
-  body.innerHTML = sorted.map(tx => txRow(tx, true)).join('');
+  body.innerHTML = sorted.map(tx => txRow(tx, true, showConverted, reportingCurrency)).join('');
 
   const totalIncome  = sorted.filter(tx => tx.type==='income').reduce((s,tx) => s+tx.amount, 0);
   const totalExpense = sorted.filter(tx => tx.type==='expense').reduce((s,tx) => s+tx.amount, 0);
@@ -1001,27 +1055,75 @@ function renderTxTable() {
   });
 }
 
-function txRow(tx, showEditBtn) {
+function txRow(tx, showEditBtn, showConverted, reportingCurrency) {
   const prop   = State.properties.find(p => p.id === tx.property_id);
   const catLbl = Reports.categoryLabel(tx.category);
   const srcLbl = tx.source === 'manual' ? t('common.manual') : (BANK_PROFILES[tx.source]?.label || tx.source);
   const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
-  const editBtn = showEditBtn
-    ? `<button class="btn btn-sm btn-secondary" onclick="openTxModal('${tx.id}')">${t('common.edit')}</button>`
-    : '';
+  const currency = tx.currency || prop?.currency || '';
+
+  // Resolve converted amount from cached rates if toggle is on
+  let convertedHtml = '';
+  if (showConverted && reportingCurrency && currency !== reportingCurrency) {
+    const rates = State.currencyRates || [];
+    const rate = rates
+      .filter(r => r.from_currency === currency && r.to_currency === reportingCurrency && r.effective_date <= tx.date)
+      .sort((a, b) => b.effective_date.localeCompare(a.effective_date))[0];
+    if (rate) {
+      const converted = (tx.amount * parseFloat(rate.rate)).toFixed(2);
+      convertedHtml = `<div style="font-size:11px;color:var(--text3)">${Reports.fmt(converted, reportingCurrency)}</div>`;
+    }
+  }
+
   const deleteBtn = showEditBtn && window.AUTH_TOKEN
-    ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="deleteTxWithConfirm('${tx.id}')" data-i18n="common.delete"></button>`
+    ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="event.stopPropagation();deleteTxWithConfirm('${tx.id}')">${t('common.delete')}</button>`
     : '';
-  const actions = (editBtn || deleteBtn) ? `<td>${editBtn}${deleteBtn}</td>` : '';
-  return `<tr>
+  const actions = showEditBtn ? `<td>${deleteBtn}</td>` : '';
+  return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="tx-row-cb" data-id="${tx.id}" onchange="onTxRowSelect()"></td>
     <td>${tx.date}</td>
     <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
-    <td>${tx.description}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
+    <td><span class="tag tag-${tx.type}">${t('categories.' + tx.type)}</span></td>
     <td><span class="tag tag-${tx.type}">${catLbl}</span></td>
+    <td>${tx.description}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
     ${showEditBtn ? `<td><span class="muted" style="font-size:11px">${srcLbl}</span></td>` : ''}
-    <td class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, prop?.currency || tx.currency)}</td>
+    <td class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, currency)}<span class="muted" style="font-size:11px;margin-left:4px">${currency}</span>${convertedHtml}</td>
     ${actions}
   </tr>`;
+}
+
+function txSelectAll(checked) {
+  document.querySelectorAll('.tx-row-cb').forEach(cb => { cb.checked = checked; });
+  onTxRowSelect();
+}
+
+function onTxRowSelect() {
+  const cbs = document.querySelectorAll('.tx-row-cb');
+  const selected = [...cbs].filter(cb => cb.checked);
+  const bar = document.getElementById('tx-bulk-bar');
+  const allCb = document.getElementById('tx-select-all');
+  if (selected.length > 0) {
+    bar.style.display = 'flex';
+    document.getElementById('tx-bulk-count').textContent = t('tx.selected', { count: selected.length });
+  } else {
+    bar.style.display = 'none';
+  }
+  if (allCb) allCb.indeterminate = selected.length > 0 && selected.length < cbs.length;
+}
+
+async function bulkDeleteTx() {
+  const ids = [...document.querySelectorAll('.tx-row-cb:checked')].map(cb => cb.dataset.id);
+  if (!ids.length) return;
+  if (!confirm(t('tx.confirmBulkDelete', { count: ids.length }))) return;
+  setLoading(true, t('status.deleting'));
+  try {
+    await Promise.all(ids.map(id => Api.deleteTransaction(id)));
+    await refreshAll();
+    toast(t('tx.toast.bulkDeleted', { count: ids.length }), 'success');
+  } catch(e) {
+    toast(t('tx.toast.delFailed', { error: e.message }), 'error');
+  }
+  setLoading(false);
 }
 
 function updateCategoryFilter() {

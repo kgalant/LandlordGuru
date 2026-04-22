@@ -11,7 +11,7 @@ Planned. The `transactions` table exists in the schema. The backend API routes a
 ## Features
 
 ### F3-1 Transaction CRUD API `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Backend REST endpoints for reading and writing transactions.
 
@@ -43,7 +43,7 @@ response for client display.
 ---
 
 ### F3-2 Transaction list UI `[MVP]`
-**Status:** Planned
+**Status:** In progress
 
 Frontend view showing transactions with filtering and sorting.
 
