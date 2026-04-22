@@ -126,6 +126,39 @@ Let users mark transactions as verified against a bank statement.
 
 ---
 
+### F3-8 Sticky and sortable column headers in transaction list `[MVP]`
+**Status:** Backlog
+
+Keep column headers visible while scrolling and allow sorting by any column.
+
+**Acceptance criteria:**
+- Column headers remain fixed at the top of the viewport when the user scrolls down through the transaction list.
+- Clicking a column header sorts the list by that column; first click = ascending, second click on the same column = descending.
+- Sortable columns: date, property, type, category, description, amount.
+- The active sort column shows a directional indicator (e.g. `▲` / `▼`) in the header; all other columns show no indicator.
+- Clicking a different column resets direction to ascending and clears the previous column's indicator.
+- Current default sort (newest date first) is preserved as the initial state.
+
+**Note:** The sort *logic* (date and amount) already exists from F3-2. This feature adds sticky positioning and per-column sort indicators for all columns.
+
+---
+
+### F3-9 Pagination in transaction list `[MVP]`
+**Status:** Backlog
+
+Show transactions in pages so large datasets don't hit the API's default limit.
+
+**Acceptance criteria:**
+- A page control bar appears below the transaction table showing current page, total pages, and prev/next buttons.
+- Page number links are shown (e.g. 1 2 3 … 12) with the current page highlighted.
+- A "rows per page" dropdown lets the user choose 10, 20, 50, or 100 transactions per page.
+- The API is called with `page` and `limit` params matching the user's selection; no client-side slicing of a full result set.
+- Total count comes from the API response (the backend already supports `page`/`limit` on `GET /api/transactions`).
+- When filters change, the page resets to 1.
+- The footer summary ("N transactions shown · Income: … · Expenses: …") reflects only the visible page, with a note of the total count when paginated.
+
+---
+
 ### F3-7 Tenant linking on transactions `[Future]`
 **Status:** Future
 
@@ -143,7 +176,12 @@ Optionally associate a transaction with a specific tenant (when tenant tracking 
 
 ## Bugs
 
-None recorded.
+### B3-2-1 Transaction footer shows garbled concatenated amounts
+**Status:** Fixed  
+**Feature:** F3-2 Transaction list UI  
+**Symptom:** Footer shows e.g. `Income: 016700.0016700.00…` — amounts concatenated as strings instead of summed as numbers.  
+**Root cause:** PostgreSQL's `NUMERIC` type is returned as a string by `node-postgres`. The footer `reduce((s, tx) => s + tx.amount, 0)` string-concatenates rather than adds. Multiplication elsewhere coerces silently; plain `+` does not.  
+**Fix:** Parse `tx.amount` to `parseFloat` when `State.transactions` is assigned, so all consumers receive a number.
 
 ---
 

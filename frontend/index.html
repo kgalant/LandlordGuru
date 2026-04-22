@@ -848,7 +848,7 @@ async function refreshAll() {
       Api.getCurrencyRates(),
     ]);
     State.properties        = props;
-    State.transactions      = txs.data ?? txs;
+    State.transactions      = (txs.data ?? txs).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
     State.rules             = rules;
     State.workspaceSettings = wsSettings;
     State.currencyRates     = rates;
