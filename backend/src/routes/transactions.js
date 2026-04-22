@@ -148,7 +148,7 @@ router.get('/', requireAuth, async (req, res) => {
 router.post('/', requireAuth, async (req, res) => {
   const errors = validateFields(req.body, true);
   if (errors.length) {
-    return res.status(400).json({ error: errors.join('; ') });
+    return res.status(422).json({ error: errors.join('; ') });
   }
 
   const {
@@ -249,7 +249,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
   const errors = validateFields(req.body, false);
   if (errors.length) {
-    return res.status(400).json({ error: errors.join('; ') });
+    return res.status(422).json({ error: errors.join('; ') });
   }
 
   // Verify account_id belongs to this workspace (if being changed)

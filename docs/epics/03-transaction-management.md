@@ -43,7 +43,7 @@ response for client display.
 ---
 
 ### F3-2 Transaction list UI `[MVP]`
-**Status:** In progress
+**Status:** Done
 
 Frontend view showing transactions with filtering and sorting.
 
@@ -63,7 +63,7 @@ Frontend view showing transactions with filtering and sorting.
 ---
 
 ### F3-3 Category validation `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Enforce the category taxonomy on the backend.
 

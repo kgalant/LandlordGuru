@@ -70,53 +70,53 @@ describe('POST /api/transactions', () => {
     expect(res.body.source).toBe('jyske_bank');
   });
 
-  it('returns 400 when required fields are missing', async () => {
+  it('returns 422 when required fields are missing', async () => {
     const res = await request(app)
       .post('/api/transactions')
       .set('Authorization', `Bearer ${token}`)
       .send({ date: '2026-01-15' }); // missing type, category, amount, currency
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/type/);
   });
 
-  it('returns 400 for invalid type', async () => {
+  it('returns 422 for invalid type', async () => {
     const res = await request(app)
       .post('/api/transactions')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...VALID_TX, type: 'invalid' });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/type/);
   });
 
-  it('returns 400 when category does not match type', async () => {
+  it('returns 422 when category does not match type', async () => {
     const res = await request(app)
       .post('/api/transactions')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...VALID_TX, type: 'expense', category: 'rent' }); // rent is income-only
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/category/);
   });
 
-  it('returns 400 when amount is zero or negative', async () => {
+  it('returns 422 when amount is zero or negative', async () => {
     const res = await request(app)
       .post('/api/transactions')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...VALID_TX, amount: -100 });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/amount/);
   });
 
-  it('returns 400 when other_expense has no notes', async () => {
+  it('returns 422 when other_expense has no notes', async () => {
     const res = await request(app)
       .post('/api/transactions')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...VALID_TX, type: 'expense', category: 'other_expense' });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/notes/);
   });
 
@@ -302,7 +302,7 @@ describe('PATCH /api/transactions/:id', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when category/type mismatch on update', async () => {
+  it('returns 422 when category/type mismatch on update', async () => {
     const created = await request(app)
       .post('/api/transactions')
       .set('Authorization', `Bearer ${token}`)
@@ -313,7 +313,7 @@ describe('PATCH /api/transactions/:id', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ type: 'expense', category: 'rent' }); // rent is income-only
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/category/);
   });
 
