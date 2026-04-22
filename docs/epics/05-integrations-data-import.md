@@ -163,6 +163,33 @@ The `fx_log` table from earlier designs is superseded by this approach.
 
 ---
 
+### F5-9 Row locking in import preview `[MVP]`
+**Status:** Backlog
+
+Allow users to mark individual import preview rows as "finished" so they are excluded from bulk operations while still being reviewable.
+
+**Acceptance criteria:**
+
+- A "Mark finished" button appears when one or more rows are selected (and none of the selected rows are already locked).
+- Clicking it locks the selected rows:
+  - They move to the bottom of the preview table, below all unlocked rows.
+  - They are highlighted with a distinct background colour to distinguish them from editable rows.
+  - All controls (category dropdown, property dropdown, type dropdown, any other editable fields) become read-only.
+  - The row checkbox in the leftmost column remains active.
+- Locked rows are excluded from:
+  - "Update all selected with the same value" bulk operations.
+  - "Select all with the same description" operations.
+- When one or more locked rows are selected **and no unlocked rows are selected**, an "Unlock" button appears instead of the normal bulk-action buttons.
+- Clicking "Unlock" restores the selected rows to their pre-lock state:
+  - They move back to their original position in the table (by original parse order).
+  - All controls become editable again.
+- Lock/unlock state is local to the current import session; it is not persisted.
+- The "Import N rows" count reflects only unlocked rows (locked rows are not submitted).
+
+**Scope:** Frontend only (`index.html` import preview section). No backend changes required.
+
+---
+
 ### F5-8 Direct bank connection `[Future]`
 **Status:** Future
 
@@ -178,6 +205,15 @@ Connect to a bank's open banking API to pull transactions automatically.
 ---
 
 ## Bugs
+
+### B5-5-2 Import preview shows all amounts as positive
+**Status:** Fixed  
+**Feature:** F5-5 Import preview  
+**Symptom:** CSV rows with negative amounts (debits/expenses) show as positive in the preview table, making it impossible to visually confirm income vs expense categorisation.  
+**Root cause:** `importer.js` calls `Math.abs(amount)` before building the row object. The sign is used to determine `type`/`category` (correct, per data model), but is then discarded from `amount`. The preview renders `row.amount` which is always positive.  
+**Fix:** Display the amount in the preview with a `-` prefix and expense CSS class for expense rows, so the visual sign reflects the stored `type`. The data model (amounts always positive, sign in `type`) is unchanged.
+
+---
 
 ### B5-5-1 `DB is not defined` on Preview Import click
 **Status:** Fixed  

@@ -1623,6 +1623,8 @@ function runImportPreview() {
     if      (row._descMappingMatched) matchTag = '<span class="tag tag-mapping">mapped</span> ';
     else if (row._autoMatched)        matchTag = '<span class="tag tag-auto">auto</span> ';
     const warnClass = (!row._autoMatched && !row._descMappingMatched) ? 'preview-row-warn' : '';
+    const amtSign   = row.type === 'expense' ? '-' : '';
+    const amtCls    = row.type === 'expense' ? 'negative' : 'positive';
     return `<tr data-row="${i}" class="${warnClass}">
       <td style="text-align:center"><input type="checkbox" id="row-sel-${i}" onchange="onRowSelect(${i})"></td>
       <td>${row.date}</td>
@@ -1630,7 +1632,7 @@ function runImportPreview() {
       <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"><option value="">—</option>${propOpts}</select></td>
       <td>${matchTag}<select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)">${catOpts}</select></td>
       <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px" placeholder="notes…" value="${row.notes || ''}" oninput="onRowFieldChange(${i},'notes',this.value)"></td>
-      <td class="amount-cell">${row.amount.toLocaleString()} ${result.currency || ''}</td>
+      <td class="amount-cell ${amtCls}">${amtSign}${row.amount.toLocaleString()} ${result.currency || ''}</td>
       <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"></td>
       <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"></td>
     </tr>`;
