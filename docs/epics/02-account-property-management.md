@@ -158,7 +158,7 @@ enables future account structure versioning (F2-8).
 ---
 
 ### F2-4 Account CRUD `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Create, view, edit, archive, and delete accounts.
 

@@ -50,9 +50,10 @@ Start these after F3-1 ships. Can be done in parallel.
 
 | Feature | Epic | Depends On | Status | Notes |
 |---------|------|-----------|--------|-------|
-| **F3-2** Transaction list UI | E3 | F3-1 | Planned | Frontend view with filtering, sorting, bulk select. |
-| **F3-3** Category validation | E3 | F3-1 | Planned | Backend validation for category taxonomy (income, expense, etc.). |
+| **F3-2** Transaction list UI | E3 | F3-1 | Done | Frontend view with filtering, sorting, bulk select. |
+| **F3-3** Category validation | E3 | F3-1 | Done | Backend validation for category taxonomy (income, expense, etc.). |
 | **F3-6** Reconciliation marking | E3 | F3-1 | Planned | Mark transactions as verified against bank statements. |
+| **F1-9a** Transaction category management | E1 | F1-6, F3-3 | Planned | Workspace owners can add custom categories. Uses generic `workspace_enum_values` table — forward-compatible with F1-9. F3-3 validation becomes dynamic (queries DB). |
 
 ---
 

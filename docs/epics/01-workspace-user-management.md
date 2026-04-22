@@ -212,7 +212,7 @@ The page is accessible only to users with the `workspace_manager` role and provi
 ---
 
 ### F1-9 Custom dropdown value management `[Future]`
-**Status:** Future
+**Status:** Future — F1-9a is the MVP stepping stone; the schema and API from F1-9a require no changes when this is built.
 
 A workspace-level configuration interface for managing custom enumerated values (dropdowns) across the system. This allows workspace owners to add, remove, replace, and set defaults for any configurable enum list (e.g., property models, transaction categories, account types, etc.), with constraints to ensure data integrity.
 
@@ -273,6 +273,40 @@ The system will be built to support any enum; which enums are actually configura
 - Each time a new enum is added to the system (e.g., a new transaction category enum), we decide whether it's workspace-configurable and wire it into this system
 - The API must support querying the current enum values for any given list (e.g., `GET /api/workspace/enums/property-models`)
 - Archived values (if applicable) should be hidden from dropdown UIs by default but remain queryable for reporting on historical records
+
+---
+
+### F1-9a Transaction category management `[MVP]`
+**Status:** Planned
+
+Allow workspace owners to add and remove custom transaction categories within each type bucket. The built-in category taxonomy remains and cannot be removed.
+
+This feature is a scoped MVP subset of F1-9. It is intentionally designed so that F1-9 (the generic enum management system) can be built on top of it with no schema or API changes — only a wider UI surface.
+
+**Architecture (forward-compatible with F1-9):**
+
+- New `workspace_enum_values` table: `id`, `workspace_id`, `enum_type` (e.g. `transaction_category`), `type_bucket` (e.g. `income`, `expense`), `value`, `is_builtin` (boolean), `is_active`, audit fields
+- Built-in categories are seeded into this table with `is_builtin = true` and cannot be deleted
+- Custom categories are inserted with `is_builtin = false` and can be deactivated or deleted (if unused)
+- API uses a generic shape: `GET/POST/DELETE /api/workspace/enums/:enum_type` — when F1-9 is built, it adds more `:enum_type` values and a generic UI shell; nothing is renamed or migrated
+- F3-3 category validation queries this table instead of the hardcoded list, making validation dynamic
+
+**Acceptance criteria:**
+- `GET /api/workspace/enums/transaction-categories` — returns all active categories (built-in + custom) grouped by type bucket
+- `POST /api/workspace/enums/transaction-categories` — creates a custom category; required: `type_bucket`, `value`; `value` must be unique within `(workspace_id, type_bucket)`; `is_builtin` is always false for client-created entries
+- `DELETE /api/workspace/enums/transaction-categories/:id` — removes a custom category; rejected if any transaction currently uses it; built-in categories cannot be deleted
+- F3-3 validation is updated to query the DB for valid categories rather than using a hardcoded list; built-in categories are always present
+- UI: a "Transaction categories" section in workspace settings (F1-6 page) lists all categories grouped by type bucket; owners can add a new value via inline form; delete is available on custom values only; built-in values show a lock icon
+- Non-owner users see the category list as read-only
+- All endpoints enforce workspace scoping via JWT
+
+**Dependencies:**
+- F1-6 (workspace settings page — done)
+- F3-3 (category validation — done; will be amended to use DB)
+
+**Notes:**
+- The `workspace_enum_values` table is the single source of truth for all configurable enums in the system. When F1-9 is built, it adds new `enum_type` values to the same table and a generic UI that lists all enum types — this feature's UI becomes one entry in that list.
+- Archived/inactive categories are hidden from all dropdowns but remain queryable so historical transactions using them are not broken.
 
 ---
 

@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: bug
-- Epic: E3 Transaction Management
-- ID: B3-2-1
-- Title: Transaction footer shows garbled concatenated amounts
-- Short summary: `tx.amount` from PostgreSQL is a string; `reduce` string-concatenates instead of adding. Fixed by parsing to `parseFloat` when loading `State.transactions`.
+- Type: chore
+- Epic: cross-epic
+- ID: —
+- Title: Select next MVP feature
+- Short summary: B3-2-1 fixed and committed. Backlog reviewed; F1-9a (transaction category management) added as MVP feature. Ready to pick next item from the priority list.
 
 ---
 
@@ -24,9 +24,7 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Log B3-2-1 in E3 epic doc; add F3-8 and F3-9 to E3 backlog
-- [x] S2: Fix State.transactions assignment in index.html — parse amount to float
-- [-] S3: Commit fix; bump patch version
+- [ ] S1: Confirm next feature with user and update AI_STATE to begin work
 
 ---
 
@@ -34,8 +32,8 @@ None
 
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
-- Known bugs: B2-1-1, B3-1-1
-- Backlog features: F3-8 (sticky/sortable tx headers), F3-9 (tx pagination), F5-9 (row locking in import preview), F5-10 (sortable columns in import preview), F5-11 (highlight missing required notes in import preview)
+- Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up)
+- Backlog features: F3-8, F3-9, F5-9, F5-10, F5-11 (polish/UX, low priority)
 
 Relevant epic docs:
 
@@ -50,7 +48,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit: `frontend/index.html`, `docs/epics/03-transaction-management.md`, `version.json`, `AI_STATE.md` with message "B3-2-1: Fix tx footer string-concatenation — parse amount to float on load (v2.4.2 → v2.4.3)".
+Confirm which feature to start next from the MVP priority list and set it as Current focus.
 
 ---
 
@@ -58,11 +56,11 @@ Commit: `frontend/index.html`, `docs/epics/03-transaction-management.md`, `versi
 
 - Commands to run:
   - `npm test` (from backend/)
-  - Manual browser test: transaction footer should show correct summed totals
+  - Manual browser test: transaction footer totals, import preview signed amounts
 
 - Last result:
   - Date/time: 2026-04-22 21:35:00
-  - Outcome: B5-5-1, B5-5-2 committed. B3-2-1 fix applied; browser test pending.
+  - Outcome: B3-2-1 committed (ec7206f). B5-5-1 and B5-5-2 committed. All tests passing.
 
 ---
 
@@ -70,30 +68,17 @@ Commit: `frontend/index.html`, `docs/epics/03-transaction-management.md`, `versi
 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
-- `frontend/js/importer.js`
-- `frontend/index.html`
-- `docs/epics/03-transaction-management.md`
+- `docs/epics/01-workspace-user-management.md`
+- `docs/epics/02-account-property-management.md`
 - `docs/epics/05-integrations-data-import.md`
+- `docs/roadmap.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-22 22:10:00 [B3-2-1 fix applied]
+- 2026-04-22 22:30:00 [backlog review; F1-9a spec added]
   - branch: main
-  - last_commit: 0efe5c7 B5-5-2: Show signed amounts in import preview (v2.4.1 → v2.4.2)
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, frontend/index.html, docs/epics/03-transaction-management.md, docs/epics/05-integrations-data-import.md
-  - git_status: M .claude/settings.json, M AI_STATE.md, M .claude/ai_state_archive.json, M docs/epics/02-account-property-management.md, M docs/epics/03-transaction-management.md, M docs/epics/05-integrations-data-import.md, M frontend/index.html
-
-- 2026-04-22 21:03:49 [lifecycle]
-  - branch: main
-  - last_commit: 0efe5c7 B5-5-2: Show signed amounts in import preview (v2.4.1 ΓåÆ v2.4.2)
-  - changed_files: .claude/ai_state_archive.json, .claude/settings.json, AI_STATE.md, docs/epics/02-account-property-management.md, docs/epics/03-transaction-management.md, docs/epics/05-integrations-data-import.md, frontend/index.html
-  - git_status:
-     M .claude/ai_state_archive.json
-     M .claude/settings.json
-     M AI_STATE.md
-     M docs/epics/02-account-property-management.md
-     M docs/epics/03-transaction-management.md
-     M docs/epics/05-integrations-data-import.md
-     M frontend/index.html
+  - last_commit: ec7206f B3-2-1: Fix tx footer string-concatenation — parse amount to float on load (v2.4.2 → v2.4.3)
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, docs/epics/01-workspace-user-management.md, docs/epics/02-account-property-management.md, docs/epics/05-integrations-data-import.md, docs/roadmap.md
+  - git_status: M .claude/ai_state_archive.json, M .claude/settings.json, M AI_STATE.md, M docs/epics/01-workspace-user-management.md, M docs/epics/02-account-property-management.md, M docs/epics/05-integrations-data-import.md, M docs/roadmap.md

@@ -190,6 +190,43 @@ Allow users to mark individual import preview rows as "finished" so they are exc
 
 ---
 
+### F5-10 Sortable columns in import preview `[MVP]`
+**Status:** Backlog
+
+Allow the user to sort the import preview table by any data column with a single click, toggling between ascending and descending, with a clear sort indicator.
+
+**Acceptance criteria:**
+
+- Clicking a column header sorts the preview rows by that column; first click = ascending, second click on the same column = descending.
+- Sortable columns: date, description, property, category, notes, amount.
+- The active sort column shows a directional indicator (e.g. `▲` / `▼`) in the header.
+- All other column headers show no indicator (only one column is sorted at a time).
+- Clicking a different column resets direction to ascending and clears the previous column's indicator.
+- Sort is in-memory only; it does not affect the underlying `State.importRows` array order, so original row indices (used for field updates, ignore flag, etc.) are preserved.
+- The "Update all selected" and "Select all with same description" bulk actions continue to operate on the logical row data regardless of display sort order.
+
+**Scope:** Frontend only (`index.html` import preview section). No backend changes required.
+
+---
+
+### F5-11 Highlight missing required notes in import preview `[MVP]`
+**Status:** Backlog
+
+Visually flag notes fields that are required but empty, so the user can fill them before submitting the import.
+
+**Acceptance criteria:**
+
+- When a row's `category` requires a note (currently: `other_expense`), and the notes field is empty, the notes input is given a subtle red background.
+- The highlight updates in real time as the user changes the category dropdown or types into the notes field — no page reload or button click needed.
+- The highlight is on the notes input only, not the entire row.
+- If the user fills in a note, the red background is removed immediately.
+- If the user changes category away from `other_expense`, the red background is removed immediately.
+- The "Import N rows" button (or submission flow) should block import and show a validation message if any non-ignored row still has a required-note category with an empty notes field.
+
+**Scope:** Frontend only (`index.html` import preview section). No backend changes required — the backend already enforces this via HTTP 422.
+
+---
+
 ### F5-8 Direct bank connection `[Future]`
 **Status:** Future
 
