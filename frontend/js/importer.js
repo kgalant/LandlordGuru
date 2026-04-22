@@ -146,6 +146,19 @@ const Importer = (() => {
     return result;
   }
 
+  // ── Rule matching ─────────────────────────────────────────
+
+  function applyRules(description, profileKey, rules) {
+    if (!rules || !rules.length) return null;
+    const desc = description.toLowerCase();
+    const sorted = [...rules].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    for (const rule of sorted) {
+      if (rule.bank_profile && rule.bank_profile !== profileKey) continue;
+      if (desc.includes(rule.keyword.toLowerCase())) return rule;
+    }
+    return null;
+  }
+
   // ── Main parse function ───────────────────────────────────
 
   /**
@@ -154,7 +167,7 @@ const Importer = (() => {
    * @param {string}  csvText     Raw CSV content
    * @param {string}  profileKey  Key from BANK_PROFILES in config.js
    * @param {string}  propertyId  Pre-selected property (can be overridden by rules)
-   * @param {Array}   rules       Auto-categorisation rules from DB.getRules()
+   * @param {Array}   rules       Auto-categorisation rules from Api.getRules()
    * @param {Object}  [colMap]    Optional explicit column mapping (from mapping panel).
    *                              If provided, overrides the profile's hardcoded indices.
    *                              Shape: { date_col, description_col, amount_col,
@@ -201,7 +214,7 @@ const Importer = (() => {
         return;
       }
 
-      const match = DB.applyRules(rawDesc, profileKey, rules);
+      const match = applyRules(rawDesc, profileKey, rules);
 
       const absAmount  = Math.abs(amount);
       let autoCategory = match ? match.category : '';

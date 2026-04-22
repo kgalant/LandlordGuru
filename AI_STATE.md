@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
-- Epic: E3 Transaction Management
-- ID: F3-3
-- Title: Category validation
-- Short summary: Enforce category taxonomy on POST/PATCH transactions; change validation error responses from HTTP 400 → 422 per spec.
+- Type: bug
+- Epic: E5 Integrations and Data Import
+- ID: B5-5-1
+- Title: DB is not defined on Preview Import
+- Short summary: `importer.js` called `DB.applyRules()` — a v1 leftover. Replaced with a local `applyRules()` function; rules come from the API array passed in as `State.rules`.
 
 ---
 
@@ -24,11 +24,9 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Change POST and PATCH validation error responses from 400 → 422
-- [x] S2: Update tests to expect 422; add any missing coverage
-- [x] S3: Run `npm test` — local DB unavailable; tests to be verified on dev server post-push
-- [x] S4: Update epic doc (F3-2 → Done, F3-3 → Done); bump version 2.3.0 → 2.4.0
-- [-] S5: Commit
+- [x] S1: Log bug B5-5-1 in E5 epic doc
+- [x] S2: Add local `applyRules()` helper to `importer.js` and replace `DB.applyRules()` call
+- [-] S3: Commit fix; bump patch version
 
 ---
 
@@ -51,7 +49,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit: `git add` the 5 changed files and commit with message "F3-3: Category validation — HTTP 422 for invalid type/category/notes (v2.3.0 → v2.4.0)".
+Commit the fix: `frontend/js/importer.js` and `docs/epics/05-integrations-data-import.md` with message "B5-5-1: Fix DB is not defined in importer — replace DB.applyRules with local helper (v2.4.0 → v2.4.1)".
 
 ---
 
@@ -59,11 +57,11 @@ Commit: `git add` the 5 changed files and commit with message "F3-3: Category va
 
 - Commands to run:
   - `npm test` (from backend/)
-  - Manual browser test on dev server (http://localhost:3000)
+  - Manual browser test: upload CSV → Preview Import should no longer throw
 
 - Last result:
   - Date/time: 2026-04-22 17:15:00
-  - Outcome: Local DB unavailable; code and test changes complete. Run `npm test` on dev server after push.
+  - Outcome: F3-3 committed (1ff3b9a). B5-5-1 fix applied; browser test required on dev server.
 
 ---
 
@@ -71,30 +69,27 @@ Commit: `git add` the 5 changed files and commit with message "F3-3: Category va
 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
-- `backend/src/routes/transactions.js`
-- `backend/tests/transactions.test.js`
-- `docs/epics/03-transaction-management.md`
-- `version.json`
+- `frontend/js/importer.js`
+- `docs/epics/05-integrations-data-import.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-22 17:15:00 [F3-3 ready to commit]
+- 2026-04-22 21:10:00 [B5-5-1 fix applied]
   - branch: main
-  - last_commit: 59ddc31 F3-2: Transaction list UI — sorting, bulk delete, multi-currency toggle, type column
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/epics/03-transaction-management.md, version.json
-  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, M docs/epics/03-transaction-management.md, M version.json
+  - last_commit: 1ff3b9a F3-3: Category validation — HTTP 422 for invalid type/category/notes (v2.3.0 → v2.4.0)
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, frontend/js/importer.js, docs/epics/05-integrations-data-import.md
+  - git_status: M .claude/settings.json, M AI_STATE.md, M docs/epics/02-account-property-management.md, M frontend/js/importer.js, M docs/epics/05-integrations-data-import.md
 
-- 2026-04-22 17:06:38 [lifecycle]
+- 2026-04-22 20:13:35 [lifecycle]
   - branch: main
-  - last_commit: 59ddc31 F3-2: Transaction list UI ΓÇö sorting, bulk delete, multi-currency toggle, type column
-  - changed_files: .claude/ai_state_archive.json, .claude/settings.json, AI_STATE.md, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/epics/03-transaction-management.md, version.json
+  - last_commit: 1ff3b9a F3-3: Category validation ΓÇö HTTP 422 for invalid type/category/notes (v2.3.0 ΓåÆ v2.4.0)
+  - changed_files: .claude/ai_state_archive.json, .claude/settings.json, AI_STATE.md, docs/epics/02-account-property-management.md, docs/epics/05-integrations-data-import.md, frontend/js/importer.js
   - git_status:
      M .claude/ai_state_archive.json
      M .claude/settings.json
      M AI_STATE.md
-     M backend/src/routes/transactions.js
-     M backend/tests/transactions.test.js
-     M docs/epics/03-transaction-management.md
-     M version.json
+     M docs/epics/02-account-property-management.md
+     M docs/epics/05-integrations-data-import.md
+     M frontend/js/importer.js

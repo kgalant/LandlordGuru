@@ -179,7 +179,12 @@ Connect to a bank's open banking API to pull transactions automatically.
 
 ## Bugs
 
-None recorded.
+### B5-5-1 `DB is not defined` on Preview Import click
+**Status:** Fixed  
+**Feature:** F5-5 Import preview  
+**Symptom:** Clicking "Preview Import" after column mapping throws `Parse error: DB is not defined` in the browser.  
+**Root cause:** `importer.js` calls `DB.applyRules()` — a leftover v1 Google Sheets helper. In v2, rules are passed in as a plain array from `State.rules` (fetched via `Api.getRules()`). No `DB` object exists.  
+**Fix:** Replaced `DB.applyRules(rawDesc, profileKey, rules)` with a self-contained `applyRules(rawDesc, profileKey, rules)` function in `importer.js` that does case-insensitive keyword matching respecting `bank_profile` and `sort_order`.
 
 ---
 
