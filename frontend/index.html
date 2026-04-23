@@ -337,8 +337,9 @@
         <select id="rep-apt" onchange="renderReports()">
           <option value="all" data-i18n="tx.filter.allProperties"></option>
         </select>
-        <input type="date" id="rep-from" onchange="renderReports()">
-        <input type="date" id="rep-to"   onchange="renderReports()">
+        <select id="rep-year" onchange="setReportYear(this.value)"><option value="">— Year —</option></select>
+        <input type="date" id="rep-from" onchange="document.getElementById('rep-year').value=''; renderReports()">
+        <input type="date" id="rep-to"   onchange="document.getElementById('rep-year').value=''; renderReports()">
         <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('ytd')"      data-i18n="reports.ytd"></button>
         <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('lastyear')" data-i18n="reports.lastYear"></button>
         <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('all')"      data-i18n="reports.allTime"></button>
@@ -923,6 +924,14 @@ function renderCurrentPage() {
 
 function populateAllDropdowns() {
   const propOpts = State.properties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+  const repYear = document.getElementById('rep-year');
+  if (repYear) {
+    const years = [...new Set(State.transactions.map(tx => tx.date?.slice(0,4)).filter(Boolean))].sort().reverse();
+    const cur = repYear.value;
+    repYear.innerHTML = '<option value="">— Year —</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+    if (cur && years.includes(cur)) repYear.value = cur;
+  }
 
   ['tx-filter-apt','rep-apt'].forEach(id => {
     const el = document.getElementById(id);
@@ -1897,7 +1906,15 @@ async function doImport(saveMappings) {
 
 // ── Reports ───────────────────────────────────────────────
 
+function setReportYear(year) {
+  if (!year) { renderReports(); return; }
+  document.getElementById('rep-from').value = `${year}-01-01`;
+  document.getElementById('rep-to').value   = `${year}-12-31`;
+  renderReports();
+}
+
 function setReportPeriod(preset) {
+  document.getElementById('rep-year').value = '';
   const yr = new Date().getFullYear();
   if (preset === 'ytd') {
     document.getElementById('rep-from').value = `${yr}-01-01`;

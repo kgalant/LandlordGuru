@@ -9,10 +9,10 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: feature
-- Epic: E1 Workspace and User Management
-- ID: F1-9a
-- Title: Transaction category management
-- Short summary: Add `workspace_enum_values` table; seed built-in categories; implement GET/POST/DELETE `/api/workspace/enums/transaction-categories`; update F3-3 validation to use DB; add UI section in workspace settings.
+- Epic: E4 Reporting and Analytics
+- ID: F4-9
+- Title: Year quick-select in reports filter
+- Short summary: Add a year dropdown to the Reports tab filter bar, populated from transaction data, that sets the date range to Jan 1–Dec 31 of the selected year.
 
 ---
 
@@ -24,14 +24,7 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: DB migration — create `workspace_enum_values` table and seed built-in transaction categories
-- [x] S2: Backend GET — `GET /api/workspace/enums/transaction-categories` returns all active categories grouped by type bucket
-- [x] S3: Backend POST — `POST /api/workspace/enums/transaction-categories` creates a custom category (unique per workspace+bucket)
-- [x] S4: Backend DELETE — `DELETE /api/workspace/enums/transaction-categories/:id` removes a custom category (reject if in use; reject if built-in)
-- [x] S5: Update F3-3 validation — query `workspace_enum_values` instead of hardcoded list
-- [x] S6: Backend tests — cover GET/POST/DELETE and updated F3-3 validation
-- [x] S7: Frontend — "Transaction categories" section in workspace settings; grouped list, add form, delete on custom, lock icon on built-in; read-only for non-owners
-- [x] S8: Run full validation (`npm test`); commit
+- [x] S1: Log F4-9 in Epic 4 doc; add HTML year select to reports filter bar; add JS to populate and handle selection; bump version; commit
 
 ---
 
@@ -62,33 +55,28 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 ## Validation
 
 - Commands to run:
-  - `npm test` (from backend/)
-  - Manual browser test: workspace settings category section
+  - Manual browser test: reports tab year dropdown
 
 - Last result:
   - Date/time: 2026-04-23 12:42:00
-  - Outcome: 157/157 tests passing (npm test --forceExit). F1-9a migration, endpoints, F3-3 update, frontend all verified.
+  - Outcome: 157/157 tests passing (npm test --forceExit). F1-9a complete.
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `backend/src/db/migrations/015_workspace_enum_values.js`
-- `backend/src/routes/workspace.js`
-- `backend/src/routes/transactions.js`
-- `backend/tests/workspace.test.js`
-- `frontend/js/api.js`
+- `.claude/ai_state_archive.json`
+- `docs/epics/04-reporting-analytics.md`
 - `frontend/index.html`
 - `version.json`
-- `docs/epics/01-workspace-user-management.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-23 [F1-9a complete — ready to commit]
+- 2026-04-23 [F4-9 complete — ready to commit]
   - branch: main
-  - last_commit: ec7206f B3-2-1: Fix tx footer string-concatenation — parse amount to float on load (v2.4.2 → v2.4.3)
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, backend/src/db/migrations/015_workspace_enum_values.js, backend/src/routes/workspace.js, backend/src/routes/transactions.js, backend/tests/workspace.test.js, frontend/js/api.js, frontend/index.html, version.json, docs/epics/01-workspace-user-management.md
-  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json, M backend/src/routes/workspace.js, M backend/src/routes/transactions.js, M backend/tests/workspace.test.js, M frontend/js/api.js, M frontend/index.html, M version.json, M docs/epics/01-workspace-user-management.md, ?? backend/src/db/migrations/015_workspace_enum_values.js
+  - last_commit: 6e2d8f0 F1-9a: Transaction category management (v2.4.3 → v2.5.0)
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, docs/epics/04-reporting-analytics.md, frontend/index.html, version.json
+  - git_status: M .claude/ai_state_archive.json, M .claude/settings.json, M AI_STATE.md, M docs/epics/04-reporting-analytics.md, M frontend/index.html, M version.json

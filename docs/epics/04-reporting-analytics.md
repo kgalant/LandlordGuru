@@ -113,6 +113,22 @@ Download transaction data as a file for use in Excel or other tools.
 
 ---
 
+### F4-9 Year quick-select in reports filter `[MVP]`
+**Status:** Done
+
+Add a year dropdown to the Reports tab filter bar so the user can jump to any year that has transactions, rather than being limited to "YTD" and "Last Year" presets.
+
+**Acceptance criteria:**
+- A `<select>` labelled by its placeholder ("— Year —") appears in the reports filter bar alongside the property select and date inputs.
+- The options are the distinct calendar years present in `State.transactions`, sorted newest-first.
+- Selecting a year sets `rep-from` to `YYYY-01-01` and `rep-to` to `YYYY-12-31`, then re-renders the report.
+- Selecting one of the existing preset buttons (YTD, Last Year, All Time) clears the year select back to the placeholder.
+- Manually editing either date input also clears the year select.
+
+**Scope:** Frontend only (`index.html`). No backend changes required.
+
+---
+
 ### F4-7 Pivot table UI `[Future]`
 **Status:** Future
 
