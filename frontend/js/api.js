@@ -98,6 +98,20 @@ const Api = (() => {
     return request('PATCH', '/workspace/settings', data);
   }
 
+  // ── Transaction Categories ───────────────────────────────────
+
+  async function getTransactionCategories() {
+    return request('GET', '/workspace/enums/transaction-categories');
+  }
+
+  async function createTransactionCategory(data) {
+    return request('POST', '/workspace/enums/transaction-categories', data);
+  }
+
+  async function deleteTransactionCategory(id) {
+    return request('DELETE', `/workspace/enums/transaction-categories/${id}`);
+  }
+
   // ── Currency Rates ───────────────────────────────────────────
 
   async function getCurrencyRates() {
@@ -130,6 +144,7 @@ const Api = (() => {
     getTransactions, createTransaction, updateTransaction, deleteTransaction,
     getRules, createRule, updateRule, deleteRule,
     getWorkspaceSettings, updateWorkspaceSettings,
+    getTransactionCategories, createTransactionCategory, deleteTransactionCategory,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     createTransactionBatch,
   };

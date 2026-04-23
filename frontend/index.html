@@ -492,6 +492,40 @@
         <div id="rates-loading" style="display:none;text-align:center;padding:1rem"><small>Loading…</small></div>
         <div id="rates-container"></div>
       </div>
+
+      <!-- Transaction Categories card -->
+      <div class="card" style="margin-top:1.5rem">
+        <div class="card-header">
+          <span class="card-title">Transaction Categories</span>
+          <button class="btn btn-sm btn-primary" id="add-category-btn" onclick="toggleAddCategoryForm()" style="display:none">+ Add category</button>
+        </div>
+
+        <!-- Add category form (hidden by default) -->
+        <div id="add-category-form" style="display:none;padding:1rem 0 0.5rem">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Type</label>
+              <select id="cat-bucket">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+                <option value="deposit">Deposit</option>
+                <option value="transfer">Transfer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Category value</label>
+              <input type="text" id="cat-value" placeholder="e.g. parking_fee" style="text-transform:lowercase">
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:0.5rem">
+            <button class="btn btn-primary btn-sm" onclick="submitAddCategory()">Save category</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleAddCategoryForm()">Cancel</button>
+          </div>
+        </div>
+
+        <div id="categories-loading" style="display:none;text-align:center;padding:1rem"><small>Loading…</small></div>
+        <div id="categories-container"></div>
+      </div>
     </div>
 
   </main>
@@ -2166,6 +2200,7 @@ async function renderSettings() {
   }
 
   renderCurrencyRates();
+  renderTransactionCategories();
 }
 
 async function saveSettings(event) {
@@ -2289,6 +2324,99 @@ async function deleteRate(id, pair, date) {
     await Api.deleteCurrencyRate(id);
     await renderCurrencyRates();
     toast('Rate deleted', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── Transaction Categories ─────────────────────────────────
+
+const BUCKET_LABELS = { income: 'Income', expense: 'Expense', deposit: 'Deposit', transfer: 'Transfer' };
+
+async function renderTransactionCategories() {
+  const loading   = document.getElementById('categories-loading');
+  const container = document.getElementById('categories-container');
+  const addBtn    = document.getElementById('add-category-btn');
+  loading.style.display = 'block';
+  container.innerHTML = '';
+
+  const isOwner = decodeToken(window.AUTH_TOKEN)?.role === 'owner';
+  if (addBtn) addBtn.style.display = isOwner ? '' : 'none';
+
+  let grouped;
+  try {
+    grouped = await Api.getTransactionCategories();
+  } catch(e) {
+    loading.style.display = 'none';
+    container.innerHTML = `<p style="padding:1rem;color:var(--danger)">Failed to load categories: ${e.message}</p>`;
+    return;
+  }
+  loading.style.display = 'none';
+
+  const buckets = Object.keys(grouped).sort();
+  if (!buckets.length) {
+    container.innerHTML = '<p style="padding:1rem;color:var(--text-muted)">No categories found.</p>';
+    return;
+  }
+
+  const html = buckets.map(bucket => {
+    const cats = grouped[bucket];
+    const label = BUCKET_LABELS[bucket] || bucket;
+    const rows = cats.map(c => {
+      const lockIcon = c.is_builtin
+        ? '<span title="Built-in — cannot be deleted" style="color:var(--text-muted);font-size:13px">🔒</span>'
+        : '';
+      const deleteBtn = (!c.is_builtin && isOwner)
+        ? `<button class="btn btn-danger btn-sm" onclick="deleteCategoryItem('${c.id}','${c.value}')">Delete</button>`
+        : '';
+      return `
+        <tr>
+          <td style="padding:0.4rem 0.5rem">${c.value}${lockIcon ? ' ' + lockIcon : ''}</td>
+          <td style="padding:0.4rem 0.5rem;text-align:right">${deleteBtn}</td>
+        </tr>`;
+    }).join('');
+    return `
+      <div style="margin-bottom:1.5rem">
+        <div style="font-weight:600;padding:0.5rem 0;border-bottom:1px solid var(--border)">${label}</div>
+        <table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+function toggleAddCategoryForm() {
+  const form = document.getElementById('add-category-form');
+  const visible = form.style.display !== 'none';
+  form.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    document.getElementById('cat-bucket').value = 'income';
+    document.getElementById('cat-value').value = '';
+  }
+}
+
+async function submitAddCategory() {
+  const type_bucket = document.getElementById('cat-bucket').value;
+  const value       = document.getElementById('cat-value').value.trim().toLowerCase();
+
+  if (!value) { toast('Category value is required', 'error'); return; }
+
+  try {
+    await Api.createTransactionCategory({ type_bucket, value });
+    toggleAddCategoryForm();
+    await renderTransactionCategories();
+    toast('Category added', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function deleteCategoryItem(id, value) {
+  if (!confirm(`Delete category '${value}'?`)) return;
+  try {
+    await Api.deleteTransactionCategory(id);
+    await renderTransactionCategories();
+    toast('Category deleted', 'success');
   } catch(e) {
     toast(e.message, 'error');
   }

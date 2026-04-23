@@ -277,7 +277,7 @@ The system will be built to support any enum; which enums are actually configura
 ---
 
 ### F1-9a Transaction category management `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Allow workspace owners to add and remove custom transaction categories within each type bucket. The built-in category taxonomy remains and cannot be removed.
 

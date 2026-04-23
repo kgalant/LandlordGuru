@@ -43,16 +43,10 @@ async function fetchTransactionWithProperty(txId, workspaceId) {
   return tx;
 }
 
-const VALID_CATEGORIES = {
-  income:   ['rent', 'heating_aconto', 'heating_settlement'],
-  expense:  ['maintenance_repair', 'property_tax', 'insurance', 'utilities',
-             'management_fee', 'advertising', 'professional_fees', 'bank_charges', 'other_expense'],
-  deposit:  ['deposit_received', 'deposit_returned'],
-  transfer: ['inter_account'],
-};
-
-// Validate fields shared by POST and PATCH
-function validateFields(body, requireAll) {
+// Validate fields shared by POST and PATCH.
+// Category validity is checked against workspace_enum_values (DB) rather than
+// a hardcoded list so that custom categories added via F1-9a are accepted.
+async function validateFields(body, workspaceId, requireAll) {
   const errors = [];
 
   if (requireAll || body.date !== undefined) {
@@ -72,8 +66,19 @@ function validateFields(body, requireAll) {
   if (requireAll || category !== undefined) {
     if (!category) {
       errors.push('category is required');
-    } else if (type && VALID_CATEGORIES[type] && !VALID_CATEGORIES[type].includes(category)) {
-      errors.push(`category '${category}' is not valid for type '${type}'`);
+    } else if (type && VALID_TYPES.includes(type)) {
+      const valid = await db('workspace_enum_values')
+        .where('enum_type', 'transaction_category')
+        .where('type_bucket', type)
+        .where('value', category)
+        .where('is_active', true)
+        .where(function () {
+          this.whereNull('workspace_id').orWhere('workspace_id', workspaceId);
+        })
+        .first();
+      if (!valid) {
+        errors.push(`category '${category}' is not valid for type '${type}'`);
+      }
     }
   }
 
@@ -146,7 +151,7 @@ router.get('/', requireAuth, async (req, res) => {
 
 // POST /api/transactions
 router.post('/', requireAuth, async (req, res) => {
-  const errors = validateFields(req.body, true);
+  const errors = await validateFields(req.body, req.workspace_id, true);
   if (errors.length) {
     return res.status(422).json({ error: errors.join('; ') });
   }
@@ -247,7 +252,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Transaction not found' });
   }
 
-  const errors = validateFields(req.body, false);
+  const errors = await validateFields(req.body, req.workspace_id, false);
   if (errors.length) {
     return res.status(422).json({ error: errors.join('; ') });
   }
