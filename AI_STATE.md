@@ -28,6 +28,7 @@ None
 - [x] S2: Backend — add search param + COUNT query + return total in response; update api.js getTransactions(); add/update backend tests.
 - [x] S3: Frontend — add TxListState, rows-per-page dropdown, tx-pagination div; refactor renderTxTable() to async API-driven; add renderTxPagination/goToTxPage/buildPageRange helpers; update openTxModal tx lookup; update footer; add tx.footerPaged to strings.js.
 - [x] S4: Update epic doc status; bump version to 2.6.0; run tests; commit.
+- [x] S5: Polish — sticky pagination bar + column headers; footer shows "Transactions X to Y out of Z" range.
 
 ---
 
@@ -36,7 +37,7 @@ None
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
 - Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up)
-- Backlog features: F1-11, F3-8, F3-9, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
+- Backlog features: F1-11, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
 
 Relevant epic docs:
 
@@ -58,7 +59,7 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 ## Validation
 
 - Commands to run:
-  - Manual browser test: bulk delete in transactions tab
+  - Manual browser test: transactions tab pagination, sticky headers, footer text
 
 - Last result:
   - Date/time: 2026-04-25 13:05:00
@@ -74,6 +75,7 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 - `backend/tests/transactions.test.js`
 - `frontend/index.html`
 - `frontend/js/strings.js`
+- `frontend/css/style.css`
 - `docs/epics/03-transaction-management.md`
 - `version.json`
 
@@ -81,23 +83,8 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 
 ## Automation log (latest only)
 
-- 2026-04-25 13:05:00 [F3-9 complete]
+- 2026-04-25 21:45:00 [F3-9 polish — sticky headers + footer range text]
   - branch: main
-  - last_commit: 9520755
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, backend/src/routes/transactions.js, frontend/js/api.js, backend/tests/transactions.test.js, frontend/index.html, frontend/js/strings.js, docs/epics/03-transaction-management.md, version.json
-  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json, M backend/src/routes/transactions.js, M frontend/js/api.js, M backend/tests/transactions.test.js, M frontend/index.html, M frontend/js/strings.js, M docs/epics/03-transaction-management.md, M version.json
-
-- 2026-04-25 21:10:43 [lifecycle]
-  - branch: main
-  - last_commit: 9520755 Backlog: add F1-11 saved column views infrastructure, F3-12 column management UI
-  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/epics/03-transaction-management.md, frontend/index.html, frontend/js/api.js, frontend/js/strings.js, version.json
-  - git_status:
-     M .claude/ai_state_archive.json
-     M AI_STATE.md
-     M backend/src/routes/transactions.js
-     M backend/tests/transactions.test.js
-     M docs/epics/03-transaction-management.md
-     M frontend/index.html
-     M frontend/js/api.js
-     M frontend/js/strings.js
-     M version.json
+  - last_commit: e9f00b1
+  - changed_files: AI_STATE.md, frontend/index.html, frontend/js/strings.js, frontend/css/style.css
+  - git_status: M AI_STATE.md, M frontend/index.html, M frontend/js/strings.js, M frontend/css/style.css

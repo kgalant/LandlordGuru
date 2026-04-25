@@ -114,6 +114,7 @@
           </label>
         </div>
 
+        <div id="tx-pagination" style="display:none; gap:4px; align-items:center; flex-wrap:wrap; padding:6px 10px;"></div>
         <div class="table-wrap">
           <table>
             <thead><tr>
@@ -135,7 +136,6 @@
           <span   data-i18n="tx.noTxSub"></span>
         </div>
         <div id="tx-footer" style="padding:10px 10px 0; font-size:12px; color:var(--text3)"></div>
-        <div id="tx-pagination" style="padding:6px 10px 10px; display:flex; gap:4px; align-items:center; flex-wrap:wrap"></div>
       </div>
     </div>
 
@@ -1082,7 +1082,8 @@ function renderTxPagination() {
   if (!container) return;
   const { page, limit, total } = TxListState;
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  if (totalPages <= 1) { container.innerHTML = ''; return; }
+  if (totalPages <= 1) { container.innerHTML = ''; container.style.display = 'none'; return; }
+  container.style.display = 'flex';
 
   const pages = buildPageRange(page, totalPages);
   const btns = pages.map(p => {
@@ -1171,9 +1172,13 @@ async function renderTxTable() {
 
   const totalIncome  = sorted.filter(tx => tx.type==='income').reduce((s,tx) => s+tx.amount, 0);
   const totalExpense = sorted.filter(tx => tx.type==='expense').reduce((s,tx) => s+tx.amount, 0);
+  const from = (TxListState.page - 1) * TxListState.limit + 1;
+  const to   = from + sorted.length - 1;
   const footerKey = TxListState.total > sorted.length ? 'tx.footerPaged' : 'tx.footer';
   footer.textContent = t(footerKey, {
     count:    sorted.length,
+    from,
+    to,
     total:    TxListState.total,
     income:   totalIncome.toLocaleString(),
     expenses: totalExpense.toLocaleString(),

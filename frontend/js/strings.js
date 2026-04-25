@@ -83,8 +83,8 @@ const I18n = (() => {
         addBtn:   '+ Add transaction',
         noTx:     'No transactions',
         noTxSub:  'Add one manually or import a bank statement.',
-        footer:       '{count} transactions shown · Income: {income} · Expenses: {expenses}',
-        footerPaged:  '{count} of {total} transactions · Income: {income} · Expenses: {expenses}',
+        footer:       '{count} transactions · Income: {income} · Expenses: {expenses}',
+        footerPaged:  'Transactions {from} to {to} out of {total} · Income: {income} · Expenses: {expenses}',
         filter: {
           allProperties: 'All properties',
           allTypes:      'All types',
