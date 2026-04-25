@@ -1096,7 +1096,7 @@ function renderTxPagination() {
   const rppOptions = [10, 20, 50, 100].map(n =>
     `<option value="${n}"${n === limit ? ' selected' : ''}>${n} / page</option>`
   ).join('');
-  const rppSelect = `<select id="tx-rows-per-page" onchange="onTxRowsPerPageChange()" style="width:auto">${rppOptions}</select>`;
+  const rppSelect = `<select id="tx-rows-per-page" onchange="onTxRowsPerPageChange()">${rppOptions}</select>`;
 
   if (totalPages <= 1) {
     container.innerHTML = rppSelect;
@@ -1105,16 +1105,16 @@ function renderTxPagination() {
 
   const pages = buildPageRange(page, totalPages);
   const btns = pages.map(p => {
-    if (p === '…') return `<span style="padding:4px 6px;color:var(--text3)">…</span>`;
-    const activeStyle = p === page ? 'background:var(--accent);color:#fff;border-color:var(--accent);' : '';
-    return `<button class="btn btn-sm btn-secondary" style="min-width:32px;${activeStyle}" onclick="goToTxPage(${p})">${p}</button>`;
+    if (p === '…') return `<span style="padding:2px 4px">…</span>`;
+    const activeStyle = p === page ? 'font-weight:600;color:var(--text);' : '';
+    return `<button style="${activeStyle}" onclick="goToTxPage(${p})">${p}</button>`;
   });
 
   container.innerHTML = [
     rppSelect,
-    `<button class="btn btn-sm btn-secondary" ${page <= 1 ? 'disabled' : ''} onclick="goToTxPage(${page - 1})">&#8249;</button>`,
+    `<button ${page <= 1 ? 'disabled' : ''} onclick="goToTxPage(${page - 1})">&#8249;</button>`,
     ...btns,
-    `<button class="btn btn-sm btn-secondary" ${page >= totalPages ? 'disabled' : ''} onclick="goToTxPage(${page + 1})">&#8250;</button>`,
+    `<button ${page >= totalPages ? 'disabled' : ''} onclick="goToTxPage(${page + 1})">&#8250;</button>`,
   ].join('');
 }
 

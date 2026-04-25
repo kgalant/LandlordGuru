@@ -33,6 +33,7 @@ None
 - [x] S7: Polish — unified #tx-sticky-header wrapper (card-header + filter-bar + pagination); rows-per-page moved into pagination row; filter bar no longer obscured; ResizeObserver simplified.
 - [x] S8: Polish — pagination + rows-per-page moved into card-header row (title | pagination | buttons); card-header given bg2 background + border-bottom for visual distinction from filter bar.
 - [x] S9: Polish — equal 1rem spacing above and below filter bar (margin-bottom on card-header matches filter-bar margin-bottom).
+- [x] S10: Polish — card-header left padding; pagination as text links (no btn styling); rpp select transparent; 12px font for pagination controls.
 
 ---
 
@@ -136,3 +137,10 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
      M AI_STATE.md
      M deploy.ps1
      M frontend/css/style.css
+
+- 2026-04-25 22:26:44 [lifecycle]
+  - branch: main
+  - last_commit: af21b9e F3-9 polish: equal spacing above and below filter bar
+  - changed_files: deploy.ps1
+  - git_status:
+     M deploy.ps1
