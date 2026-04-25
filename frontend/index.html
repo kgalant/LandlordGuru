@@ -1096,6 +1096,7 @@ function renderTxTable() {
     income:   totalIncome.toLocaleString(),
     expenses: totalExpense.toLocaleString(),
   });
+  onTxRowSelect();
 }
 
 function txRow(tx, showEditBtn, showConverted, reportingCurrency) {
@@ -1156,7 +1157,7 @@ function onTxRowSelect() {
 
 async function bulkDeleteTx() {
   const ids = [...document.querySelectorAll('.tx-row-cb:checked')].map(cb => cb.dataset.id);
-  if (!ids.length) return;
+  if (!ids.length) { toast(t('tx.toast.noneSelected'), 'error'); return; }
   if (!confirm(t('tx.confirmBulkDelete', { count: ids.length }))) return;
   setLoading(true, t('status.deleting'));
   try {

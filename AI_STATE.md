@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
-- Epic: E4 Reporting and Analytics
-- ID: F4-9
-- Title: Year quick-select in reports filter
-- Short summary: Add a year dropdown to the Reports tab filter bar, populated from transaction data, that sets the date range to Jan 1–Dec 31 of the selected year.
+- Type: bug
+- Epic: E3 Transaction Management
+- ID: B3-2-2
+- Title: Bulk delete button stays visible after re-render, then does nothing
+- Short summary: `renderTxTable()` replaces tbody without calling `onTxRowSelect()`, leaving the bulk bar stale. Fix: call `onTxRowSelect()` at end of `renderTxTable()`; also make the empty-selection path show a toast.
 
 ---
 
@@ -24,7 +24,7 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Log F4-9 in Epic 4 doc; add HTML year select to reports filter bar; add JS to populate and handle selection; bump version; commit
+- [x] S1: Log B3-2-2 in Epic 3 doc; fix renderTxTable to call onTxRowSelect(); add noneSelected i18n key; bump version; commit
 
 ---
 
@@ -55,7 +55,7 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 ## Validation
 
 - Commands to run:
-  - Manual browser test: reports tab year dropdown
+  - Manual browser test: bulk delete in transactions tab
 
 - Last result:
   - Date/time: 2026-04-23 12:42:00
@@ -67,16 +67,18 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
+- `docs/epics/03-transaction-management.md`
 - `docs/epics/04-reporting-analytics.md`
 - `frontend/index.html`
+- `frontend/js/strings.js`
 - `version.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-23 [F4-9 complete — ready to commit]
+- 2026-04-25 [B3-2-2 complete — committing]
   - branch: main
-  - last_commit: 6e2d8f0 F1-9a: Transaction category management (v2.4.3 → v2.5.0)
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, docs/epics/04-reporting-analytics.md, frontend/index.html, version.json
-  - git_status: M .claude/ai_state_archive.json, M .claude/settings.json, M AI_STATE.md, M docs/epics/04-reporting-analytics.md, M frontend/index.html, M version.json
+  - last_commit: be65361 F4-9: Year quick-select in reports filter (v2.5.0 → v2.5.1)
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/index.html, frontend/js/strings.js, version.json
+  - git_status: M .claude/ai_state_archive.json, M .claude/settings.json, M AI_STATE.md, M docs/epics/03-transaction-management.md, M frontend/index.html, M frontend/js/strings.js, M version.json

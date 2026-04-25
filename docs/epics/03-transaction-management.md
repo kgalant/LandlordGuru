@@ -176,6 +176,15 @@ Optionally associate a transaction with a specific tenant (when tenant tracking 
 
 ## Bugs
 
+### B3-2-2 Bulk delete button stays visible after table re-render, then does nothing
+**Status:** Fixed
+**Feature:** F3-2 Transaction list UI
+**Symptom:** User checks transactions, then changes a filter (or any action that calls `renderTxTable()`). The "Delete selected" count/button stays visible even though the table was re-rendered with fresh, unchecked checkboxes. Clicking "Delete selected" silently does nothing.
+**Root cause:** `renderTxTable()` replaces `tbody.innerHTML`, destroying all checkboxes. It never calls `onTxRowSelect()` afterwards, so the bulk bar retains its previous `display:flex` state. `bulkDeleteTx()` queries `.tx-row-cb:checked`, finds zero, and returns early with no feedback.
+**Fix:** Call `onTxRowSelect()` at the end of `renderTxTable()` so the bulk bar always reflects actual checkbox state. Also changed the silent early-return on empty selection to show a toast.
+
+---
+
 ### B3-2-1 Transaction footer shows garbled concatenated amounts
 **Status:** Fixed  
 **Feature:** F3-2 Transaction list UI  

@@ -121,6 +121,7 @@ const I18n = (() => {
           bulkDeleted:  '{count} transactions removed.',
           saveFailed:   'Save failed: {error}',
           delFailed:    'Delete failed: {error}',
+          noneSelected: 'No transactions selected.',
           fillReq:      'Please fill in all required fields.',
           noteReq:      'Please add a note for "other expense".',
         },
