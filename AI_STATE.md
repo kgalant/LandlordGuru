@@ -67,6 +67,7 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
+- `.claude/settings.json`
 - `docs/epics/03-transaction-management.md`
 - `docs/epics/04-reporting-analytics.md`
 - `frontend/index.html`
@@ -147,3 +148,10 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
      M .claude/settings.json
      M AI_STATE.md
      M docs/epics/03-transaction-management.md
+
+- 2026-04-25 20:21:35 [lifecycle]
+  - branch: main
+  - last_commit: 3d84e23 Backlog: add F3-10 tx edit modal + source-field override tracking, F3-11 year filter
+  - changed_files: .claude/settings.json
+  - git_status:
+     M .claude/settings.json

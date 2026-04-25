@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(cd c:/dev/repos/LandlordGuru/backend && npm test *)",
-      "Bash(npm test --prefix backend *)"
+      "Bash(npm test --prefix backend *)",
+      "Edit(.claude/ai_state_archive.json)"
     ]
   },
   "hooks": {
