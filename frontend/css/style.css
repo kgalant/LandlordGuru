@@ -364,16 +364,12 @@ textarea { resize: vertical; min-height: 70px; }
   z-index: 50;
   background: var(--bg);
   border-bottom: 0.5px solid var(--border);
-  padding-bottom: 6px;
 }
 
-#page-transactions .card-header {
+#tx-card-header {
+  background: var(--bg2);
+  border-bottom: 0.5px solid var(--border);
   margin-bottom: 0;
-  border-bottom: none;
-}
-
-#tx-pagination {
-  padding: 4px 10px 2px;
 }
 
 #page-transactions .table-wrap {

@@ -74,8 +74,9 @@
     <div id="page-transactions" class="page">
       <div class="card">
         <div id="tx-sticky-header">
-          <div class="card-header">
+          <div class="card-header" id="tx-card-header">
             <span class="card-title" data-i18n="tx.title"></span>
+            <div id="tx-pagination" style="flex:1; display:flex; gap:4px; align-items:center; flex-wrap:wrap; padding:0 16px;"></div>
             <div style="display:flex;gap:8px;align-items:center">
               <span id="tx-bulk-bar" style="display:none;gap:8px;align-items:center;display:none">
                 <span id="tx-bulk-count" style="font-size:13px;color:var(--text2)"></span>
@@ -108,8 +109,6 @@
               <span id="tx-converted-label"></span>
             </label>
           </div>
-
-          <div id="tx-pagination" style="display:none; gap:4px; align-items:center; flex-wrap:wrap; padding:4px 10px 6px;"></div>
         </div>
         <div class="table-wrap">
           <table>
@@ -1098,8 +1097,6 @@ function renderTxPagination() {
     `<option value="${n}"${n === limit ? ' selected' : ''}>${n} / page</option>`
   ).join('');
   const rppSelect = `<select id="tx-rows-per-page" onchange="onTxRowsPerPageChange()" style="width:auto">${rppOptions}</select>`;
-
-  container.style.display = 'flex';
 
   if (totalPages <= 1) {
     container.innerHTML = rppSelect;

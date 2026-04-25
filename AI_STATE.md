@@ -31,6 +31,7 @@ None
 - [x] S5: Polish — sticky pagination bar + column headers; footer shows "Transactions X to Y out of Z" range.
 - [x] S6: Polish — sticky card-header (top) and footer (bottom); pagination top offset adjusted to 104px.
 - [x] S7: Polish — unified #tx-sticky-header wrapper (card-header + filter-bar + pagination); rows-per-page moved into pagination row; filter bar no longer obscured; ResizeObserver simplified.
+- [x] S8: Polish — pagination + rows-per-page moved into card-header row (title | pagination | buttons); card-header given bg2 background + border-bottom for visual distinction from filter bar.
 
 ---
 
@@ -95,6 +96,23 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 - 2026-04-25 22:12:40 [lifecycle]
   - branch: main
   - last_commit: 90ceed7 F3-9 polish: dynamic sticky offsets via ResizeObserver
+  - changed_files: AI_STATE.md, deploy.ps1, frontend/css/style.css, frontend/index.html
+  - git_status:
+     M AI_STATE.md
+     M deploy.ps1
+     M frontend/css/style.css
+     M frontend/index.html
+
+- 2026-04-25 22:14:31 [lifecycle]
+  - branch: main
+  - last_commit: 14a7f7b F3-9 polish: unified sticky header ΓÇö filter bar + pagination in one block
+  - changed_files: deploy.ps1
+  - git_status:
+     M deploy.ps1
+
+- 2026-04-25 22:20:48 [lifecycle]
+  - branch: main
+  - last_commit: 14a7f7b F3-9 polish: unified sticky header ΓÇö filter bar + pagination in one block
   - changed_files: AI_STATE.md, deploy.ps1, frontend/css/style.css, frontend/index.html
   - git_status:
      M AI_STATE.md
