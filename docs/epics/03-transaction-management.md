@@ -159,6 +159,60 @@ Show transactions in pages so large datasets don't hit the API's default limit.
 
 ---
 
+### F3-10 Transaction edit modal with source-field override tracking `[MVP]`
+**Status:** Backlog
+
+Edit any field on a transaction via a modal, and preserve the original import values for source-data fields (date, description, amount) so users can see what was changed from the imported data.
+
+**Acceptance criteria:**
+
+**Edit modal:**
+- Clicking a transaction row opens an edit modal showing all editable fields: date, account, type, category, amount, currency, description, notes
+- All fields are editable; saving calls `PATCH /api/transactions/:id`
+- Type/category changes are validated against the F3-3 taxonomy rules
+- Modal shows a "Cancel" and a "Save" button; unsaved changes prompt for confirmation on dismiss
+
+**Source-field override tracking:**
+- Source fields are: `date`, `description`, `amount` — values that originally came from import or entry
+- `raw_description` (existing column) already stores the original description; no new column needed for description
+- Two new nullable columns are added to the `transactions` table: `original_date` (date) and `original_amount` (numeric)
+  - Each is set to the field's current value the **first time** a user changes it; null means the field has never been overridden
+  - Once set, these columns are never overwritten — they permanently record the as-imported value
+- In the UI, when an override is present, display the original value in small muted text directly below the current value in the modal (and optionally in the list row)
+  - `description`: shown when `raw_description` is non-null and differs from `description`
+  - `date`: shown when `original_date` is non-null
+  - `amount`: shown when `original_amount` is non-null
+- `PATCH /api/transactions/:id` accepts `original_date` and `original_amount` and persists them (ignored if already set)
+
+**Schema change:** New migration adding `original_date` (nullable date) and `original_amount` (nullable numeric) to the `transactions` table.
+
+**Non-goals (out of scope for this feature):**
+- Full edit history / audit log of every change
+- Bulk edit
+- Reverting source fields back to original (can be added later)
+
+**Dependencies:** F3-1 (PATCH endpoint), F3-2 (list UI host)
+
+---
+
+### F3-11 Year quick-select in transaction list filter `[MVP]`
+**Status:** Backlog
+
+Add a year dropdown to the transaction filter bar, mirroring the equivalent control in the reports view (F4-9).
+
+**Acceptance criteria:**
+- A "Year" dropdown appears in the filter bar alongside the existing property, type, and date-range controls
+- Default / blank option = "All years" — no year filter is applied; all transactions within other active filters are shown
+- Selecting a year restricts results to transactions whose `date` falls within that calendar year
+- The year list is derived from the years present in the workspace's transactions (no hardcoded range)
+- When a year is selected alongside an explicit date-range filter, the date-range takes precedence (or the year control is disabled while a date range is active — either is acceptable; implement whichever is simpler)
+- When filters change, pagination resets to page 1 (aligns with F3-9)
+- The API call passes `from` / `to` date params derived from the selected year (e.g. `from=2024-01-01&to=2024-12-31`)
+
+**Dependencies:** F3-2 (filter bar host), F3-1 (`from`/`to` query params already supported)
+
+---
+
 ### F3-7 Tenant linking on transactions `[Future]`
 **Status:** Future
 

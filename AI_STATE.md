@@ -33,7 +33,7 @@ None
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
 - Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up)
-- Backlog features: F3-8, F3-9, F5-9, F5-10, F5-11 (polish/UX, low priority)
+- Backlog features: F3-8, F3-9, F3-10, F3-11, F5-9, F5-10, F5-11 (polish/UX, low priority)
 
 Relevant epic docs:
 
@@ -82,3 +82,68 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
   - last_commit: be65361 F4-9: Year quick-select in reports filter (v2.5.0 → v2.5.1)
   - changed_files: AI_STATE.md, .claude/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/index.html, frontend/js/strings.js, version.json
   - git_status: M .claude/ai_state_archive.json, M .claude/settings.json, M AI_STATE.md, M docs/epics/03-transaction-management.md, M frontend/index.html, M frontend/js/strings.js, M version.json
+
+- 2026-04-25 17:29:05 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json
+  - git_status:
+     M .claude/settings.json
+
+- 2026-04-25 20:15:52 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json, AI_STATE.md
+  - git_status:
+     M .claude/settings.json
+     M AI_STATE.md
+
+- 2026-04-25 20:15:53 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json, AI_STATE.md
+  - git_status:
+     M .claude/settings.json
+     M AI_STATE.md
+
+- 2026-04-25 20:15:54 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json, AI_STATE.md
+  - git_status:
+     M .claude/settings.json
+     M AI_STATE.md
+
+- 2026-04-25 20:15:55 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json, AI_STATE.md
+  - git_status:
+     M .claude/settings.json
+     M AI_STATE.md
+
+- 2026-04-25 20:16:00 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json, AI_STATE.md
+  - git_status:
+     M .claude/settings.json
+     M AI_STATE.md
+
+- 2026-04-25 20:19:39 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json, AI_STATE.md, docs/epics/03-transaction-management.md
+  - git_status:
+     M .claude/settings.json
+     M AI_STATE.md
+     M docs/epics/03-transaction-management.md
+
+- 2026-04-25 20:20:46 [lifecycle]
+  - branch: main
+  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
+  - changed_files: .claude/settings.json, AI_STATE.md, docs/epics/03-transaction-management.md
+  - git_status:
+     M .claude/settings.json
+     M AI_STATE.md
+     M docs/epics/03-transaction-management.md
