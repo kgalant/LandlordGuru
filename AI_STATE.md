@@ -30,6 +30,7 @@ None
 - [x] S4: Update epic doc status; bump version to 2.6.0; run tests; commit.
 - [x] S5: Polish — sticky pagination bar + column headers; footer shows "Transactions X to Y out of Z" range.
 - [x] S6: Polish — sticky card-header (top) and footer (bottom); pagination top offset adjusted to 104px.
+- [x] S7: Polish — unified #tx-sticky-header wrapper (card-header + filter-bar + pagination); rows-per-page moved into pagination row; filter bar no longer obscured; ResizeObserver simplified.
 
 ---
 
@@ -85,65 +86,18 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 
 ## Automation log (latest only)
 
-- 2026-04-25 21:45:00 [F3-9 polish — sticky headers + footer range text]
+- 2026-04-25 22:30:00 [F3-9 polish — unified sticky header, pagination row, filter not obscured]
   - branch: main
-  - last_commit: e9f00b1
-  - changed_files: AI_STATE.md, frontend/index.html, frontend/js/strings.js, frontend/css/style.css
-  - git_status: M AI_STATE.md, M frontend/index.html, M frontend/js/strings.js, M frontend/css/style.css
+  - last_commit: 90ceed7
+  - changed_files: AI_STATE.md, frontend/index.html, frontend/css/style.css
+  - git_status: M AI_STATE.md, M frontend/index.html, M frontend/css/style.css
 
-- 2026-04-25 21:50:57 [lifecycle]
+- 2026-04-25 22:12:40 [lifecycle]
   - branch: main
-  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
-
-- 2026-04-25 21:52:11 [lifecycle]
-  - branch: main
-  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-25 21:53:56 [lifecycle]
-  - branch: main
-  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
-  - changed_files: AI_STATE.md, deploy.ps1
+  - last_commit: 90ceed7 F3-9 polish: dynamic sticky offsets via ResizeObserver
+  - changed_files: AI_STATE.md, deploy.ps1, frontend/css/style.css, frontend/index.html
   - git_status:
      M AI_STATE.md
      M deploy.ps1
-
-- 2026-04-25 21:55:15 [lifecycle]
-  - branch: main
-  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
-  - changed_files: AI_STATE.md, deploy.ps1
-  - git_status:
-     M AI_STATE.md
-     M deploy.ps1
-
-- 2026-04-25 21:55:58 [lifecycle]
-  - branch: main
-  - last_commit: 310432f deploy: continue on step failure and report errors in summary
-
-- 2026-04-25 21:56:20 [lifecycle]
-  - branch: main
-  - last_commit: 310432f deploy: continue on step failure and report errors in summary
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-25 21:56:23 [lifecycle]
-  - branch: main
-  - last_commit: 310432f deploy: continue on step failure and report errors in summary
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-
-- 2026-04-25 21:56:58 [lifecycle]
-  - branch: main
-  - last_commit: 313e043 F3-9 polish: sticky card-header (top) and footer (bottom)
-
-- 2026-04-25 22:01:58 [lifecycle]
-  - branch: main
-  - last_commit: 313e043 F3-9 polish: sticky card-header (top) and footer (bottom)
-  - changed_files: AI_STATE.md, frontend/css/style.css
-  - git_status:
-     M AI_STATE.md
      M frontend/css/style.css
+     M frontend/index.html

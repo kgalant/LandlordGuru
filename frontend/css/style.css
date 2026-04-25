@@ -349,32 +349,31 @@ textarea { resize: vertical; min-height: 70px; }
 .import-paste-toggle     { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 0.75rem; }
 .import-paste-toggle a   { color: var(--accent); cursor: pointer; text-decoration: underline; }
 
-/* ── Sticky card-header / pagination / footer (transactions) ── */
+/* ── Sticky header / footer (transactions) ── */
 /*
   Sticky stack (top → bottom):
-    52px                — nav header
-    var(--nav-h, 52px)  — #page-transactions .card-header  (top: var(--nav-h))
-    var(--tx-pg-top)    — #tx-pagination (JS-measured; updates on resize)
+    52px               — nav header
+    var(--nav-h, 52px) — #tx-sticky-header (card-header + filter-bar + pagination)
   Column headers stick inside the table-wrap scroll container (top: 0).
   #tx-footer sticks at the bottom of the viewport.
 */
 
-#page-transactions .card-header {
+#tx-sticky-header {
   position: sticky;
   top: var(--nav-h, 52px);
   z-index: 50;
   background: var(--bg);
-  margin-bottom: 0.75rem;
-  padding-bottom: 10px;
   border-bottom: 0.5px solid var(--border);
+  padding-bottom: 6px;
+}
+
+#page-transactions .card-header {
+  margin-bottom: 0;
+  border-bottom: none;
 }
 
 #tx-pagination {
-  position: sticky;
-  top: var(--tx-pg-top, 104px);
-  z-index: 30;
-  background: var(--bg);
-  border-bottom: 0.5px solid var(--border);
+  padding: 4px 10px 2px;
 }
 
 #page-transactions .table-wrap {

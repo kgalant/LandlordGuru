@@ -73,48 +73,44 @@
     <!-- ── TRANSACTIONS ── -->
     <div id="page-transactions" class="page">
       <div class="card">
-        <div class="card-header">
-          <span class="card-title" data-i18n="tx.title"></span>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span id="tx-bulk-bar" style="display:none;gap:8px;align-items:center;display:none">
-              <span id="tx-bulk-count" style="font-size:13px;color:var(--text2)"></span>
-              <button class="btn btn-sm btn-danger" onclick="bulkDeleteTx()" data-i18n="tx.bulkDelete"></button>
-            </span>
-            <button class="btn btn-sm btn-primary" onclick="openTxModal()" data-i18n="tx.addBtn"></button>
+        <div id="tx-sticky-header">
+          <div class="card-header">
+            <span class="card-title" data-i18n="tx.title"></span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="tx-bulk-bar" style="display:none;gap:8px;align-items:center;display:none">
+                <span id="tx-bulk-count" style="font-size:13px;color:var(--text2)"></span>
+                <button class="btn btn-sm btn-danger" onclick="bulkDeleteTx()" data-i18n="tx.bulkDelete"></button>
+              </span>
+              <button class="btn btn-sm btn-primary" onclick="openTxModal()" data-i18n="tx.addBtn"></button>
+            </div>
           </div>
-        </div>
 
-        <div class="filter-bar">
-          <select id="tx-filter-apt" onchange="resetAndRenderTxTable()">
-            <option value="all" data-i18n="tx.filter.allProperties"></option>
-          </select>
-          <select id="tx-filter-type" onchange="updateCategoryFilter(); resetAndRenderTxTable()">
-            <option value="all"      data-i18n="tx.filter.allTypes"></option>
-            <option value="income"   data-i18n="categories.income"></option>
-            <option value="expense"  data-i18n="categories.expense"></option>
-            <option value="deposit"  data-i18n="categories.deposit"></option>
-            <option value="transfer" data-i18n="categories.transfer"></option>
-          </select>
-          <select id="tx-filter-cat" onchange="resetAndRenderTxTable()">
-            <option value="all" data-i18n="tx.filter.allCats"></option>
-          </select>
-          <input type="date"   id="tx-filter-from"   onchange="resetAndRenderTxTable()" data-i18n-title="tx.col.date">
-          <input type="date"   id="tx-filter-to"     onchange="resetAndRenderTxTable()" data-i18n-title="tx.col.date">
-          <input type="search" id="tx-filter-search" oninput="resetAndRenderTxTable()"  data-i18n-placeholder="common.search">
-          <select id="tx-rows-per-page" onchange="onTxRowsPerPageChange()" style="width:auto">
-            <option value="10">10 / page</option>
-            <option value="20">20 / page</option>
-            <option value="50" selected>50 / page</option>
-            <option value="100">100 / page</option>
-          </select>
-          <button class="btn btn-sm btn-secondary" onclick="clearTxFilters()" data-i18n="common.clear"></button>
-          <label id="tx-converted-toggle-wrap" style="display:none;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--text2)">
-            <input type="checkbox" id="tx-show-converted" onchange="renderTxTable()">
-            <span id="tx-converted-label"></span>
-          </label>
-        </div>
+          <div class="filter-bar">
+            <select id="tx-filter-apt" onchange="resetAndRenderTxTable()">
+              <option value="all" data-i18n="tx.filter.allProperties"></option>
+            </select>
+            <select id="tx-filter-type" onchange="updateCategoryFilter(); resetAndRenderTxTable()">
+              <option value="all"      data-i18n="tx.filter.allTypes"></option>
+              <option value="income"   data-i18n="categories.income"></option>
+              <option value="expense"  data-i18n="categories.expense"></option>
+              <option value="deposit"  data-i18n="categories.deposit"></option>
+              <option value="transfer" data-i18n="categories.transfer"></option>
+            </select>
+            <select id="tx-filter-cat" onchange="resetAndRenderTxTable()">
+              <option value="all" data-i18n="tx.filter.allCats"></option>
+            </select>
+            <input type="date"   id="tx-filter-from"   onchange="resetAndRenderTxTable()" data-i18n-title="tx.col.date">
+            <input type="date"   id="tx-filter-to"     onchange="resetAndRenderTxTable()" data-i18n-title="tx.col.date">
+            <input type="search" id="tx-filter-search" oninput="resetAndRenderTxTable()"  data-i18n-placeholder="common.search">
+            <button class="btn btn-sm btn-secondary" onclick="clearTxFilters()" data-i18n="common.clear"></button>
+            <label id="tx-converted-toggle-wrap" style="display:none;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--text2)">
+              <input type="checkbox" id="tx-show-converted" onchange="renderTxTable()">
+              <span id="tx-converted-label"></span>
+            </label>
+          </div>
 
-        <div id="tx-pagination" style="display:none; gap:4px; align-items:center; flex-wrap:wrap; padding:6px 10px;"></div>
+          <div id="tx-pagination" style="display:none; gap:4px; align-items:center; flex-wrap:wrap; padding:4px 10px 6px;"></div>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr>
@@ -1036,25 +1032,18 @@ function renderDashboard() {
 const TxSort = { col: 'date', dir: 'desc' };
 const TxListState = { page: 1, limit: 50, total: 0, data: [] };
 
-// Keep #tx-pagination top offset in sync with the actual card-header height.
+// Keep --nav-h in sync with actual nav height so #tx-sticky-header stacks correctly.
 // Uses ResizeObserver so it adapts to zoom, font-size changes, and window resizes.
 function updateTxStickyOffsets() {
-  const nav    = document.querySelector('header');
-  const ch     = document.querySelector('#page-transactions .card-header');
-  if (!nav || !ch) return;
-  const navH   = nav.getBoundingClientRect().height;
-  const chH    = ch.getBoundingClientRect().height;
-  const root   = document.documentElement;
-  root.style.setProperty('--nav-h',    navH + 'px');
-  root.style.setProperty('--tx-pg-top', (navH + chH) + 'px');
+  const nav = document.querySelector('header');
+  if (!nav) return;
+  document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height + 'px');
 }
 
 const _txStickyObserver = new ResizeObserver(updateTxStickyOffsets);
 document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('header');
-  const ch  = document.querySelector('#page-transactions .card-header');
   if (nav) _txStickyObserver.observe(nav);
-  if (ch)  _txStickyObserver.observe(ch);
   updateTxStickyOffsets();
 });
 
@@ -1104,8 +1093,18 @@ function renderTxPagination() {
   if (!container) return;
   const { page, limit, total } = TxListState;
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  if (totalPages <= 1) { container.innerHTML = ''; container.style.display = 'none'; return; }
+
+  const rppOptions = [10, 20, 50, 100].map(n =>
+    `<option value="${n}"${n === limit ? ' selected' : ''}>${n} / page</option>`
+  ).join('');
+  const rppSelect = `<select id="tx-rows-per-page" onchange="onTxRowsPerPageChange()" style="width:auto">${rppOptions}</select>`;
+
   container.style.display = 'flex';
+
+  if (totalPages <= 1) {
+    container.innerHTML = rppSelect;
+    return;
+  }
 
   const pages = buildPageRange(page, totalPages);
   const btns = pages.map(p => {
@@ -1115,6 +1114,7 @@ function renderTxPagination() {
   });
 
   container.innerHTML = [
+    rppSelect,
     `<button class="btn btn-sm btn-secondary" ${page <= 1 ? 'disabled' : ''} onclick="goToTxPage(${page - 1})">&#8249;</button>`,
     ...btns,
     `<button class="btn btn-sm btn-secondary" ${page >= totalPages ? 'disabled' : ''} onclick="goToTxPage(${page + 1})">&#8250;</button>`,
