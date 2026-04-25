@@ -29,6 +29,7 @@ None
 - [x] S3: Frontend — add TxListState, rows-per-page dropdown, tx-pagination div; refactor renderTxTable() to async API-driven; add renderTxPagination/goToTxPage/buildPageRange helpers; update openTxModal tx lookup; update footer; add tx.footerPaged to strings.js.
 - [x] S4: Update epic doc status; bump version to 2.6.0; run tests; commit.
 - [x] S5: Polish — sticky pagination bar + column headers; footer shows "Transactions X to Y out of Z" range.
+- [x] S6: Polish — sticky card-header (top) and footer (bottom); pagination top offset adjusted to 104px.
 
 ---
 
@@ -116,3 +117,21 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
   - git_status:
      M AI_STATE.md
      M deploy.ps1
+
+- 2026-04-25 21:55:58 [lifecycle]
+  - branch: main
+  - last_commit: 310432f deploy: continue on step failure and report errors in summary
+
+- 2026-04-25 21:56:20 [lifecycle]
+  - branch: main
+  - last_commit: 310432f deploy: continue on step failure and report errors in summary
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-25 21:56:23 [lifecycle]
+  - branch: main
+  - last_commit: 310432f deploy: continue on step failure and report errors in summary
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md

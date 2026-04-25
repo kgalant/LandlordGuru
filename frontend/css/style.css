@@ -349,11 +349,29 @@ textarea { resize: vertical; min-height: 70px; }
 .import-paste-toggle     { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 0.75rem; }
 .import-paste-toggle a   { color: var(--accent); cursor: pointer; text-decoration: underline; }
 
-/* ── Sticky pagination bar + column headers (transactions) ── */
+/* ── Sticky card-header / pagination / footer (transactions) ── */
+/*
+  Sticky stack (top → bottom):
+    52px  — nav header
+    52px  — #page-transactions .card-header  (top: 52px)
+    ~44px — #tx-pagination                   (top: 104px; hidden when single page)
+  Column headers stick inside the table-wrap scroll container (top: 0).
+  #tx-footer sticks at the bottom of the viewport.
+*/
+
+#page-transactions .card-header {
+  position: sticky;
+  top: 52px;
+  z-index: 50;
+  background: var(--bg);
+  margin-bottom: 0.75rem;
+  padding-bottom: 10px;
+  border-bottom: 0.5px solid var(--border);
+}
 
 #tx-pagination {
   position: sticky;
-  top: 52px;
+  top: 104px;
   z-index: 30;
   background: var(--bg);
   border-bottom: 0.5px solid var(--border);
@@ -370,6 +388,14 @@ textarea { resize: vertical; min-height: 70px; }
   z-index: 20;
   background: var(--bg2);
   box-shadow: 0 1px 0 var(--border);
+}
+
+#tx-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 25;
+  background: var(--bg);
+  border-top: 0.5px solid var(--border);
 }
 
 /* ── Sticky import preview header + column headers ────────── */
