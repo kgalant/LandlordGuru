@@ -402,6 +402,7 @@ textarea { resize: vertical; min-height: 70px; }
 
 #tx-pagination select {
   appearance: none;
+  flex: 0 0 auto;
   background: transparent;
   border: none;
   font-size: inherit;
