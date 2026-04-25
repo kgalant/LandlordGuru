@@ -144,3 +144,10 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
   - changed_files: deploy.ps1
   - git_status:
      M deploy.ps1
+
+- 2026-04-25 22:31:37 [lifecycle]
+  - branch: main
+  - last_commit: 8b91275 F3-9 polish: pagination as text links, 12px, card-header left padding
+  - changed_files: deploy.ps1
+  - git_status:
+     M deploy.ps1
