@@ -159,6 +159,52 @@ Show transactions in pages so large datasets don't hit the API's default limit.
 
 ---
 
+### F3-12 Column management UI for transaction list `[MVP]`
+**Status:** Backlog
+
+A gear-icon button in the transaction list toolbar that opens a column management panel, allowing users to show/hide columns and save named views. Column visibility is coupled to filter bar visibility. Persisted via F1-11.
+
+**Column management panel (opened by gear button):**
+- Gear icon (⚙) button sits in the transaction list toolbar alongside existing filter controls
+- Clicking opens a modal/panel listing all available columns with a checkbox per column (visible/hidden)
+- Columns can be reordered by drag-and-drop (optional; may be deferred to a follow-up)
+- Two save actions:
+  - **Save** — overwrites the currently active named view with the new column selection
+  - **Save as new view** — prompts for a name and creates a new named view (calls F1-11 POST); new view becomes active
+- A dropdown at the top of the panel lists all saved views for this user; switching applies that view immediately and persists it as active
+- **Rename** and **Delete** actions on non-default named views
+- Closing the panel without saving discards unsaved changes
+
+**Column-filter coupling:**
+- Each column definition in the frontend column registry declares an optional `filterKey` — the ID of the filter control associated with that column
+- When a column is hidden, its associated filter control is removed from the filter bar and its value is cleared
+- When a column is made visible, its filter control reappears in the filter bar
+- This rule applies at initial page load (columns and filters both reflect the active saved view) and whenever the user changes the active view
+- **Forward-compatible:** adding a new column to the transaction data model requires registering it in the column registry with a `key`, `label`, `defaultVisible` flag, and optional `filterKey`; no other code changes are needed to participate in column management
+
+**Column registry (initial columns for `transactions` view):**
+
+| key | label | defaultVisible | filterKey |
+|-----|-------|---------------|-----------|
+| `date` | Date | true | `filter_date` |
+| `account` | Account | true | `filter_account` |
+| `type` | Type | true | `filter_type` |
+| `category` | Category | true | `filter_category` |
+| `description` | Description | true | — |
+| `amount` | Amount | true | — |
+| `currency` | Currency | true | — |
+| `source` | Source | false | — |
+| `reconciled` | Reconciled | false | `filter_reconciled` |
+
+**Persistence:**
+- On page load, calls `GET /api/user/view-configs/transactions`; applies the active view's column config
+- On save, calls `POST` or `PATCH /api/user/view-configs/transactions`
+- If the API returns no saved config, the synthetic default (all columns at `defaultVisible`) is applied without writing a row
+
+**Dependencies:** F1-11 (view config API), F3-2 (transaction list host)
+
+---
+
 ### F3-10 Transaction edit modal with source-field override tracking `[MVP]`
 **Status:** Backlog
 

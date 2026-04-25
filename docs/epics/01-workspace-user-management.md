@@ -326,6 +326,42 @@ Enhance F1-6 workspace settings with a currency selection dropdown that displays
 
 ---
 
+### F1-11 Per-user saved column views `[MVP]`
+**Status:** Backlog
+
+Infrastructure for persisting per-user, per-view column visibility and layout preferences, with support for multiple named saved views per view. Analogous to Salesforce list view management.
+
+**Data model:**
+- New table `user_view_configs`: `id`, `user_id`, `workspace_id`, `view_key` (varchar — e.g. `transactions`, `dashboard_transactions`), `name` (user-assigned label), `is_active` (boolean), `column_config` (JSONB: ordered array of `{ key, visible }` objects), `created_at`, `updated_at`
+- Exactly one row per `(user_id, workspace_id, view_key)` may have `is_active = true` at any time (enforced by the PATCH/activate endpoint, not a DB constraint)
+- Configs are user-scoped (not workspace-scoped); two users in the same workspace have independent view configs
+- `workspace_id` is stored for multi-workspace support and correct data isolation
+
+**Default behaviour:**
+- If no saved config exists for a `(user_id, workspace_id, view_key)`, the API returns a synthetic default (all columns visible, canonical order) without writing a DB row
+- A DB row is created only when the user explicitly saves or modifies a view
+
+**API:**
+- `GET /api/user/view-configs/:view_key` — returns all saved views for this user + view_key, each with `is_active`; returns synthetic default if none exist
+- `POST /api/user/view-configs/:view_key` — creates a named view; body: `{ name, columns: [{ key, visible }] }`; new view is not automatically activated
+- `PATCH /api/user/view-configs/:view_key/:id` — updates `name` or `columns`; use body `{ active: true }` to activate (deactivates all others for this user + view_key)
+- `DELETE /api/user/view-configs/:view_key/:id` — deletes the view; if it was the active view, activates the next available view (or reverts to synthetic default)
+- All endpoints require auth; `user_id` is injected from JWT; `workspace_id` from JWT; client never supplies either
+
+**Known view keys (initial):**
+- `transactions` — the main transaction list (see F3-12)
+- `dashboard_transactions` — the transactions summary on the dashboard (applied when dashboard is built)
+
+**Non-goals:**
+- Sharing saved views between users in the same workspace (future)
+- Workspace-level default view templates (future)
+
+**Dependencies:** F1-1 (auth — done)
+
+**Schema change:** New migration adding `user_view_configs` table.
+
+---
+
 ## Bugs
 
 None recorded.

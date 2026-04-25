@@ -33,7 +33,7 @@ None
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
 - Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up)
-- Backlog features: F3-8, F3-9, F3-10, F3-11, F5-9, F5-10, F5-11 (polish/UX, low priority)
+- Backlog features: F1-11, F3-8, F3-9, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
 
 Relevant epic docs:
 
@@ -155,3 +155,16 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
   - changed_files: .claude/settings.json
   - git_status:
      M .claude/settings.json
+
+- 2026-04-25 20:22:58 [lifecycle]
+  - branch: main
+  - last_commit: 5d95530 Allow Edit permission for ai_state_archive.json in project settings
+
+- 2026-04-25 20:27:41 [lifecycle]
+  - branch: main
+  - last_commit: 5d95530 Allow Edit permission for ai_state_archive.json in project settings
+  - changed_files: AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/03-transaction-management.md
+  - git_status:
+     M AI_STATE.md
+     M docs/epics/01-workspace-user-management.md
+     M docs/epics/03-transaction-management.md
