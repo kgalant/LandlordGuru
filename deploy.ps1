@@ -1,48 +1,87 @@
 # Deploy script: push locally, pull on remote, restart PM2
 # Usage: .\deploy.ps1
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
+
+$stepErrors = @()
 
 Write-Host "=== LandlordGuru Deploy Script ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Step 1: Push locally
-Write-Host "📤 Pushing to origin..." -ForegroundColor Yellow
+Write-Host "[1/4] Pushing to origin..." -ForegroundColor Yellow
 try {
     git push origin main
-    Write-Host "✅ Push successful" -ForegroundColor Green
+    if ($LASTEXITCODE -ne 0) { throw "exit code $LASTEXITCODE" }
+    Write-Host "  -> Push successful" -ForegroundColor Green
 } catch {
-    Write-Host "❌ Git push failed: $_" -ForegroundColor Red
-    exit 1
+    Write-Host "  -> Git push failed: $_" -ForegroundColor Red
+    $stepErrors += "Step 1 (git push): $_"
 }
 Write-Host ""
 
-# Step 2: SSH into remote, pull, restart
-Write-Host "🔄 Connecting to remote server (kim@homedev)..." -ForegroundColor Yellow
+# Steps 2-4: SSH into remote, pull, migrate, restart
+# Each remote step records its exit code; a sentinel line carries them back.
+Write-Host "[2-4] Connecting to remote server (kim@homedev)..." -ForegroundColor Yellow
 
-$remoteCommands = @"
+$remoteCommands = @'
+set +e
 source ~/.nvm/nvm.sh
+
 cd ~/dev/landlordguru
-echo '📥 Pulling latest changes...'
+echo "[2/4] Pulling latest changes..."
 git pull origin main
-echo '🗄️  Running database migrations...'
+GIT_PULL_EXIT=$?
+
+echo "[3/4] Running database migrations..."
 cd backend
 npm run migrate
-echo '🔄 Restarting PM2...'
-pm2 restart landlordguru
-echo '✅ Remote server updated and restarted'
-"@
+MIGRATE_EXIT=$?
 
-try {
-    $remoteCommands | ssh kim@homedev bash -l
-    if ($LASTEXITCODE -ne 0) {
-        throw "Remote operations failed with exit code $LASTEXITCODE"
-    }
-} catch {
-    Write-Host "❌ Remote operations failed: $_" -ForegroundColor Red
-    exit 1
+echo "[4/4] Restarting PM2..."
+pm2 restart landlordguru
+PM2_EXIT=$?
+
+printf '\n__DEPLOY_RESULTS__ git_pull=%d migrate=%d pm2=%d\n' $GIT_PULL_EXIT $MIGRATE_EXIT $PM2_EXIT
+'@
+
+$remoteOutput = $remoteCommands | ssh kim@homedev bash -l 2>&1
+$sshExit = $LASTEXITCODE
+
+# Print remote output, hiding the internal sentinel line
+$remoteOutput | Where-Object { $_ -notmatch '__DEPLOY_RESULTS__' } | ForEach-Object { Write-Host "  $_" }
+Write-Host ""
+
+# Parse per-step exit codes from sentinel
+$resultsLine = $remoteOutput | Where-Object { $_ -match '__DEPLOY_RESULTS__' } | Select-Object -Last 1
+if ($resultsLine -match 'git_pull=(\d+) migrate=(\d+) pm2=(\d+)') {
+    $gitPullExit = [int]$Matches[1]
+    $migrateExit = [int]$Matches[2]
+    $pm2Exit     = [int]$Matches[3]
+
+    if ($gitPullExit -ne 0) { $stepErrors += "Step 2 (git pull on remote): exit code $gitPullExit" }
+    else                     { Write-Host "  -> Git pull successful" -ForegroundColor Green }
+
+    if ($migrateExit -ne 0) { $stepErrors += "Step 3 (database migrations): exit code $migrateExit" }
+    else                    { Write-Host "  -> Migrations successful" -ForegroundColor Green }
+
+    if ($pm2Exit -ne 0) { $stepErrors += "Step 4 (PM2 restart): exit code $pm2Exit" }
+    else                { Write-Host "  -> PM2 restart successful" -ForegroundColor Green }
+} else {
+    $stepErrors += "Steps 2-4 (remote): SSH failed or no results received (SSH exit code $sshExit)"
 }
 
 Write-Host ""
-Write-Host "🚀 Deployment complete!" -ForegroundColor Green
-Write-Host "Your changes are live on the dev server." -ForegroundColor Cyan
+
+# Summary
+if ($stepErrors.Count -eq 0) {
+    Write-Host "Deployment complete — all steps succeeded." -ForegroundColor Green
+    Write-Host "Your changes are live on the dev server." -ForegroundColor Cyan
+} else {
+    Write-Host "Deployment finished with $($stepErrors.Count) error(s):" -ForegroundColor Yellow
+    foreach ($err in $stepErrors) {
+        Write-Host "  x $err" -ForegroundColor Red
+    }
+    Write-Host ""
+    Write-Host "Some steps did not complete. Review the output above for details." -ForegroundColor Yellow
+}

@@ -78,6 +78,7 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
 - `frontend/css/style.css`
 - `docs/epics/03-transaction-management.md`
 - `version.json`
+- `deploy.ps1`
 
 ---
 
@@ -88,3 +89,30 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
   - last_commit: e9f00b1
   - changed_files: AI_STATE.md, frontend/index.html, frontend/js/strings.js, frontend/css/style.css
   - git_status: M AI_STATE.md, M frontend/index.html, M frontend/js/strings.js, M frontend/css/style.css
+
+- 2026-04-25 21:50:57 [lifecycle]
+  - branch: main
+  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
+
+- 2026-04-25 21:52:11 [lifecycle]
+  - branch: main
+  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+
+- 2026-04-25 21:53:56 [lifecycle]
+  - branch: main
+  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
+  - changed_files: AI_STATE.md, deploy.ps1
+  - git_status:
+     M AI_STATE.md
+     M deploy.ps1
+
+- 2026-04-25 21:55:15 [lifecycle]
+  - branch: main
+  - last_commit: db83e96 F3-9 polish: sticky pagination + column headers, range footer text
+  - changed_files: AI_STATE.md, deploy.ps1
+  - git_status:
+     M AI_STATE.md
+     M deploy.ps1
