@@ -46,10 +46,15 @@ const Api = (() => {
   async function getTransactions(filters = {}) {
     let path = '/transactions';
     const params = new URLSearchParams();
-    if (filters.account_id) params.append('account_id', filters.account_id);
-    if (filters.type) params.append('type', filters.type);
-    if (filters.from) params.append('from', filters.from);
-    if (filters.to) params.append('to', filters.to);
+    if (filters.account_id)  params.append('account_id',  filters.account_id);
+    if (filters.property_id) params.append('property_id', filters.property_id);
+    if (filters.type)        params.append('type',        filters.type);
+    if (filters.category)    params.append('category',    filters.category);
+    if (filters.from)        params.append('from',        filters.from);
+    if (filters.to)          params.append('to',          filters.to);
+    if (filters.search)      params.append('search',      filters.search);
+    if (filters.page)        params.append('page',        filters.page);
+    if (filters.limit)       params.append('limit',       filters.limit);
     if (params.toString()) path += '?' + params.toString();
     return request('GET', path);
   }

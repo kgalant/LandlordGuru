@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: bug
+- Type: feature
 - Epic: E3 Transaction Management
-- ID: B3-2-2
-- Title: Bulk delete button stays visible after re-render, then does nothing
-- Short summary: `renderTxTable()` replaces tbody without calling `onTxRowSelect()`, leaving the bulk bar stale. Fix: call `onTxRowSelect()` at end of `renderTxTable()`; also make the empty-selection path show a toast.
+- ID: F3-9
+- Title: Pagination in transaction list
+- Short summary: Add server-driven pagination to the transaction list — page control bar, rows-per-page dropdown, API page/limit params, total count from backend, footer shows N of M.
 
 ---
 
@@ -24,7 +24,10 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Log B3-2-2 in Epic 3 doc; fix renderTxTable to call onTxRowSelect(); add noneSelected i18n key; bump version; commit
+- [x] S1: Audit backend GET /api/transactions — confirm page/limit/total/search support. Finding: total missing, search missing, api.js missing category/page/limit/search params, renderTxTable is fully client-side.
+- [x] S2: Backend — add search param + COUNT query + return total in response; update api.js getTransactions(); add/update backend tests.
+- [x] S3: Frontend — add TxListState, rows-per-page dropdown, tx-pagination div; refactor renderTxTable() to async API-driven; add renderTxPagination/goToTxPage/buildPageRange helpers; update openTxModal tx lookup; update footer; add tx.footerPaged to strings.js.
+- [x] S4: Update epic doc status; bump version to 2.6.0; run tests; commit.
 
 ---
 
@@ -58,113 +61,43 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
   - Manual browser test: bulk delete in transactions tab
 
 - Last result:
-  - Date/time: 2026-04-23 12:42:00
-  - Outcome: 157/157 tests passing (npm test --forceExit). F1-9a complete.
+  - Date/time: 2026-04-25 13:05:00
+  - Outcome: 158/158 tests passing (npm test --forceExit on homedev server). F3-9 complete.
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `.claude/ai_state_archive.json`
-- `.claude/settings.json`
-- `docs/epics/03-transaction-management.md`
-- `docs/epics/04-reporting-analytics.md`
+- `backend/src/routes/transactions.js`
+- `frontend/js/api.js`
+- `backend/tests/transactions.test.js`
 - `frontend/index.html`
 - `frontend/js/strings.js`
+- `docs/epics/03-transaction-management.md`
 - `version.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-25 [B3-2-2 complete — committing]
+- 2026-04-25 13:05:00 [F3-9 complete]
   - branch: main
-  - last_commit: be65361 F4-9: Year quick-select in reports filter (v2.5.0 → v2.5.1)
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/index.html, frontend/js/strings.js, version.json
-  - git_status: M .claude/ai_state_archive.json, M .claude/settings.json, M AI_STATE.md, M docs/epics/03-transaction-management.md, M frontend/index.html, M frontend/js/strings.js, M version.json
+  - last_commit: 9520755
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json, backend/src/routes/transactions.js, frontend/js/api.js, backend/tests/transactions.test.js, frontend/index.html, frontend/js/strings.js, docs/epics/03-transaction-management.md, version.json
+  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json, M backend/src/routes/transactions.js, M frontend/js/api.js, M backend/tests/transactions.test.js, M frontend/index.html, M frontend/js/strings.js, M docs/epics/03-transaction-management.md, M version.json
 
-- 2026-04-25 17:29:05 [lifecycle]
+- 2026-04-25 21:10:43 [lifecycle]
   - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json
+  - last_commit: 9520755 Backlog: add F1-11 saved column views infrastructure, F3-12 column management UI
+  - changed_files: .claude/ai_state_archive.json, AI_STATE.md, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/epics/03-transaction-management.md, frontend/index.html, frontend/js/api.js, frontend/js/strings.js, version.json
   - git_status:
-     M .claude/settings.json
-
-- 2026-04-25 20:15:52 [lifecycle]
-  - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json, AI_STATE.md
-  - git_status:
-     M .claude/settings.json
+     M .claude/ai_state_archive.json
      M AI_STATE.md
-
-- 2026-04-25 20:15:53 [lifecycle]
-  - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json, AI_STATE.md
-  - git_status:
-     M .claude/settings.json
-     M AI_STATE.md
-
-- 2026-04-25 20:15:54 [lifecycle]
-  - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json, AI_STATE.md
-  - git_status:
-     M .claude/settings.json
-     M AI_STATE.md
-
-- 2026-04-25 20:15:55 [lifecycle]
-  - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json, AI_STATE.md
-  - git_status:
-     M .claude/settings.json
-     M AI_STATE.md
-
-- 2026-04-25 20:16:00 [lifecycle]
-  - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json, AI_STATE.md
-  - git_status:
-     M .claude/settings.json
-     M AI_STATE.md
-
-- 2026-04-25 20:19:39 [lifecycle]
-  - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json, AI_STATE.md, docs/epics/03-transaction-management.md
-  - git_status:
-     M .claude/settings.json
-     M AI_STATE.md
+     M backend/src/routes/transactions.js
+     M backend/tests/transactions.test.js
      M docs/epics/03-transaction-management.md
-
-- 2026-04-25 20:20:46 [lifecycle]
-  - branch: main
-  - last_commit: bcf5a8a B3-2-2: Fix bulk delete ΓÇö sync bar after re-render, toast on empty selection (v2.5.1 ΓåÆ v2.5.2)
-  - changed_files: .claude/settings.json, AI_STATE.md, docs/epics/03-transaction-management.md
-  - git_status:
-     M .claude/settings.json
-     M AI_STATE.md
-     M docs/epics/03-transaction-management.md
-
-- 2026-04-25 20:21:35 [lifecycle]
-  - branch: main
-  - last_commit: 3d84e23 Backlog: add F3-10 tx edit modal + source-field override tracking, F3-11 year filter
-  - changed_files: .claude/settings.json
-  - git_status:
-     M .claude/settings.json
-
-- 2026-04-25 20:22:58 [lifecycle]
-  - branch: main
-  - last_commit: 5d95530 Allow Edit permission for ai_state_archive.json in project settings
-
-- 2026-04-25 20:27:41 [lifecycle]
-  - branch: main
-  - last_commit: 5d95530 Allow Edit permission for ai_state_archive.json in project settings
-  - changed_files: AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/epics/03-transaction-management.md
-  - git_status:
-     M AI_STATE.md
-     M docs/epics/01-workspace-user-management.md
-     M docs/epics/03-transaction-management.md
+     M frontend/index.html
+     M frontend/js/api.js
+     M frontend/js/strings.js
+     M version.json

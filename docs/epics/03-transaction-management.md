@@ -144,7 +144,7 @@ Keep column headers visible while scrolling and allow sorting by any column.
 ---
 
 ### F3-9 Pagination in transaction list `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Show transactions in pages so large datasets don't hit the API's default limit.
 

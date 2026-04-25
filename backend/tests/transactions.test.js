@@ -142,7 +142,7 @@ describe('POST /api/transactions', () => {
 // GET /api/transactions
 // ---------------------------------------------------------------------------
 describe('GET /api/transactions', () => {
-  it('returns paginated response with data, page, limit', async () => {
+  it('returns paginated response with data, page, limit, total', async () => {
     await request(app)
       .post('/api/transactions')
       .set('Authorization', `Bearer ${token}`)
@@ -162,12 +162,13 @@ describe('GET /api/transactions', () => {
     expect(res.body.data.length).toBe(2);
     expect(res.body.page).toBe(1);
     expect(res.body.limit).toBe(50);
+    expect(res.body.total).toBe(2);
     expect(res.body.data[0].date).toBe('2026-03-01');
     expect(res.body.data[0].hasOwnProperty('property_id')).toBe(true);
     expect(res.body.data[1].date).toBe('2026-01-01');
   });
 
-  it('supports page and limit params', async () => {
+  it('supports page and limit params; total reflects full count', async () => {
     for (let i = 1; i <= 3; i++) {
       await request(app)
         .post('/api/transactions')
@@ -183,6 +184,7 @@ describe('GET /api/transactions', () => {
     expect(res.body.data.length).toBe(1);
     expect(res.body.page).toBe(2);
     expect(res.body.limit).toBe(2);
+    expect(res.body.total).toBe(3);
   });
 
   it('filters by type', async () => {
@@ -202,6 +204,7 @@ describe('GET /api/transactions', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
+    expect(res.body.total).toBe(1);
     expect(res.body.data[0].category).toBe('insurance');
   });
 
@@ -222,6 +225,7 @@ describe('GET /api/transactions', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
+    expect(res.body.total).toBe(1);
     expect(res.body.data[0].category).toBe('heating_aconto');
   });
 
@@ -242,7 +246,29 @@ describe('GET /api/transactions', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
+    expect(res.body.total).toBe(1);
     expect(res.body.data[0].date).toBe('2026-06-10');
+  });
+
+  it('filters by search term (case-insensitive description match)', async () => {
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, description: 'Monthly rent payment' });
+
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, description: 'Water utility bill' });
+
+    const res = await request(app)
+      .get('/api/transactions?search=rent')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.total).toBe(1);
+    expect(res.body.data[0].description).toBe('Monthly rent payment');
   });
 
   it('returns 401 without a token', async () => {

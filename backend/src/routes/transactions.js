@@ -108,40 +108,50 @@ async function validateFields(body, workspaceId, requireAll) {
 // GET /api/transactions
 // Returns transactions for the workspace, newest first.
 // Each transaction includes property_id (via account_properties join).
-// Optional query params: account_id, property_id, type, category, from, to, page, limit
+// Optional query params: account_id, property_id, type, category, from, to, search, page, limit
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { account_id, property_id, type, category, from, to } = req.query;
+    const { account_id, property_id, type, category, from, to, search } = req.query;
     let page = parseInt(req.query.page, 10) || 1;
     let limit = parseInt(req.query.limit, 10) || DEFAULT_PAGE_LIMIT;
     if (page < 1) page = 1;
     if (limit < 1 || limit > MAX_PAGE_LIMIT) limit = DEFAULT_PAGE_LIMIT;
 
     await req.logger.info('transaction.list.started', {
-      filters: { account_id: account_id || null, property_id: property_id || null, type: type || null, category: category || null, from: from || null, to: to || null },
+      filters: { account_id: account_id || null, property_id: property_id || null, type: type || null, category: category || null, from: from || null, to: to || null, search: search || null },
       page,
       limit,
     });
 
-    let query = db('transactions as t')
+    function applyFilters(q) {
+      if (account_id) q = q.where('t.account_id', account_id);
+      if (property_id) q = q.where('ap.property_id', property_id);
+      if (type) q = q.where('t.type', type);
+      if (category) q = q.where('t.category', category);
+      if (from) q = q.where('t.date', '>=', from);
+      if (to) q = q.where('t.date', '<=', to);
+      if (search) q = q.whereILike('t.description', `%${search}%`);
+      return q;
+    }
+
+    const baseQuery = db('transactions as t')
       .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
-      .where('t.workspace_id', req.workspace_id)
+      .where('t.workspace_id', req.workspace_id);
+
+    const [{ count: totalCount }] = await applyFilters(baseQuery.clone()).count('t.id as count');
+
+    const dataQuery = applyFilters(baseQuery.clone())
       .select('t.*', 'ap.property_id')
       .orderBy('t.date', 'desc')
-      .orderBy('t.created_at', 'desc');
+      .orderBy('t.created_at', 'desc')
+      .limit(limit)
+      .offset((page - 1) * limit);
 
-    if (account_id) query = query.where('t.account_id', account_id);
-    if (property_id) query = query.where('ap.property_id', property_id);
-    if (type) query = query.where('t.type', type);
-    if (category) query = query.where('t.category', category);
-    if (from) query = query.where('t.date', '>=', from);
-    if (to) query = query.where('t.date', '<=', to);
+    const transactions = await dataQuery;
+    const total = parseInt(totalCount, 10);
 
-    const offset = (page - 1) * limit;
-    const transactions = await query.limit(limit).offset(offset);
-
-    await req.logger.info('transaction.list.success', { transaction_count: transactions.length, page, limit });
-    res.json({ data: transactions.map(formatDate), page, limit });
+    await req.logger.info('transaction.list.success', { transaction_count: transactions.length, total, page, limit });
+    res.json({ data: transactions.map(formatDate), page, limit, total });
   } catch (err) {
     await req.logger.error('transaction.list.failed', { error: err.message });
     console.error('GET /api/transactions error:', err.message);
