@@ -1036,6 +1036,28 @@ function renderDashboard() {
 const TxSort = { col: 'date', dir: 'desc' };
 const TxListState = { page: 1, limit: 50, total: 0, data: [] };
 
+// Keep #tx-pagination top offset in sync with the actual card-header height.
+// Uses ResizeObserver so it adapts to zoom, font-size changes, and window resizes.
+function updateTxStickyOffsets() {
+  const nav    = document.querySelector('header');
+  const ch     = document.querySelector('#page-transactions .card-header');
+  if (!nav || !ch) return;
+  const navH   = nav.getBoundingClientRect().height;
+  const chH    = ch.getBoundingClientRect().height;
+  const root   = document.documentElement;
+  root.style.setProperty('--nav-h',    navH + 'px');
+  root.style.setProperty('--tx-pg-top', (navH + chH) + 'px');
+}
+
+const _txStickyObserver = new ResizeObserver(updateTxStickyOffsets);
+document.addEventListener('DOMContentLoaded', () => {
+  const nav = document.querySelector('header');
+  const ch  = document.querySelector('#page-transactions .card-header');
+  if (nav) _txStickyObserver.observe(nav);
+  if (ch)  _txStickyObserver.observe(ch);
+  updateTxStickyOffsets();
+});
+
 function setTxSort(col) {
   if (TxSort.col === col) {
     TxSort.dir = TxSort.dir === 'desc' ? 'asc' : 'desc';

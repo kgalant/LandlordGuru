@@ -352,16 +352,16 @@ textarea { resize: vertical; min-height: 70px; }
 /* ── Sticky card-header / pagination / footer (transactions) ── */
 /*
   Sticky stack (top → bottom):
-    52px  — nav header
-    52px  — #page-transactions .card-header  (top: 52px)
-    ~44px — #tx-pagination                   (top: 104px; hidden when single page)
+    52px                — nav header
+    var(--nav-h, 52px)  — #page-transactions .card-header  (top: var(--nav-h))
+    var(--tx-pg-top)    — #tx-pagination (JS-measured; updates on resize)
   Column headers stick inside the table-wrap scroll container (top: 0).
   #tx-footer sticks at the bottom of the viewport.
 */
 
 #page-transactions .card-header {
   position: sticky;
-  top: 52px;
+  top: var(--nav-h, 52px);
   z-index: 50;
   background: var(--bg);
   margin-bottom: 0.75rem;
@@ -371,7 +371,7 @@ textarea { resize: vertical; min-height: 70px; }
 
 #tx-pagination {
   position: sticky;
-  top: 104px;
+  top: var(--tx-pg-top, 104px);
   z-index: 30;
   background: var(--bg);
   border-bottom: 0.5px solid var(--border);

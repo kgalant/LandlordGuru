@@ -135,3 +135,15 @@ Confirm next feature from MVP priority list (consult `docs/roadmap.md`) and set 
   - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
+
+- 2026-04-25 21:56:58 [lifecycle]
+  - branch: main
+  - last_commit: 313e043 F3-9 polish: sticky card-header (top) and footer (bottom)
+
+- 2026-04-25 22:01:58 [lifecycle]
+  - branch: main
+  - last_commit: 313e043 F3-9 polish: sticky card-header (top) and footer (bottom)
+  - changed_files: AI_STATE.md, frontend/css/style.css
+  - git_status:
+     M AI_STATE.md
+     M frontend/css/style.css
