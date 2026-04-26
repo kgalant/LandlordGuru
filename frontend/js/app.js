@@ -23,6 +23,7 @@ let State = {
 // ── Boot ──────────────────────────────────────────────────
 
 async function boot() {
+  if (!window.AUTH_TOKEN) return;
   setLoading(true, t('status.connecting'));
   try {
     // v2 mode: authenticated via JWT — use backend API
