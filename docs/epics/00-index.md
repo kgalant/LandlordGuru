@@ -8,6 +8,7 @@
 | E4 | [Reporting and Analytics](04-reporting-analytics.md) | Planned | Yes |
 | E5 | [Integrations and Data Import](05-integrations-data-import.md) | Partially done (frontend) | Yes |
 | E6 | [Architecture and Backend](06-architecture-backend.md) | In progress | No |
+| E7 | [Frontend Architecture](07-frontend-architecture.md) | Planned | No |
 
 **For the recommended MVP implementation order, see [`../roadmap.md`](../roadmap.md).**
 

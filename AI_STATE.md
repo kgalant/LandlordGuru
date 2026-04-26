@@ -9,27 +9,30 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: feature
-- Epic: E5 Integrations and Data Import
-- ID: F5-11
-- Title: Highlight missing required notes in import preview
-- Short summary: Visually flag notes inputs red when category is `other_expense` and notes are empty; block import submission until all such rows are filled.
+- Epic: E7 Frontend Architecture
+- ID: F7-1
+- Title: DataTable component — core build
+- Short summary: Create `frontend/js/datatable.js` and `frontend/css/datatable.css` — the standalone reusable DataTable component with sticky layout, sorting, filtering, pagination, bulk actions, and column visibility. No table migrations in this step.
 
 ---
 
 ## Previous focus
 
-- Type: feature
-- Epic: E6 Architecture
-- ID: F6-6
-- Title: Frontend debug panel
-- Short summary: Near-invisible version label (bottom-right) toggling a debug panel with frontend/backend version, environment, auth user, token TTL, last sync, and API health. GET /api/version added. GIT_COMMIT injected by deploy scripts.
-- State: done
+None.
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] F5-11-1: Red-highlight notes input in real time when category is `other_expense` + notes empty; block "Next: Review →" with toast if any active row still fails that check.
+- [ ] F7-1-1: Scaffold `datatable.css` (sticky flexbox layout, base table styles) and `datatable.js` (module skeleton, `DataTable.create()` entry point); wire up `<link>` in `index.html`
+- [ ] F7-1-2: Render header bar (title, action buttons, ⚙ column-visibility toggle placeholder)
+- [ ] F7-1-3: Render filter bar (per-column filter controls; hide entire bar when no filters configured)
+- [ ] F7-1-4: Render column headers with sort indicators; handle click-to-sort, track sort state internally
+- [ ] F7-1-5: Render scrollable body via `renderRow` callback; pass `visibleCols` correctly
+- [ ] F7-1-6: Render sticky footer with pagination controls and rows-per-page dropdown; track page state internally
+- [ ] F7-1-7: Implement bulk-actions bar (checkbox column, bulk action buttons)
+- [ ] F7-1-8: Implement column visibility (⚙ dropdown, localStorage persistence, hide column + its filter + reset filter value)
+- [ ] F7-1-9: Expose `table.refresh()` and `table.reset()` on returned instance; smoke-test all config combinations
 
 ---
 
@@ -41,6 +44,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 - Backlog chores: F6-7 (consolidate version numbering — three files, two are authoritative, root version.json appears unused)
 - Backlog features: F1-11, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
 - Next MVP candidates (Wave 3): F2-2, F2-6, F2-7
+- Frontend architecture: F7-1 through F7-5 (DataTable component + migrations)
 
 Relevant epic docs:
 
@@ -50,12 +54,13 @@ Relevant epic docs:
 - `docs/epics/04-reporting-analytics.md`         (E4)
 - `docs/epics/05-integrations-data-import.md`    (E5)
 - `docs/epics/06-architecture-backend.md`        (E6)
+- `docs/epics/07-frontend-architecture.md`       (E7)
 
 ---
 
 ## Next step
 
-Deploy to homedev and smoke-test: verify red highlight appears on `other_expense` rows with empty notes, clears on fill/category change, and "Next: Review →" is blocked until all notes are filled.
+Start F7-1-1: create `frontend/css/datatable.css` with the sticky flexbox layout skeleton, create `frontend/js/datatable.js` with the `DataTable.create()` module shell, and add the `<link>` tag in `index.html`.
 
 ---
 
@@ -74,17 +79,15 @@ Deploy to homedev and smoke-test: verify red highlight appears on `other_expense
 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
-- `frontend/js/app.js`
-- `frontend/js/strings.js`
-- `frontend/version.json`
-- `docs/epics/06-architecture-backend.md`
+- `docs/epics/07-frontend-architecture.md`
+- `docs/epics/00-index.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-26 [F5-11 done — committed c5540df; F6-7 added to backlog 3be0e88]
+- 2026-04-26 [F7-1 set as current focus]
   - branch: main
-  - last_commit: 3be0e88
-  - changed_files: frontend/js/app.js, frontend/js/strings.js, frontend/version.json, docs/epics/06-architecture-backend.md, AI_STATE.md, .claude/ai_state_archive.json
+  - last_commit: e7caa26
+  - changed_files: docs/epics/07-frontend-architecture.md, docs/epics/00-index.md, AI_STATE.md, .claude/ai_state_archive.json
   - git_status: clean
