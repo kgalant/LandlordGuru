@@ -695,8 +695,15 @@ function _syncRowDOM(j, field, value) {
 function _applyRowStyle(i) {
   const tr = document.querySelector('tr[data-row="' + i + '"]');
   if (!tr) return;
-  if (State.importRows[i]._ignored) tr.classList.add('preview-row-ignored');
-  else                               tr.classList.remove('preview-row-ignored');
+  const row = State.importRows[i];
+  if (row._ignored) tr.classList.add('preview-row-ignored');
+  else              tr.classList.remove('preview-row-ignored');
+
+  const notesEl = document.getElementById('row-notes-' + i);
+  if (notesEl) {
+    const needsNote = !row._ignored && row.category === 'other_expense' && !(row.notes || '').trim();
+    notesEl.style.background = needsNote ? 'var(--error-bg, #ffeaea)' : '';
+  }
 }
 
 // ── Import file / paste toggle ────────────────────────────
@@ -947,7 +954,7 @@ function runImportPreview() {
       <td style="max-width:160px;font-size:12px">${row.description}</td>
       <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"><option value="">—</option>${propOpts}</select></td>
       <td>${matchTag}<select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)">${catOpts}</select></td>
-      <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px" placeholder="notes…" value="${row.notes || ''}" oninput="onRowFieldChange(${i},'notes',this.value)"></td>
+      <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : ''}" placeholder="notes…" value="${row.notes || ''}" oninput="onRowFieldChange(${i},'notes',this.value)"></td>
       <td class="amount-cell ${amtCls}">${amtSign}${row.amount.toLocaleString()} ${result.currency || ''}</td>
       <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"></td>
       <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"></td>
@@ -976,6 +983,9 @@ function runImportPreview() {
 function goToStaticPreview() {
   const activeRows = State.importRows.filter(r => !r._ignored);
   if (!activeRows.length) { toast(t('import.toast.noActiveRows'), 'error'); return; }
+
+  const missingNotes = activeRows.filter(r => r.category === 'other_expense' && !(r.notes || '').trim());
+  if (missingNotes.length) { toast(t('import.toast.notesRequired', { count: missingNotes.length }), 'error'); return; }
 
   const profileKey  = document.getElementById('import-profile').value;
   const hasToStore  = activeRows.some(r => r._storeMapping);
