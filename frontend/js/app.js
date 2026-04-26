@@ -42,7 +42,7 @@ async function refreshAll() {
     // v2 mode: data from backend API
     const [props, txs, rules, wsSettings, rates] = await Promise.all([
       Api.getProperties(),
-      Api.getTransactions(),
+      Api.getTransactions({ limit: 10000 }),
       Api.getRules(),
       Api.getWorkspaceSettings(),
       Api.getCurrencyRates(),
