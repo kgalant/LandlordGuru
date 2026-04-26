@@ -19,8 +19,8 @@ Start these three in parallel once F1-6 is complete. All depend only on F1-6.
 | Priority | Feature | Epic | Status | Notes |
 |----------|---------|------|--------|-------|
 | **1** | **F2-1** Property CRUD | E2 | Done | Highest priority — unblocks F3-1 (Transaction CRUD). |
-| **2** | **F2-4** Account CRUD | E2 | Planned | Unblocks account management UI. F2-3 (Account schema) is complete. |
-| **3** | **F2-9** Currency rate management | E2 | Planned | Required by F3-1 for multi-currency transactions. Can be parallel to F2-1. |
+| **2** | **F2-4** Account CRUD | E2 | Done | Unblocks account management UI. F2-3 (Account schema) is complete. |
+| **3** | **F2-9** Currency rate management | E2 | Done | Required by F3-1 for multi-currency transactions. Can be parallel to F2-1. |
 
 ---
 
@@ -40,7 +40,7 @@ Start these after their dependencies complete.
 
 | Feature | Epic | Depends On | Status | Notes |
 |---------|------|-----------|--------|-------|
-| **F3-1** Transaction CRUD API | E3 | F2-1, F2-9 | Planned | ⭐ Core user feature. Backend REST API for creating, reading, updating transactions. |
+| **F3-1** Transaction CRUD API | E3 | F2-1, F2-9 | Done | ⭐ Core user feature. Backend REST API for creating, reading, updating transactions. |
 
 ---
 
@@ -52,6 +52,7 @@ Start these after F3-1 ships. Can be done in parallel.
 |---------|------|-----------|--------|-------|
 | **F3-2** Transaction list UI | E3 | F3-1 | Done | Frontend view with filtering, sorting, bulk select. |
 | **F3-3** Category validation | E3 | F3-1 | Done | Backend validation for category taxonomy (income, expense, etc.). |
+| **F5-3** Auto-categorisation rules backend | E5 | F3-1 | Done | Rules API (GET/POST/PATCH/DELETE /api/rules); client-side matching already implemented. |
 | **F3-6** Reconciliation marking | E3 | F3-1 | Planned | Mark transactions as verified against bank statements. |
 | **F1-9a** Transaction category management | E1 | F1-6, F3-3 | Planned | Workspace owners can add custom categories. Uses generic `workspace_enum_values` table — forward-compatible with F1-9. F3-3 validation becomes dynamic (queries DB). |
 

@@ -59,7 +59,7 @@ Named presets for known bank export formats to reduce manual column mapping.
 ---
 
 ### F5-3 Auto-categorisation rules `[MVP]`
-**Status:** Planned (backend)
+**Status:** Done (backend)
 
 Apply saved rules to automatically assign category and property to imported rows.
 
