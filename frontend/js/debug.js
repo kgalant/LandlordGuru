@@ -16,7 +16,9 @@
 //    Debug.addTransport(fn)   // fn receives each entry object
 // ============================================================
 
-const Debug = (() => {
+import { CONFIG } from '../config.js';
+
+export const Debug = (() => {
 
   const LEVELS   = { error: 2, warn: 1, info: 0 };
   const COLORS   = { error: '#a32020', warn: '#7a5200', info: '#5a5a55' };
@@ -81,7 +83,7 @@ const Debug = (() => {
     add('App', 'Build date', _ver.date,         'info');
     add('App', 'Page',       location.pathname, 'info');
 
-    if (typeof CONFIG !== 'undefined') {
+    if (CONFIG) {
       add('Config', 'Spreadsheet ID',  CONFIG.SPREADSHEET_ID,       'info');
       add('Config', 'Service account', CONFIG.SERVICE_ACCOUNT_EMAIL, 'info');
       add('Config', 'Key URL',         CONFIG.KEY_FETCHER_URL,       'info');

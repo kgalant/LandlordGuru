@@ -4,7 +4,7 @@
 //  Throws on non-2xx responses.
 // ============================================================
 
-const Api = (() => {
+export const Api = (() => {
 
   async function request(method, path, body) {
     const opts = {

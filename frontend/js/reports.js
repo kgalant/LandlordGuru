@@ -4,7 +4,10 @@
 //  All functions are pure — they take transactions array + params.
 // ============================================================
 
-const Reports = (() => {
+import { CONFIG, CATEGORIES } from '../config.js';
+import { t } from './strings.js';
+
+export const Reports = (() => {
 
   // ── Filtering ─────────────────────────────────────────────
 

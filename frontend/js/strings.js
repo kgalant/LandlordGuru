@@ -19,7 +19,7 @@
 //    I18n.setLang('da')                    — switch language
 // ============================================================
 
-const I18n = (() => {
+export const I18n = (() => {
 
   // ── Hardcoded English defaults ────────────────────────────
 
@@ -432,4 +432,4 @@ const I18n = (() => {
 })();
 
 // Global shorthand — safe to call before initStrings(); falls back to hardcoded defaults
-function t(key, vars) { return I18n.translate(key, vars); }
+export function t(key, vars) { return I18n.translate(key, vars); }

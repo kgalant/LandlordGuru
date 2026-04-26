@@ -10,7 +10,7 @@
 //  before the backend is fully loaded.
 // ============================================================
 
-const CONFIG = {
+export const CONFIG = {
   // App display settings
   APP_NAME: 'LandlordGuru',
   BASE_CURRENCY: 'DKK',
@@ -28,7 +28,7 @@ const CONFIG = {
 
 // ── Category taxonomy ─────────────────────────────────────
 // Single source of truth used by UI dropdowns and reporting.
-const CATEGORIES = {
+export const CATEGORIES = {
   income: {
     label: 'Income',
     items: {
@@ -67,8 +67,7 @@ const CATEGORIES = {
 };
 
 // ── Bank import profiles ──────────────────────────────────
-// Each profile defines how to parse a CSV from a specific bank.
-const BANK_PROFILES = {
+export const BANK_PROFILES = {
   jyske_bank: {
     label: 'Jyske Bank (DK)',
     currency: 'DKK',

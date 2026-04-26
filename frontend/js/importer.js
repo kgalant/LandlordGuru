@@ -5,7 +5,10 @@
 //  named column mappings stored in localStorage.
 // ============================================================
 
-const Importer = (() => {
+import { BANK_PROFILES, CATEGORIES } from '../config.js';
+import { t } from './strings.js';
+
+export const Importer = (() => {
 
   // ── Date parsing ──────────────────────────────────────────
 
