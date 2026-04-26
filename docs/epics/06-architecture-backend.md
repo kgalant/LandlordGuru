@@ -72,8 +72,8 @@ Formalise how environment configuration is managed across local and server envir
 
 ---
 
-### F6-6 Frontend debug panel `[Planned]`
-**Status:** Planned
+### F6-6 Frontend debug panel `[Done]`
+**Status:** Done
 
 A discreet debug panel accessible via a version label in the bottom-right corner of every authenticated page. Intended for developers and operators checking runtime state; it is deliberately low-visibility and does not draw attention in normal use.
 
