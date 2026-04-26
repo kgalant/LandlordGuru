@@ -55,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Implement F5-11-1: red highlight on notes input + block "Next: Review →" in `frontend/js/app.js` and add the validation string in `frontend/js/strings.js`.
+Deploy to homedev and smoke-test: verify red highlight appears on `other_expense` rows with empty notes, clears on fill/category change, and "Next: Review →" is blocked until all notes are filled.
 
 ---
 
@@ -83,8 +83,8 @@ Implement F5-11-1: red highlight on notes input + block "Next: Review →" in `f
 
 ## Automation log (latest only)
 
-- 2026-04-26 11:30:00 [F5-11 set as current focus]
+- 2026-04-26 [F5-11 done — committed c5540df; F6-7 added to backlog 3be0e88]
   - branch: main
-  - last_commit: 8eba2bf
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
-  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json
+  - last_commit: 3be0e88
+  - changed_files: frontend/js/app.js, frontend/js/strings.js, frontend/version.json, docs/epics/06-architecture-backend.md, AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: clean
