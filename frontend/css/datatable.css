@@ -1,0 +1,267 @@
+/* DataTable component styles */
+
+/* Container: flex column, height determined by caller */
+.dt-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+/* Sticky regions — flex-shrink:0 keeps them fixed */
+.dt-header-bar,
+.dt-filter-bar,
+.dt-col-headers {
+  flex-shrink: 0;
+}
+
+/* Scrollable body */
+.dt-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Sticky footer */
+.dt-footer {
+  flex-shrink: 0;
+}
+
+/* ── Header bar ────────────────────────────── */
+.dt-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+  background: #f8f9fa;
+}
+
+.dt-header-bar .dt-title {
+  font-weight: 600;
+  margin-right: auto;
+}
+
+.dt-header-bar .dt-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ── Filter bar ────────────────────────────── */
+.dt-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+  background: #fff;
+}
+
+.dt-filter-bar.dt-hidden {
+  display: none;
+}
+
+.dt-filter-bar .dt-filter-control {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dt-filter-bar select,
+.dt-filter-bar input[type="text"],
+.dt-filter-bar input[type="date"] {
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+}
+
+/* ── Column headers table ──────────────────── */
+.dt-col-headers {
+  border-bottom: 2px solid #dee2e6;
+  overflow: hidden;
+}
+
+.dt-col-headers table,
+.dt-body table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.dt-col-headers th {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #f8f9fa;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.dt-col-headers th.dt-sortable {
+  cursor: pointer;
+}
+
+.dt-col-headers th.dt-sortable:hover {
+  background: #e9ecef;
+}
+
+.dt-sort-indicator {
+  margin-left: 0.25rem;
+  opacity: 0.4;
+}
+
+.dt-sort-indicator.dt-sort-active {
+  opacity: 1;
+}
+
+/* ── Body rows ─────────────────────────────── */
+.dt-body td {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.dt-body tr:last-child td {
+  border-bottom: none;
+}
+
+.dt-body tr:hover td {
+  background: #f8f9fa;
+}
+
+/* Empty / loading states */
+.dt-body .dt-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* ── Bulk-actions bar ──────────────────────── */
+.dt-bulk-bar {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background: #e8f0fe;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 0.85rem;
+}
+
+.dt-bulk-bar.dt-visible {
+  display: flex;
+}
+
+.dt-bulk-bar .dt-bulk-count {
+  margin-right: auto;
+  font-weight: 500;
+}
+
+/* ── Footer / pager ────────────────────────── */
+.dt-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid #dee2e6;
+  background: #f8f9fa;
+  font-size: 0.85rem;
+}
+
+.dt-footer.dt-hidden {
+  display: none;
+}
+
+.dt-page-info {
+  margin-right: auto;
+  color: #495057;
+}
+
+.dt-pager {
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.dt-pager button {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid #ced4da;
+  background: #fff;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.dt-pager button:hover:not(:disabled) {
+  background: #e9ecef;
+}
+
+.dt-pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dt-pager button.dt-page-active {
+  background: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+}
+
+.dt-limit-select {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+/* ── Column visibility dropdown ────────────── */
+.dt-col-vis-wrap {
+  position: relative;
+}
+
+.dt-col-vis-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  padding: 0.4rem 0;
+  min-width: 170px;
+}
+
+.dt-col-vis-dropdown.dt-open {
+  display: block;
+}
+
+.dt-col-vis-dropdown label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.dt-col-vis-dropdown label:hover {
+  background: #f8f9fa;
+}
+
+.dt-col-vis-dropdown label input[type="checkbox"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Hidden column utility */
+.dt-col-hidden {
+  display: none;
+}

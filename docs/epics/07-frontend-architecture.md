@@ -10,8 +10,8 @@ Planned.
 
 ## Features
 
-### F7-1 DataTable component — core build `[Planned]`
-**Status:** Planned
+### F7-1 DataTable component — core build `[Done]`
+**Status:** Done
 
 Create `frontend/js/datatable.js` and `frontend/css/datatable.css` as the standalone DataTable component. No table migrations in this step — the component is built and smoke-tested in isolation.
 

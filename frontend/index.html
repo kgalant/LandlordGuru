@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LandlordGuru</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/datatable.css">
 </head>
 <body>
 
@@ -688,6 +689,8 @@
 <!-- Loading overlay -->
 <div id="loading"><span id="loading-msg">Loading…</span></div>
 
+<!-- DataTable component (loaded before module entry point so it is available as a global) -->
+<script src="js/datatable.js"></script>
 <!-- Entry point — ES modules handle load order via imports -->
 <script type="module" src="js/main.js"></script>
 </body>

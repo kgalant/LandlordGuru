@@ -10,9 +10,9 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Type: feature
 - Epic: E7 Frontend Architecture
-- ID: F7-1
-- Title: DataTable component — core build
-- Short summary: Create `frontend/js/datatable.js` and `frontend/css/datatable.css` — the standalone reusable DataTable component with sticky layout, sorting, filtering, pagination, bulk actions, and column visibility. No table migrations in this step.
+- ID: F7-2
+- Title: Migrate transactions table to DataTable
+- Short summary: Replace `renderTxTable`, `renderTxPagination`, `TxSort`, `TxListState`, and inline filter wiring in `app.js` with a `DataTable.create()` call. Replace static `#tx-sticky-header`/`#tx-table-body` markup in `index.html` with `<div id="tx-table-wrap">`. All existing sort/filter/pagination/bulk-delete behaviour preserved.
 
 ---
 
@@ -24,15 +24,11 @@ None.
 
 ## Task breakdown (current focus)
 
-- [ ] F7-1-1: Scaffold `datatable.css` (sticky flexbox layout, base table styles) and `datatable.js` (module skeleton, `DataTable.create()` entry point); wire up `<link>` in `index.html`
-- [ ] F7-1-2: Render header bar (title, action buttons, ⚙ column-visibility toggle placeholder)
-- [ ] F7-1-3: Render filter bar (per-column filter controls; hide entire bar when no filters configured)
-- [ ] F7-1-4: Render column headers with sort indicators; handle click-to-sort, track sort state internally
-- [ ] F7-1-5: Render scrollable body via `renderRow` callback; pass `visibleCols` correctly
-- [ ] F7-1-6: Render sticky footer with pagination controls and rows-per-page dropdown; track page state internally
-- [ ] F7-1-7: Implement bulk-actions bar (checkbox column, bulk action buttons)
-- [ ] F7-1-8: Implement column visibility (⚙ dropdown, localStorage persistence, hide column + its filter + reset filter value)
-- [ ] F7-1-9: Expose `table.refresh()` and `table.reset()` on returned instance; smoke-test all config combinations
+- [ ] F7-2-1: Audit `app.js` and `index.html` — list every symbol and HTML element that will be replaced; confirm column definitions and filter config
+- [ ] F7-2-2: Add `<div id="tx-table-wrap">` to `index.html`; remove static `#tx-sticky-header` / `#tx-table-body` markup
+- [ ] F7-2-3: Wire `DataTable.create()` in `app.js` — define columns, `fetchData` (wraps `Api.getTransactions()`), `renderRow` (wraps existing `txRow()`), all filter and bulk-delete config
+- [ ] F7-2-4: Delete dead code from `app.js` (`renderTxTable`, `renderTxPagination`, `TxSort`, `TxListState`, filter-event wiring)
+- [ ] F7-2-5: Smoke-test on homedev — sort, all 6 filters, pagination, bulk-delete, sticky layout; confirm no regressions
 
 ---
 
@@ -60,7 +56,7 @@ Relevant epic docs:
 
 ## Next step
 
-Start F7-1-1: create `frontend/css/datatable.css` with the sticky flexbox layout skeleton, create `frontend/js/datatable.js` with the `DataTable.create()` module shell, and add the `<link>` tag in `index.html`.
+Commit F7-1 (pending confirmation), then start F7-2-1: read `app.js` and `index.html` to list every symbol and markup element that will be replaced by the DataTable migration.
 
 ---
 
@@ -81,13 +77,16 @@ Start F7-1-1: create `frontend/css/datatable.css` with the sticky flexbox layout
 - `.claude/ai_state_archive.json`
 - `docs/epics/07-frontend-architecture.md`
 - `docs/epics/00-index.md`
+- `frontend/css/datatable.css`
+- `frontend/js/datatable.js`
+- `frontend/index.html`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-26 [F7-1 set as current focus]
+- 2026-04-26 [F7-1 done; F7-2 set as current focus]
   - branch: main
-  - last_commit: e7caa26
-  - changed_files: docs/epics/07-frontend-architecture.md, docs/epics/00-index.md, AI_STATE.md, .claude/ai_state_archive.json
-  - git_status: clean
+  - last_commit: 7c2ede1
+  - changed_files: frontend/css/datatable.css, frontend/js/datatable.js, frontend/index.html, docs/epics/07-frontend-architecture.md, AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: M AI_STATE.md, M docs/epics/07-frontend-architecture.md, M frontend/index.html, ?? frontend/css/datatable.css, ?? frontend/js/datatable.js
