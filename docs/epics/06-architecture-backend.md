@@ -115,6 +115,25 @@ A discreet debug panel accessible via a version label in the bottom-right corner
 
 ---
 
+### F6-7 Consolidate version numbering `[Backlog]`
+**Status:** Backlog
+
+The project currently has three version files that have drifted out of sync and serve overlapping purposes:
+
+- `frontend/version.json` — authoritative frontend version (read by `version-badge.js` at runtime)
+- `backend/package.json` → `version` field — authoritative backend version (served by `GET /api/version`)
+- `version.json` (root) — origin unclear; not read by any known code path; currently at a different version to both of the above
+
+**Acceptance criteria:**
+
+- Exactly two authoritative version sources remain: `frontend/version.json` and `backend/package.json`.
+- Root `version.json` is deleted (or repurposed with a clear, documented role — confirm before acting).
+- `PROJECT_LANDLORDGURU.md` versioning section is updated to name the two canonical files explicitly, with the rule: frontend features bump `frontend/version.json`, backend changes bump `backend/package.json`.
+- The debug panel still displays both versions correctly after the cleanup.
+- No stale references to the root `version.json` remain in source, deploy scripts, or docs.
+
+---
+
 ## Bugs
 
 None recorded.

@@ -8,7 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-None — awaiting next item selection.
+- Type: feature
+- Epic: E5 Integrations and Data Import
+- ID: F5-11
+- Title: Highlight missing required notes in import preview
+- Short summary: Visually flag notes inputs red when category is `other_expense` and notes are empty; block import submission until all such rows are filled.
 
 ---
 
@@ -25,7 +29,7 @@ None — awaiting next item selection.
 
 ## Task breakdown (current focus)
 
-N/A — no active focus.
+- [x] F5-11-1: Red-highlight notes input in real time when category is `other_expense` + notes empty; block "Next: Review →" with toast if any active row still fails that check.
 
 ---
 
@@ -34,6 +38,7 @@ N/A — no active focus.
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
 - Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up)
+- Backlog chores: F6-7 (consolidate version numbering — three files, two are authoritative, root version.json appears unused)
 - Backlog features: F1-11, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
 - Next MVP candidates (Wave 3): F2-2, F2-6, F2-7
 
@@ -50,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Confirm next item with user — likely a Wave 3 feature (F2-2, F2-6, F2-7) or a known bug (B2-1-1, B3-1-1).
+Implement F5-11-1: red highlight on notes input + block "Next: Review →" in `frontend/js/app.js` and add the validation string in `frontend/js/strings.js`.
 
 ---
 
@@ -69,22 +74,17 @@ Confirm next item with user — likely a Wave 3 feature (F2-2, F2-6, F2-7) or a 
 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
-- `backend/src/routes/version.js` (new)
-- `backend/src/app.js`
-- `backend/tests/version.test.js` (new)
-- `deploy.sh`
-- `deploy.ps1`
-- `frontend/js/version-badge.js` (new)
-- `frontend/js/main.js`
 - `frontend/js/app.js`
+- `frontend/js/strings.js`
+- `frontend/version.json`
 - `docs/epics/06-architecture-backend.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-26 11:00:00 [F6-6 done — smoke test passed]
+- 2026-04-26 11:30:00 [F5-11 set as current focus]
   - branch: main
-  - last_commit: 8eba2bf chore: update AI_STATE — F6-6 committed, smoke test pending
-  - changed_files: docs/epics/06-architecture-backend.md, AI_STATE.md
-  - git_status: M docs/epics/06-architecture-backend.md, M AI_STATE.md
+  - last_commit: 8eba2bf
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: M AI_STATE.md, M .claude/ai_state_archive.json
