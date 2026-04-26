@@ -8,28 +8,34 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: chore
+- Type: feature
 - Epic: E6 Architecture
-- ID: C6-1
-- Title: Refactor frontend inline JS to ES modules
-- Short summary: Break ~1,900 lines of inline JS in index.html into ES module files. Convert existing js/*.js globals to exports, extract AUTH and APP sections by domain, wire up via a single `<script type="module">` entry point.
+- ID: F6-6
+- Title: Frontend debug panel
+- Short summary: Hidden version label (bottom-right, near-invisible) that toggles a debug panel showing frontend/backend version, environment, auth user, token expiry, last sync, and API health. Backend adds `GET /api/version`. Deploy scripts inject `GIT_COMMIT`.
 
 ---
 
 ## Previous focus
 
-None
+- Type: chore
+- Epic: E6 Architecture
+- ID: C6-1
+- Title: Refactor frontend inline JS to ES modules
+- Short summary: Broke ~1,900 lines of inline JS in index.html into ES modules (js/auth.js, js/app.js, js/main.js). All subtasks complete.
+- State: paused
+- Return point: S6 (browser smoke test) was in-progress but refactor is shipped — smoke test can be done as part of F6-6 verification.
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: Convert existing js files (config.js, api.js, strings.js, importer.js, reports.js, debug.js) to ES modules — add export statements.
-- [x] S2: Extract AUTH inline block → js/auth.js as ES module.
-- [x] S3: Extract APP inline block → js/app.js as ES module with imports and window bindings.
-- [x] S4: Create js/main.js entry point.
-- [x] S5: Update index.html — removed 1886 lines of inline JS, replaced 8 script tags with single `<script type="module" src="js/main.js">`, fixed FOUC on #app.
-- [-] S6: Smoke test in browser — verify all pages load and function correctly.
+- [x] S1: Add `GET /api/version` backend route — returns `{ version, environment, commit }` from package.json / NODE_ENV / GIT_COMMIT env var. No auth required.
+- [x] S2: Update `deploy.ps1` and `deploy.sh` to inject `GIT_COMMIT` env var at deploy time.
+- [x] S3: Add version label to frontend — bottom-right fixed, near-invisible style (text colour ≈ background), shows `v{semver}+{commit}`, only rendered when authenticated.
+- [x] S4: Wire label click to toggle debug panel — panel shows all F6-6 spec fields (frontend version, backend version, environment, user, token expiry, last sync, API health). Escape closes.
+- [x] S5: Test: verify `GET /api/version` shape; add to backend test suite. (161/161 passing)
+- [-] S6: Browser smoke test — confirm label invisible at a glance, panel opens/closes, all fields populate.
 
 ---
 
@@ -53,7 +59,7 @@ Relevant epic docs:
 
 ## Next step
 
-S6: Open the app in a browser, verify login, navigation, all 6 pages, and the import flow work correctly.
+S6: Deploy to homedev and smoke-test in browser — verify label is invisible, panel opens/closes, all fields populate correctly.
 
 ---
 
@@ -71,23 +77,22 @@ S6: Open the app in a browser, verify login, navigation, all 6 pages, and the im
 ## Files touched this session
 
 - `AI_STATE.md`
-- `frontend/config.js`
-- `frontend/js/strings.js`
-- `frontend/js/api.js`
-- `frontend/js/importer.js`
-- `frontend/js/reports.js`
-- `frontend/js/debug.js`
-- `frontend/js/auth.js` (new)
-- `frontend/js/app.js` (new)
-- `frontend/js/main.js` (new)
-- `frontend/index.html`
+- `.claude/ai_state_archive.json`
+- `backend/src/routes/version.js` (new)
+- `backend/src/app.js`
+- `backend/tests/version.test.js` (new)
+- `deploy.sh`
+- `deploy.ps1`
+- `frontend/js/version-badge.js` (new)
+- `frontend/js/main.js`
+- `frontend/js/app.js`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-26 09:30:00 [chore: deploy.sh committed]
+- 2026-04-26 10:00:00 [F6-6 focus set — C6-1 closed]
   - branch: main
-  - last_commit: eb7d4d8 chore: add deploy.sh — bash port of deploy.ps1, auto-detects homedev vs remote
-  - changed_files: deploy.sh, AI_STATE.md, .claude/ai_state_archive.json
+  - last_commit: c8e2931 fix: raise MAX_PAGE_LIMIT to 10000 so State loads all transactions for reports/dashboard
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
   - git_status: clean

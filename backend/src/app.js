@@ -39,6 +39,7 @@ app.use('/api/rules',        require('./routes/rules'));
 app.use('/api/workspace',        require('./routes/workspace'));
 app.use('/api/accounts',        require('./routes/accounts'));
 app.use('/api/currency-rates',  require('./routes/currency-rates'));
+app.use('/api/version',         require('./routes/version'));
 
 // Static files
 app.use(express.static(FRONTEND_DIR));

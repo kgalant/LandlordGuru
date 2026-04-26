@@ -29,14 +29,15 @@ cd ~/dev/landlordguru
 echo "[2/4] Pulling latest changes..."
 git pull origin main
 GIT_PULL_EXIT=$?
+GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
 echo "[3/4] Running database migrations..."
 cd backend
 npm run migrate
 MIGRATE_EXIT=$?
 
-echo "[4/4] Restarting PM2..."
-pm2 restart landlordguru
+echo "[4/4] Restarting PM2 (commit: $GIT_COMMIT)..."
+GIT_COMMIT=$GIT_COMMIT pm2 restart landlordguru --update-env
 PM2_EXIT=$?
 
 printf "\n__DEPLOY_RESULTS__ git_pull=%d migrate=%d pm2=%d\n" $GIT_PULL_EXIT $MIGRATE_EXIT $PM2_EXIT

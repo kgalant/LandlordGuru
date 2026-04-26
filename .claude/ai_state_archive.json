@@ -131,5 +131,13 @@
     "last_commit": "262ad7a F5-3 verified Done; fix stale roadmap (F2-4, F2-9, F3-1, F5-3)",
     "changed_files": ["AI_STATE.md", "docs/epics/05-integrations-data-import.md", "docs/roadmap.md", ".claude/ai_state_archive.json"],
     "git_status": "clean"
+  },
+  {
+    "timestamp": "2026-04-26 09:30:00",
+    "phase": "[chore: deploy.sh committed]",
+    "branch": "main",
+    "last_commit": "eb7d4d8 chore: add deploy.sh — bash port of deploy.ps1, auto-detects homedev vs remote",
+    "changed_files": ["deploy.sh", "AI_STATE.md", ".claude/ai_state_archive.json"],
+    "git_status": "clean"
   }
 ]

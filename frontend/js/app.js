@@ -52,9 +52,10 @@ async function refreshAll() {
     State.rules             = rules;
     State.workspaceSettings = wsSettings;
     State.currencyRates     = rates;
+    window.LAST_SYNC = new Date();
     populateAllDropdowns();
     renderCurrentPage();
-    setStatus(t('status.synced', { time: new Date().toLocaleTimeString() }));
+    setStatus(t('status.synced', { time: window.LAST_SYNC.toLocaleTimeString() }));
   } catch(e) {
     setStatus(t('status.syncError'));
     toast(t('status.connFailed', { error: e.message }), 'error');
