@@ -1206,8 +1206,11 @@ function renderReports() {
   const dateFrom = document.getElementById('rep-from')?.value || '';
   const dateTo   = document.getElementById('rep-to')?.value   || '';
 
-  const filtered = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
-  const summary  = Reports.pnl(filtered, State.properties);
+  const filtered   = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
+  const visibleProps = propId !== 'all'
+    ? State.properties.filter(p => p.id === propId)
+    : State.properties;
+  const summary  = Reports.pnl(filtered, visibleProps);
 
   document.getElementById('rep-metrics').innerHTML = `
     <div class="metric"><div class="m-label">${t('reports.metrics.totalIncome')}</div><div class="m-value positive">${Reports.fmtDKK(summary.totals.income_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
@@ -1752,7 +1755,7 @@ Object.assign(window, {
   refreshSavedMappingsDropdown, loadSavedMapping, saveCurrentMapping, deleteSavedMapping,
   goToStaticPreview, backToEditPreview, goToMappingConfirmOrImport, backToStaticPreview,
   toggleTree, doImport,
-  setReportYear, setReportPeriod,
+  setReportYear, setReportPeriod, renderReports,
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,
   saveSettings, toggleAddRateForm, submitAddRate, deleteRate,
