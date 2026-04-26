@@ -20,7 +20,7 @@ function formatDate(tx) {
 
 const VALID_TYPES = ['income', 'expense', 'deposit', 'transfer'];
 const DEFAULT_PAGE_LIMIT = 50;
-const MAX_PAGE_LIMIT = 500;
+const MAX_PAGE_LIMIT = 10000;
 
 // Resolves the most recent rate for (currency → reportingCurrency) on or before txDate.
 async function resolveRate(workspaceId, currency, reportingCurrency, txDate) {
