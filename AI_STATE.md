@@ -91,8 +91,8 @@ S6: Deploy to homedev and smoke-test in browser — verify label is invisible, p
 
 ## Automation log (latest only)
 
-- 2026-04-26 10:00:00 [F6-6 focus set — C6-1 closed]
+- 2026-04-26 10:30:00 [F6-6 committed — browser smoke test pending]
   - branch: main
-  - last_commit: c8e2931 fix: raise MAX_PAGE_LIMIT to 10000 so State loads all transactions for reports/dashboard
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
+  - last_commit: 7270df2 feat: F6-6 Frontend debug panel — version badge + /api/version endpoint
+  - changed_files: backend/src/routes/version.js, backend/tests/version.test.js, frontend/js/version-badge.js, backend/src/app.js, deploy.sh, deploy.ps1, frontend/js/app.js, frontend/js/main.js, AI_STATE.md
   - git_status: clean
