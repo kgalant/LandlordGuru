@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: chore
-- Epic: E5 Integrations and Data Import
-- ID: F5-3
-- Title: Auto-categorisation rules backend — verification and doc update
-- Short summary: Confirm F5-3 is fully implemented (routes + tests), mark Done in epic doc and roadmap.
+- Type: TBD
+- Epic: TBD
+- ID: TBD
+- Title: Awaiting new task from user
+- Short summary: User has a new task not yet on the roadmap — to be defined.
 
 ---
 
@@ -24,11 +24,7 @@ None
 
 ## Task breakdown (current focus)
 
-- [x] S1: Read rules.js and rules.test.js — confirmed all 4 endpoints implemented, 24 tests.
-- [x] S2: Run tests on homedev — 24/24 passing.
-- [x] S3: Update F5-3 status in docs/epics/05-integrations-data-import.md to Done (backend).
-- [x] S4: Fix stale roadmap entries — mark F2-4, F2-9, F3-1 Done; add F5-3 Done to Wave 5.
-- [ ] S5: Commit doc updates.
+- [ ] S1: Define task with user and add to appropriate epic or backlog.
 
 ---
 
@@ -52,7 +48,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit: `F5-3 verified Done; fix stale roadmap (F2-4, F2-9, F3-1, F5-3)`.
+Receive new task from user, add it to the appropriate epic doc or create a new one, then set Current focus.
 
 ---
 
@@ -63,23 +59,21 @@ Commit: `F5-3 verified Done; fix stale roadmap (F2-4, F2-9, F3-1, F5-3)`.
 
 - Last result:
   - Date/time: 2026-04-26 06:14:00
-  - Outcome: 24/24 rules tests passing (run from /home/kim/dev/landlordguru/backend). F5-3 verified complete.
+  - Outcome: 24/24 rules tests passing. F5-3 verified complete and committed (262ad7a).
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `docs/epics/05-integrations-data-import.md`
-- `docs/roadmap.md`
 - `.claude/ai_state_archive.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-26 06:14:00 [F5-3 verified Done — doc/roadmap update]
+- 2026-04-26 09:00:00 [F5-3 closed; awaiting new task]
   - branch: main
-  - last_commit: a8a815a F3-9 polish: vertical padding on card-header row
-  - changed_files: AI_STATE.md, docs/epics/05-integrations-data-import.md, docs/roadmap.md, .claude/ai_state_archive.json
-  - git_status: M AI_STATE.md, M docs/epics/05-integrations-data-import.md, M docs/roadmap.md, M .claude/ai_state_archive.json
+  - last_commit: 262ad7a F5-3 verified Done; fix stale roadmap (F2-4, F2-9, F3-1, F5-3)
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: clean
