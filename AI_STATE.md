@@ -85,8 +85,8 @@ Commit F7-1 (pending confirmation), then start F7-2-1: read `app.js` and `index.
 
 ## Automation log (latest only)
 
-- 2026-04-26 [F7-1 done; F7-2 set as current focus]
+- 2026-04-27 21:30:00 [merge resolved — rebased onto origin/main; F6-9 marked Done]
   - branch: main
-  - last_commit: 7c2ede1
-  - changed_files: frontend/css/datatable.css, frontend/js/datatable.js, frontend/index.html, docs/epics/07-frontend-architecture.md, AI_STATE.md, .claude/ai_state_archive.json
-  - git_status: M AI_STATE.md, M docs/epics/07-frontend-architecture.md, M frontend/index.html, ?? frontend/css/datatable.css, ?? frontend/js/datatable.js
+  - last_commit: 05873c6 feat: F7-1 DataTable component — core build
+  - changed_files: AI_STATE.md, docs/epics/06-architecture-backend.md
+  - git_status: M AI_STATE.md, M docs/epics/06-architecture-backend.md

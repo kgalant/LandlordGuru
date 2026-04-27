@@ -134,6 +134,15 @@ The project currently has three version files that have drifted out of sync and 
 
 ---
 
+### F6-9 Extract inline scripts from index.html `[Done]`
+**Status:** Done
+
+Pull the large inline `<script>` block out of `frontend/index.html` into logically-named JS files.
+
+**Delivered in:** `f6e0b75` — refactor: extract inline JS from index.html into ES modules (`app.js`, `auth.js`, `main.js`, etc.)
+
+---
+
 ## Bugs
 
 None recorded.
