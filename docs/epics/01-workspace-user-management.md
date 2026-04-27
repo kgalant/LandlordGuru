@@ -362,6 +362,28 @@ Infrastructure for persisting per-user, per-view column visibility and layout pr
 
 ---
 
+### F1-12 Date display format preference `[MVP]`
+**Status:** Backlog
+
+Allow users to choose how dates are displayed throughout the app. The setting is stored per workspace and applies to all date fields in the UI.
+
+**Options (dropdown):**
+- `YYYY-MM-DD` — ISO 8601 (e.g. 2026-04-27)
+- `MM-DD-YYYY` — US format (e.g. 04-27-2026)
+- `DD-MM-YYYY` — European format (e.g. 27-04-2026)
+
+**Acceptance criteria:**
+- A "Date format" dropdown is added to the workspace settings page (F1-6)
+- `GET /api/workspace/settings` returns the current `date_format` value (default: `YYYY-MM-DD`)
+- `PATCH /api/workspace/settings` accepts `date_format`; validates against the three allowed values
+- All date values rendered in the frontend use the workspace `date_format` setting
+- The setting is workspace-scoped; different workspaces are independent
+- Only workspace owners can change the setting (same permission as other workspace settings)
+
+**Dependencies:** F1-6 (workspace settings — done)
+
+---
+
 ## Bugs
 
 None recorded.

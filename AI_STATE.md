@@ -24,11 +24,11 @@ None.
 
 ## Task breakdown (current focus)
 
-- [ ] F7-2-1: Audit `app.js` and `index.html` — list every symbol and HTML element that will be replaced; confirm column definitions and filter config
-- [ ] F7-2-2: Add `<div id="tx-table-wrap">` to `index.html`; remove static `#tx-sticky-header` / `#tx-table-body` markup
-- [ ] F7-2-3: Wire `DataTable.create()` in `app.js` — define columns, `fetchData` (wraps `Api.getTransactions()`), `renderRow` (wraps existing `txRow()`), all filter and bulk-delete config
-- [ ] F7-2-4: Delete dead code from `app.js` (`renderTxTable`, `renderTxPagination`, `TxSort`, `TxListState`, filter-event wiring)
-- [ ] F7-2-5: Smoke-test on homedev — sort, all 6 filters, pagination, bulk-delete, sticky layout; confirm no regressions
+- [x] F7-2-1: Audit `app.js` and `index.html` — list every symbol and HTML element that will be replaced; confirm column definitions and filter config
+- [x] F7-2-2: Add `<div id="tx-table-wrap">` to `index.html`; remove static `#tx-sticky-header` / `#tx-table-body` markup
+- [x] F7-2-3: Wire `DataTable.create()` in `app.js` — define columns, `fetchData` (wraps `Api.getTransactions()`), `renderRow` (wraps existing `txRow()`), all filter and bulk-delete config
+- [x] F7-2-4: Delete dead code from `app.js` (`renderTxTable`, `renderTxPagination`, `TxSort`, `TxListState`, filter-event wiring)
+- [-] F7-2-5: Smoke-test on homedev — sort, all 6 filters, pagination, bulk-delete, sticky layout; confirm no regressions
 
 ---
 
@@ -38,7 +38,7 @@ None.
 
 - Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up)
 - Backlog chores: F6-7 (consolidate version numbering — three files, two are authoritative, root version.json appears unused)
-- Backlog features: F1-11, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
+- Backlog features: F1-11, F1-12, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
 - Next MVP candidates (Wave 3): F2-2, F2-6, F2-7
 - Frontend architecture: F7-1 through F7-5 (DataTable component + migrations)
 
@@ -56,7 +56,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit F7-1 (pending confirmation), then start F7-2-1: read `app.js` and `index.html` to list every symbol and markup element that will be replaced by the DataTable migration.
+Deploy to homedev and smoke-test F7-2 (F7-2-5): verify sort (date, amount), all 6 filters, pagination, bulk-delete, sticky layout, column visibility, and no regressions on other pages.
 
 ---
 
@@ -79,8 +79,11 @@ Commit F7-1 (pending confirmation), then start F7-2-1: read `app.js` and `index.
 - `docs/epics/00-index.md`
 - `frontend/css/datatable.css`
 - `frontend/js/datatable.js`
+- `frontend/js/app.js`
+- `frontend/css/style.css`
 - `frontend/index.html`
 - `docs/parallel-branch-working-model.md`
+- `docs/epics/01-workspace-user-management.md` (F1-12 added)
 
 ---
 
