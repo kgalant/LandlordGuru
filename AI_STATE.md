@@ -80,13 +80,26 @@ Commit F7-1 (pending confirmation), then start F7-2-1: read `app.js` and `index.
 - `frontend/css/datatable.css`
 - `frontend/js/datatable.js`
 - `frontend/index.html`
+- `docs/parallel-branch-working-model.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-27 21:30:00 [merge resolved — rebased onto origin/main; F6-9 marked Done]
+- 2026-04-27 21:45:00 [docs: parallel branch working model design document added]
   - branch: main
   - last_commit: 05873c6 feat: F7-1 DataTable component — core build
   - changed_files: AI_STATE.md, docs/epics/06-architecture-backend.md
   - git_status: M AI_STATE.md, M docs/epics/06-architecture-backend.md
+
+- 2026-04-27 20:56:03 [lifecycle]
+  - branch: main
+  - last_commit: a1e2bfb docs: mark F6-9 (extract inline scripts) as Done ΓÇö delivered in f6e0b75
+
+- 2026-04-27 20:58:01 [lifecycle]
+  - branch: main
+  - last_commit: a1e2bfb docs: mark F6-9 (extract inline scripts) as Done ΓÇö delivered in f6e0b75
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? docs/parallel-branch-working-model.md
