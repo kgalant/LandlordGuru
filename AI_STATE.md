@@ -86,8 +86,8 @@ F7-4-4: Deploy to homedev and smoke-test — all three report tables render, col
 
 ## Automation log (latest only)
 
-- 2026-04-28 09:30:00 [F7-3 Done — rules table migrated to DataTable]
+- 2026-04-28 10:00:00 [F7-4 Done — report tables migrated to DataTable]
   - branch: main
-  - last_commit: f246d85
+  - last_commit: 59fafa8
   - changed_files: frontend/index.html, frontend/js/app.js, version.json, docs/epics/07-frontend-architecture.md, docs/roadmap.md, AI_STATE.md
   - git_status: clean
