@@ -349,89 +349,15 @@ textarea { resize: vertical; min-height: 70px; }
 .import-paste-toggle     { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 0.75rem; }
 .import-paste-toggle a   { color: var(--accent); cursor: pointer; text-decoration: underline; }
 
-/* ── Sticky header / footer (transactions) ── */
-/*
-  Sticky stack (top → bottom):
-    52px               — nav header
-    var(--nav-h, 52px) — #tx-sticky-header (card-header + filter-bar + pagination)
-  Column headers stick inside the table-wrap scroll container (top: 0).
-  #tx-footer sticks at the bottom of the viewport.
-*/
+/* ── Transactions DataTable card ── */
 
-#tx-sticky-header {
-  position: sticky;
-  top: var(--nav-h, 52px);
-  z-index: 50;
-  background: var(--bg);
-  border-bottom: 0.5px solid var(--border);
+.tx-card {
+  padding: 0;
+  overflow: hidden;
 }
 
-#tx-card-header {
-  background: var(--bg2);
-  border-bottom: 0.5px solid var(--border);
-  margin-bottom: 1rem;
-  padding: 0.6rem 0.5rem;
-}
-
-#tx-pagination {
-  font-size: 12px;
-  color: var(--text2);
-}
-
-#tx-pagination button {
-  background: none;
-  border: none;
-  padding: 2px 5px;
-  cursor: pointer;
-  color: inherit;
-  font-size: inherit;
-  font-family: inherit;
-  line-height: 1.4;
-  border-radius: var(--radius);
-}
-
-#tx-pagination button:hover:not(:disabled) {
-  color: var(--text);
-  background: var(--bg3);
-}
-
-#tx-pagination button:disabled {
-  color: var(--text3);
-  cursor: default;
-}
-
-#tx-pagination select {
-  appearance: none;
-  flex: 0 0 auto;
-  background: transparent;
-  border: none;
-  font-size: inherit;
-  color: inherit;
-  font-family: inherit;
-  cursor: pointer;
-  padding: 2px 5px;
-  line-height: 1.4;
-}
-
-#page-transactions .table-wrap {
-  overflow: auto;
-  max-height: calc(100vh - 300px);
-}
-
-#page-transactions .table-wrap thead th {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--bg2);
-  box-shadow: 0 1px 0 var(--border);
-}
-
-#tx-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 25;
-  background: var(--bg);
-  border-top: 0.5px solid var(--border);
+#tx-table-wrap {
+  height: calc(100vh - var(--nav-h, 52px) - 3rem); /* 3rem = main top + bottom padding */
 }
 
 /* ── Sticky import preview header + column headers ────────── */

@@ -144,6 +144,7 @@ const DataTable = (() => {
             <option value="">${f.placeholder || col.label}</option>
           </select>
         </div>`;
+        // options populated by _populateSelectOptions() on each load
       }
       if (f.type === 'text') {
         return `<div class="dt-filter-control" data-col="${col.key}">
@@ -261,10 +262,29 @@ const DataTable = (() => {
       }
 
       _renderColHeaders();
+      _populateSelectOptions();
       _renderBody(data);
       _renderPager(total);
       _applyColVisibility();
       if (colVis.enabled) _renderColVisDropdown();
+    }
+
+    function _populateSelectOptions() {
+      columns.forEach(col => {
+        if (!col.filter || col.filter.type !== 'select' || !col.filter.options) return;
+        const sel = container.querySelector(`[data-filter-key="${col.key}"]`);
+        if (!sel) return;
+        const current = filterState[col.key] || '';
+        const rawOpts = typeof col.filter.options === 'function'
+          ? col.filter.options(filterState)
+          : col.filter.options;
+        const opts = rawOpts.map(o =>
+          typeof o === 'object'
+            ? `<option value="${_esc(o.value)}"${o.value === current ? ' selected' : ''}>${_esc(o.label)}</option>`
+            : `<option value="${_esc(o)}"${o === current ? ' selected' : ''}>${_esc(o)}</option>`
+        ).join('');
+        sel.innerHTML = `<option value="">${col.filter.placeholder || col.label}</option>${opts}`;
+      });
     }
 
     function _renderBody(data) {

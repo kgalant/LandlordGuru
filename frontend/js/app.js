@@ -79,7 +79,7 @@ function showPage(id, btn) {
 
 function renderCurrentPage() {
   if (currentPage === 'dashboard')    renderDashboard();
-  if (currentPage === 'transactions') renderTxTable();
+  if (currentPage === 'transactions') { if (!txTable) initTxTable(); else txTable.refresh(); }
   if (currentPage === 'reports')      renderReports();
   if (currentPage === 'properties')   renderPropertyList();
   if (currentPage === 'rules')        renderRules();
@@ -99,10 +99,8 @@ function populateAllDropdowns() {
     if (cur && years.includes(cur)) repYear.value = cur;
   }
 
-  ['tx-filter-apt','rep-apt'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { const v = el.value; el.innerHTML = `<option value="all">${t('tx.filter.allProperties')}</option>${propOpts}`; el.value = v || 'all'; }
-  });
+  const repApt = document.getElementById('rep-apt');
+  if (repApt) { const v = repApt.value; repApt.innerHTML = `<option value="all">${t('tx.filter.allProperties')}</option>${propOpts}`; repApt.value = v || 'all'; }
 
   ['tx-m-apt','import-apt','rule-m-apt'].forEach(id => {
     const el = document.getElementById(id);
@@ -115,13 +113,10 @@ function populateAllDropdowns() {
   });
 
   const catOpts = Importer.buildCategoryOptions('');
-  ['tx-m-cat','rule-m-cat','tx-filter-cat'].forEach(id => {
+  ['tx-m-cat','rule-m-cat'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    const blank = id === 'tx-filter-cat'
-      ? `<option value="all">${t('tx.filter.allCats')}</option>`
-      : `<option value="">${t('common.select')}</option>`;
-    el.innerHTML = blank + catOpts;
+    el.innerHTML = `<option value="">${t('common.select')}</option>` + catOpts;
   });
 }
 
@@ -192,11 +187,9 @@ function renderDashboard() {
 
 // ── Transactions table ────────────────────────────────────
 
-const TxSort = { col: 'date', dir: 'desc' };
-const TxListState = { page: 1, limit: 50, total: 0, data: [] };
+let txTable = null;
 
-// Keep --nav-h in sync with actual nav height so #tx-sticky-header stacks correctly.
-// Uses ResizeObserver so it adapts to zoom, font-size changes, and window resizes.
+// Keep --nav-h CSS var in sync so #tx-table-wrap height calc stays correct.
 function updateTxStickyOffsets() {
   const nav = document.querySelector('header');
   if (!nav) return;
@@ -210,177 +203,103 @@ document.addEventListener('DOMContentLoaded', () => {
   updateTxStickyOffsets();
 });
 
-function setTxSort(col) {
-  if (TxSort.col === col) {
-    TxSort.dir = TxSort.dir === 'desc' ? 'asc' : 'desc';
-  } else {
-    TxSort.col = col;
-    TxSort.dir = col === 'amount' ? 'desc' : 'desc';
-  }
-  renderTxTable();
-}
-
-function resetAndRenderTxTable() {
-  TxListState.page = 1;
-  renderTxTable();
-}
-
-function onTxRowsPerPageChange() {
-  const val = document.getElementById('tx-rows-per-page')?.value;
-  TxListState.limit = parseInt(val || '50', 10);
-  TxListState.page  = 1;
-  renderTxTable();
-}
-
-function goToTxPage(n) {
-  const totalPages = Math.max(1, Math.ceil(TxListState.total / TxListState.limit));
-  TxListState.page = Math.max(1, Math.min(n, totalPages));
-  renderTxTable();
-}
-
-function buildPageRange(current, total) {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages = [];
-  pages.push(1);
-  if (current > 3) pages.push('…');
-  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
-    pages.push(p);
-  }
-  if (current < total - 2) pages.push('…');
-  pages.push(total);
-  return pages;
-}
-
-function renderTxPagination() {
-  const container = document.getElementById('tx-pagination');
-  if (!container) return;
-  const { page, limit, total } = TxListState;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-
-  const rppOptions = [10, 20, 50, 100].map(n =>
-    `<option value="${n}"${n === limit ? ' selected' : ''}>${n} / page</option>`
-  ).join('');
-  const rppSelect = `<select id="tx-rows-per-page" onchange="onTxRowsPerPageChange()">${rppOptions}</select>`;
-
-  if (totalPages <= 1) {
-    container.innerHTML = rppSelect;
-    return;
-  }
-
-  const pages = buildPageRange(page, totalPages);
-  const btns = pages.map(p => {
-    if (p === '…') return `<span style="padding:2px 4px">…</span>`;
-    const activeStyle = p === page ? 'font-weight:600;color:var(--text);' : '';
-    return `<button style="${activeStyle}" onclick="goToTxPage(${p})">${p}</button>`;
+function initTxTable() {
+  txTable = DataTable.create({
+    containerId: 'tx-table-wrap',
+    title: t('tx.title'),
+    actions: [
+      { label: t('tx.addBtn'), onclick: 'openTxModal()' },
+    ],
+    columns: [
+      {
+        key: 'property', label: t('tx.col.property'), sortable: false, defaultVisible: true,
+        filter: {
+          type: 'select',
+          placeholder: t('tx.filter.allProperties'),
+          options: () => State.properties.map(p => ({ value: String(p.id), label: p.name })),
+        },
+      },
+      {
+        key: 'date', label: t('tx.col.date'), sortable: true, defaultVisible: true,
+        filter: { type: 'date-range' },
+      },
+      {
+        key: 'type', label: t('tx.col.type'), sortable: false, defaultVisible: true,
+        filter: {
+          type: 'select',
+          placeholder: t('tx.filter.allTypes'),
+          options: [
+            { value: 'income',   label: t('categories.income') },
+            { value: 'expense',  label: t('categories.expense') },
+            { value: 'deposit',  label: t('categories.deposit') },
+            { value: 'transfer', label: t('categories.transfer') },
+          ],
+        },
+      },
+      {
+        key: 'category', label: t('tx.col.category'), sortable: false, defaultVisible: true,
+        filter: {
+          type: 'select',
+          placeholder: t('tx.filter.allCats'),
+          options: (filterState) => {
+            const type = filterState.type || '';
+            if (type && CATEGORIES[type]) {
+              return Object.keys(CATEGORIES[type].items).map(k => ({ value: k, label: t('categories.items.' + k) }));
+            }
+            return Object.entries(CATEGORIES).flatMap(([, group]) =>
+              Object.keys(group.items).map(k => ({ value: k, label: t('categories.items.' + k) }))
+            );
+          },
+        },
+      },
+      {
+        key: 'description', label: t('tx.col.description'), sortable: false, defaultVisible: true,
+        filter: { type: 'text', placeholder: t('common.search') },
+      },
+      { key: 'source', label: t('tx.col.source'), sortable: false, defaultVisible: true },
+      { key: 'amount', label: t('tx.col.amount'), sortable: true,  defaultVisible: true },
+    ],
+    fetchData: async (params) => {
+      const filters = { page: params.page, limit: params.limit };
+      if (params.sort_col) { filters.sort_col = params.sort_col; filters.sort_dir = params.sort_dir; }
+      if (params.property)    filters.property_id = params.property;
+      if (params.type)        filters.type        = params.type;
+      if (params.category)    filters.category    = params.category;
+      if (params['date-from']) filters.from        = params['date-from'];
+      if (params['date-to'])   filters.to          = params['date-to'];
+      if (params.description)  filters.search      = params.description;
+      const result = await Api.getTransactions(filters);
+      return {
+        data:  (result.data ?? []).map(tx => ({ ...tx, amount: parseFloat(tx.amount) })),
+        total: result.total ?? 0,
+      };
+    },
+    renderRow: (tx) => txRow(tx),
+    pagination: {
+      enabled: true,
+      defaultLimit: 50,
+      limitOptions: [10, 20, 50, 100],
+    },
+    bulkActions: [
+      { label: t('tx.bulkDelete'), onclick: (ids) => bulkDeleteSelectedTx(ids) },
+    ],
+    columnVisibility: {
+      enabled: true,
+      storageKey: 'datatable-tx-columns',
+    },
   });
-
-  container.innerHTML = [
-    rppSelect,
-    `<button ${page <= 1 ? 'disabled' : ''} onclick="goToTxPage(${page - 1})">&#8249;</button>`,
-    ...btns,
-    `<button ${page >= totalPages ? 'disabled' : ''} onclick="goToTxPage(${page + 1})">&#8250;</button>`,
-  ].join('');
 }
 
-async function renderTxTable() {
-  const filterApt    = document.getElementById('tx-filter-apt')?.value;
-  const filterType   = document.getElementById('tx-filter-type')?.value;
-  const filterCat    = document.getElementById('tx-filter-cat')?.value;
-  const filterFrom   = document.getElementById('tx-filter-from')?.value;
-  const filterTo     = document.getElementById('tx-filter-to')?.value;
-  const filterSearch = document.getElementById('tx-filter-search')?.value;
-
-  const filters = { page: TxListState.page, limit: TxListState.limit };
-  if (filterApt    && filterApt    !== 'all') filters.property_id = filterApt;
-  if (filterType   && filterType   !== 'all') filters.type        = filterType;
-  if (filterCat    && filterCat    !== 'all') filters.category    = filterCat;
-  if (filterFrom)  filters.from   = filterFrom;
-  if (filterTo)    filters.to     = filterTo;
-  if (filterSearch) filters.search = filterSearch;
-
-  let result;
-  try {
-    result = await Api.getTransactions(filters);
-  } catch (e) {
-    console.error('renderTxTable fetch error:', e);
-    return;
-  }
-
-  const pageData = (result.data ?? []).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
-  TxListState.total = result.total ?? 0;
-  TxListState.data  = pageData;
-
-  const sorted = [...pageData].sort((a, b) => {
-    let cmp = 0;
-    if (TxSort.col === 'amount') cmp = a.amount - b.amount;
-    else cmp = a.date.localeCompare(b.date);
-    return TxSort.dir === 'asc' ? cmp : -cmp;
-  });
-
-  // Update sortable header indicators
-  document.querySelectorAll('#page-transactions th.sortable').forEach(th => {
-    th.classList.remove('sort-asc', 'sort-desc');
-  });
-  const hdrs = document.querySelectorAll('#page-transactions th.sortable');
-  const sortColIndex = TxSort.col === 'amount' ? 1 : 0;
-  if (hdrs[sortColIndex]) hdrs[sortColIndex].classList.add('sort-' + TxSort.dir);
-
-  const body   = document.getElementById('tx-table-body');
-  const empty  = document.getElementById('tx-empty');
-  const footer = document.getElementById('tx-footer');
-
-  if (!sorted.length) {
-    body.innerHTML = '';
-    empty.style.display = 'block';
-    footer.textContent  = '';
-    renderTxPagination();
-    onTxRowSelect();
-    return;
-  }
-
-  // Show converted-amount toggle if workspace has multiple currencies in view
-  const reportingCurrency = State.workspaceSettings?.reporting_currency;
-  const hasMultiCurrency = reportingCurrency && sorted.some(tx => tx.currency !== reportingCurrency);
-  const toggleWrap = document.getElementById('tx-converted-toggle-wrap');
-  if (toggleWrap) {
-    toggleWrap.style.display = hasMultiCurrency ? 'flex' : 'none';
-    const lbl = document.getElementById('tx-converted-label');
-    if (lbl) lbl.textContent = t('tx.showConverted', { currency: reportingCurrency });
-  }
-
-  const showConverted = hasMultiCurrency && document.getElementById('tx-show-converted')?.checked;
-
-  empty.style.display = 'none';
-  body.innerHTML = sorted.map(tx => txRow(tx, true, showConverted, reportingCurrency)).join('');
-
-  const totalIncome  = sorted.filter(tx => tx.type==='income').reduce((s,tx) => s+tx.amount, 0);
-  const totalExpense = sorted.filter(tx => tx.type==='expense').reduce((s,tx) => s+tx.amount, 0);
-  const from = (TxListState.page - 1) * TxListState.limit + 1;
-  const to   = from + sorted.length - 1;
-  const footerKey = TxListState.total > sorted.length ? 'tx.footerPaged' : 'tx.footer';
-  footer.textContent = t(footerKey, {
-    count:    sorted.length,
-    from,
-    to,
-    total:    TxListState.total,
-    income:   totalIncome.toLocaleString(),
-    expenses: totalExpense.toLocaleString(),
-  });
-
-  renderTxPagination();
-  onTxRowSelect();
-}
-
-function txRow(tx, showEditBtn, showConverted, reportingCurrency) {
+function txRow(tx) {
   const prop   = State.properties.find(p => p.id === tx.property_id);
   const catLbl = Reports.categoryLabel(tx.category);
   const srcLbl = tx.source === 'manual' ? t('common.manual') : (BANK_PROFILES[tx.source]?.label || tx.source);
   const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
   const currency = tx.currency || prop?.currency || '';
 
-  // Resolve converted amount from cached rates if toggle is on
+  const reportingCurrency = State.workspaceSettings?.reporting_currency;
   let convertedHtml = '';
-  if (showConverted && reportingCurrency && currency !== reportingCurrency) {
+  if (reportingCurrency && currency !== reportingCurrency) {
     const rates = State.currencyRates || [];
     const rate = rates
       .filter(r => r.from_currency === currency && r.to_currency === reportingCurrency && r.effective_date <= tx.date)
@@ -391,44 +310,23 @@ function txRow(tx, showEditBtn, showConverted, reportingCurrency) {
     }
   }
 
-  const deleteBtn = showEditBtn && window.AUTH_TOKEN
+  const deleteBtn = window.AUTH_TOKEN
     ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="event.stopPropagation();deleteTxWithConfirm('${tx.id}')">${t('common.delete')}</button>`
     : '';
-  const actions = showEditBtn ? `<td>${deleteBtn}</td>` : '';
   return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
-    <td onclick="event.stopPropagation()"><input type="checkbox" class="tx-row-cb" data-id="${tx.id}" onchange="onTxRowSelect()"></td>
-    <td>${tx.date}</td>
-    <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
-    <td><span class="tag tag-${tx.type}">${t('categories.' + tx.type)}</span></td>
-    <td><span class="tag tag-${tx.type}">${catLbl}</span></td>
-    <td>${tx.description}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
-    ${showEditBtn ? `<td><span class="muted" style="font-size:11px">${srcLbl}</span></td>` : ''}
-    <td class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, currency)}<span class="muted" style="font-size:11px;margin-left:4px">${currency}</span>${convertedHtml}</td>
-    ${actions}
+    <td onclick="event.stopPropagation()"><input type="checkbox" data-row-id="${tx.id}"></td>
+    <td data-col="property">${prop ? prop.name : '<span class="muted">—</span>'}</td>
+    <td data-col="date">${tx.date}</td>
+    <td data-col="type"><span class="tag tag-${tx.type}">${t('categories.' + tx.type)}</span></td>
+    <td data-col="category"><span class="tag tag-${tx.type}">${catLbl}</span></td>
+    <td data-col="description">${tx.description}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
+    <td data-col="source"><span class="muted" style="font-size:11px">${srcLbl}</span></td>
+    <td data-col="amount" class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, currency)}<span class="muted" style="font-size:11px;margin-left:4px">${currency}</span>${convertedHtml}</td>
+    <td><div style="display:flex">${deleteBtn}</div></td>
   </tr>`;
 }
 
-function txSelectAll(checked) {
-  document.querySelectorAll('.tx-row-cb').forEach(cb => { cb.checked = checked; });
-  onTxRowSelect();
-}
-
-function onTxRowSelect() {
-  const cbs = document.querySelectorAll('.tx-row-cb');
-  const selected = [...cbs].filter(cb => cb.checked);
-  const bar = document.getElementById('tx-bulk-bar');
-  const allCb = document.getElementById('tx-select-all');
-  if (selected.length > 0) {
-    bar.style.display = 'flex';
-    document.getElementById('tx-bulk-count').textContent = t('tx.selected', { count: selected.length });
-  } else {
-    bar.style.display = 'none';
-  }
-  if (allCb) allCb.indeterminate = selected.length > 0 && selected.length < cbs.length;
-}
-
-async function bulkDeleteTx() {
-  const ids = [...document.querySelectorAll('.tx-row-cb:checked')].map(cb => cb.dataset.id);
+async function bulkDeleteSelectedTx(ids) {
   if (!ids.length) { toast(t('tx.toast.noneSelected'), 'error'); return; }
   if (!confirm(t('tx.confirmBulkDelete', { count: ids.length }))) return;
   setLoading(true, t('status.deleting'));
@@ -442,26 +340,6 @@ async function bulkDeleteTx() {
   setLoading(false);
 }
 
-function updateCategoryFilter() {
-  const type  = document.getElementById('tx-filter-type').value;
-  const catEl = document.getElementById('tx-filter-cat');
-  catEl.innerHTML = `<option value="all">${t('tx.filter.allCats')}</option>`;
-  if (type !== 'all' && CATEGORIES[type]) {
-    Object.entries(CATEGORIES[type].items).forEach(([k]) => {
-      catEl.innerHTML += `<option value="${k}">${t('categories.items.' + k)}</option>`;
-    });
-  } else {
-    catEl.innerHTML += Importer.buildCategoryOptions('');
-  }
-}
-
-function clearTxFilters() {
-  ['tx-filter-apt','tx-filter-type','tx-filter-cat'].forEach(id => document.getElementById(id).value = 'all');
-  ['tx-filter-from','tx-filter-to','tx-filter-search'].forEach(id => document.getElementById(id).value = '');
-  updateCategoryFilter();
-  resetAndRenderTxTable();
-}
-
 // ── Transaction modal ─────────────────────────────────────
 
 function openTxModal(txId) {
@@ -471,7 +349,7 @@ function openTxModal(txId) {
   populateAllDropdowns();
 
   if (txId) {
-    const tx = TxListState.data.find(tx => tx.id === txId) || State.transactions.find(tx => tx.id === txId);
+    const tx = State.transactions.find(tx => tx.id === txId);
     if (!tx) return;
     document.getElementById('tx-modal-title').textContent = t('tx.modal.editTitle');
     document.getElementById('tx-m-date').value   = tx.date;
@@ -1757,8 +1635,6 @@ window.addEventListener('DOMContentLoaded', boot);
 Object.assign(window, {
   showPage, refreshAll,
   openTxModal, closeTxModal, saveTxModal, deleteTxModal, onCategoryChange,
-  txSelectAll, onTxRowSelect, bulkDeleteTx, clearTxFilters, updateCategoryFilter,
-  resetAndRenderTxTable, setTxSort, goToTxPage, onTxRowsPerPageChange,
   deleteTxWithConfirm,
   onProfileChange, onImportFileChange, onImportDragOver, onImportDragLeave, onImportDrop,
   toggleImportPaste, clearImport, runImportPreview,
