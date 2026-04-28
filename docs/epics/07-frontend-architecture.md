@@ -117,8 +117,8 @@ When a column is hidden (via ⚙ or `defaultVisible: false`), its `<th>`, all `<
 
 ---
 
-### F7-2 Migrate transactions table to DataTable `[Planned]`
-**Status:** Planned
+### F7-2 Migrate transactions table to DataTable `[Done]`
+**Status:** Done
 
 The reference migration. Replace the hand-rolled transactions table (`renderTxTable`,
 `renderTxPagination`, `TxSort`, `TxListState`, inline filter reads) with a `DataTable.create()`
