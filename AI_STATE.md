@@ -85,8 +85,8 @@ F7-5-3: Deploy to homedev and smoke-test — dashboard mini-table renders top-8 
 
 ## Automation log (latest only)
 
-- 2026-04-28 10:00:00 [F7-4 Done — report tables migrated to DataTable]
+- 2026-04-28 10:30:00 [F7-5 Done — dashboard mini-table migrated to DataTable]
   - branch: main
-  - last_commit: 59fafa8
+  - last_commit: 47f3f91
   - changed_files: frontend/index.html, frontend/js/app.js, version.json, docs/epics/07-frontend-architecture.md, docs/roadmap.md, AI_STATE.md
   - git_status: clean
