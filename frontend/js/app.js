@@ -212,7 +212,7 @@ function initTxTable() {
     ],
     columns: [
       {
-        key: 'property', label: t('tx.col.property'), sortable: false, defaultVisible: true,
+        key: 'property', label: t('tx.col.property'), sortable: true,defaultVisible: true,
         filter: {
           type: 'select',
           placeholder: t('tx.filter.allProperties'),
@@ -224,7 +224,7 @@ function initTxTable() {
         filter: { type: 'date-range' },
       },
       {
-        key: 'type', label: t('tx.col.type'), sortable: false, defaultVisible: true,
+        key: 'type', label: t('tx.col.type'), sortable: true,defaultVisible: true,
         filter: {
           type: 'select',
           placeholder: t('tx.filter.allTypes'),
@@ -237,7 +237,7 @@ function initTxTable() {
         },
       },
       {
-        key: 'category', label: t('tx.col.category'), sortable: false, defaultVisible: true,
+        key: 'category', label: t('tx.col.category'), sortable: true,defaultVisible: true,
         filter: {
           type: 'select',
           placeholder: t('tx.filter.allCats'),
@@ -253,10 +253,10 @@ function initTxTable() {
         },
       },
       {
-        key: 'description', label: t('tx.col.description'), sortable: false, defaultVisible: true,
+        key: 'description', label: t('tx.col.description'), sortable: true,defaultVisible: true,
         filter: { type: 'text', placeholder: t('common.search') },
       },
-      { key: 'source', label: t('tx.col.source'), sortable: false, defaultVisible: true },
+      { key: 'source', label: t('tx.col.source'), sortable: true,defaultVisible: true },
       { key: 'amount', label: t('tx.col.amount'), sortable: true,  defaultVisible: true },
     ],
     fetchData: async (params) => {

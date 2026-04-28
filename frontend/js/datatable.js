@@ -183,9 +183,10 @@ const DataTable = (() => {
 
       columns.forEach(c => {
         const hidden  = visibleCols[c.key] === false ? ' class="dt-col-hidden"' : '';
-        const sortCls = c.sortable ? ' dt-sortable' : '';
+        const sortable = c.sortable !== false;
+        const sortCls = sortable ? ' dt-sortable' : '';
         let indicator = '';
-        if (c.sortable) {
+        if (sortable) {
           const isActive = sortState.col === c.key;
           const arrow    = isActive ? (sortState.dir === 'asc' ? '↑' : '↓') : '↕';
           const cls      = isActive ? 'dt-sort-indicator dt-sort-active' : 'dt-sort-indicator';

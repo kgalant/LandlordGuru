@@ -198,7 +198,10 @@ Migrate the dashboard recent-transactions mini-table (5 rows, read-only, no cont
 
 ## Bugs
 
-None recorded.
+### F7-B1 — Sort by property sorts by ID not name `[Backlog]`
+**Status:** Backlog
+
+The property column sorts by `ap.property_id` (numeric) rather than the property name. Users expect alphabetical sort. Fix requires joining the `properties` table in `GET /api/transactions` and ordering by `p.name` when `sort_col=property`.
 
 ---
 

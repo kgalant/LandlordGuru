@@ -111,7 +111,7 @@ async function validateFields(body, workspaceId, requireAll) {
 // Optional query params: account_id, property_id, type, category, from, to, search, page, limit
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { account_id, property_id, type, category, from, to, search } = req.query;
+    const { account_id, property_id, type, category, from, to, search, sort_col, sort_dir } = req.query;
     let page = parseInt(req.query.page, 10) || 1;
     let limit = parseInt(req.query.limit, 10) || DEFAULT_PAGE_LIMIT;
     if (page < 1) page = 1;
@@ -140,9 +140,13 @@ router.get('/', requireAuth, async (req, res) => {
 
     const [{ count: totalCount }] = await applyFilters(baseQuery.clone()).count('t.id as count');
 
+    const SORT_COLS = { date: 't.date', amount: 't.amount', type: 't.type', category: 't.category', description: 't.description', source: 't.source', property: 'ap.property_id' };
+    const sortColumn = SORT_COLS[sort_col] || 't.date';
+    const sortDirection = sort_dir === 'asc' ? 'asc' : 'desc';
+
     const dataQuery = applyFilters(baseQuery.clone())
       .select('t.*', 'ap.property_id')
-      .orderBy('t.date', 'desc')
+      .orderBy(sortColumn, sortDirection)
       .orderBy('t.created_at', 'desc')
       .limit(limit)
       .offset((page - 1) * limit);

@@ -36,7 +36,7 @@ None.
 
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
-- Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up)
+- Known bugs: B2-1-1, B3-1-1 (referenced in backlog but not yet documented in epic docs — investigate before picking up), F7-B1 (property column sorts by ID not name — needs properties join in transactions API)
 - Backlog chores: F6-7 (consolidate version numbering — three files, two are authoritative, root version.json appears unused)
 - Backlog features: F1-11, F1-12, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
 - Next MVP candidates (Wave 3): F2-2, F2-6, F2-7

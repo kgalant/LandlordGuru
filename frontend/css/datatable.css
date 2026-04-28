@@ -1,9 +1,10 @@
 /* DataTable component styles */
 
-/* Container: flex column, height determined by caller */
+/* Container: flex column, fills whatever height caller sets */
 .dt-wrap {
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
   background: #fff;
   border: 1px solid #dee2e6;
@@ -81,8 +82,11 @@
 /* ── Column headers table ──────────────────── */
 .dt-col-headers {
   border-bottom: 2px solid #dee2e6;
-  overflow: hidden;
+  /* scroll reserves same width as .dt-body scrollbar so columns align */
+  overflow-y: scroll;
+  scrollbar-width: none;
 }
+.dt-col-headers::-webkit-scrollbar { display: none; }
 
 .dt-col-headers table,
 .dt-body table {
