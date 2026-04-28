@@ -82,7 +82,7 @@ function renderCurrentPage() {
   if (currentPage === 'transactions') { if (!txTable) initTxTable(); else txTable.refresh(); }
   if (currentPage === 'reports')      renderReports();
   if (currentPage === 'properties')   renderPropertyList();
-  if (currentPage === 'rules')        renderRules();
+  if (currentPage === 'rules')        { if (!rulesTable) initRulesTable(); else rulesTable.refresh(); }
   if (currentPage === 'settings')     renderSettings();
 }
 
@@ -1257,35 +1257,46 @@ async function archiveProperty(id) {
 
 // ── Rules ─────────────────────────────────────────────────
 
-function renderRules() {
-  const body  = document.getElementById('rules-body');
-  const empty = document.getElementById('rules-empty');
-  if (!State.rules.length) {
-    body.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-  body.innerHTML = State.rules.map((r, i) => {
-    const prop    = State.properties.find(p => p.id === r.property_id);
-    const profile = BANK_PROFILES[r.bank_profile]?.label || (r.bank_profile ? r.bank_profile : t('rules.modal.anyBank'));
-    return `<tr>
-      <td style="font-size:12px">${profile}</td>
-      <td><code style="font-size:12px;background:var(--bg3);padding:2px 6px;border-radius:4px">${r.keyword}</code></td>
-      <td><span class="tag tag-${Importer.categoryToType(r.category)}">${Reports.categoryLabel(r.category)}</span></td>
-      <td style="font-size:12px">${prop ? prop.name : '—'}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteRule(${i})">✕</button></td>
-    </tr>`;
-  }).join('');
+let rulesTable = null;
+
+function initRulesTable() {
+  rulesTable = DataTable.create({
+    containerId: 'rules-table-wrap',
+    title: t('rules.title'),
+    actions: [
+      { label: t('rules.addBtn'), onclick: 'openRuleModal()' },
+    ],
+    columns: [
+      { key: 'bank_profile', label: t('rules.col.bankProfile'), sortable: true },
+      { key: 'keyword',      label: t('rules.col.keyword'),     sortable: true },
+      { key: 'category',     label: t('rules.col.category'),    sortable: true },
+      { key: 'property',     label: t('rules.col.property'),    sortable: true },
+      { key: '_actions',     label: '',                         sortable: false, width: '4rem' },
+    ],
+    fetchData: async () => {
+      return { data: State.rules, total: State.rules.length };
+    },
+    renderRow: (r) => {
+      const prop    = State.properties.find(p => p.id === r.property_id);
+      const profile = BANK_PROFILES[r.bank_profile]?.label || (r.bank_profile ? r.bank_profile : t('rules.modal.anyBank'));
+      return `<tr>
+        <td data-col="bank_profile" style="font-size:12px">${profile}</td>
+        <td data-col="keyword"><code style="font-size:12px;background:var(--bg3);padding:2px 6px;border-radius:4px">${r.keyword}</code></td>
+        <td data-col="category"><span class="tag tag-${Importer.categoryToType(r.category)}">${Reports.categoryLabel(r.category)}</span></td>
+        <td data-col="property" style="font-size:12px">${prop ? prop.name : '—'}</td>
+        <td data-col="_actions"><button class="btn btn-sm btn-danger" onclick="deleteRule(${r.id})">✕</button></td>
+      </tr>`;
+    },
+  });
 }
 
-async function deleteRule(idx) {
-  // v2 mode: call Api.deleteRule()
-  const rule = State.rules[idx];
+async function deleteRule(id) {
+  const idx = State.rules.findIndex(r => r.id === id);
+  if (idx === -1) return;
   try {
-    await Api.deleteRule(rule.id);
+    await Api.deleteRule(id);
     State.rules.splice(idx, 1);
-    renderRules();
+    rulesTable.refresh();
     toast(t('rules.toast.saved'), 'success');
   } catch(e) {
     toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
@@ -1316,7 +1327,7 @@ async function saveRuleModal() {
   try {
     const rule = await Api.createRule(ruleData);
     State.rules.push(rule);
-    renderRules();
+    if (rulesTable) rulesTable.refresh();
     closeRuleModal();
     toast(t('rules.toast.saved'), 'success');
   } catch(e) {
@@ -1360,7 +1371,7 @@ async function loadDefaultRules() {
         const rule = await Api.createRule(d);
         State.rules.push(rule);
       }
-      renderRules();
+      if (rulesTable) rulesTable.refresh();
       toast(t('rules.toast.defaultLoaded'), 'info');
     } catch(e) {
       toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
@@ -1368,7 +1379,7 @@ async function loadDefaultRules() {
   } else {
     // v1 mode: in-memory only
     State.rules = [...State.rules, ...defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword))];
-    renderRules();
+    if (rulesTable) rulesTable.refresh();
     toast(t('rules.toast.defaultLoaded'), 'info');
   }
 }

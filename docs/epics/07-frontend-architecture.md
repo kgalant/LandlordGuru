@@ -65,8 +65,9 @@ DataTable.create({
 {
   key:            'category',
   label:          'Category',
-  sortable:       false,
+  sortable:       true,   // default: true — set false to suppress sort arrow and click
   defaultVisible: true,
+  width:          '6rem', // optional: passed to <colgroup> <col> for fixed-width columns
   filter: {
     type:        'select',           // 'select' | 'text' | 'date-range' | 'toggle'
     placeholder: 'All categories',
@@ -74,6 +75,8 @@ DataTable.create({
   },
 }
 ```
+
+**Column alignment:** The component generates a matching `<colgroup>` for both the header table and body table. Columns with an explicit `width` get a fixed `<col style="width:...">` ; columns without one share the remaining space equally. This ensures `table-layout: fixed` distributes columns identically in both tables regardless of cell content.
 
 When a column is hidden (via ⚙ or `defaultVisible: false`), its `<th>`, all `<td>` cells in that column, and its filter control are all hidden. The filter value is also reset so it does not silently filter the data. At least one column must remain visible (the last visible checkbox is disabled).
 
@@ -139,8 +142,8 @@ call. All existing functionality must be preserved exactly.
 
 ---
 
-### F7-3 Migrate rules table to DataTable `[Planned]`
-**Status:** Planned
+### F7-3 Migrate rules table to DataTable `[Done]`
+**Status:** Done
 
 Migrate the rules table. Simpler than transactions: no filter bar, no pagination, no bulk ops, one delete button per row.
 

@@ -58,6 +58,20 @@ Start these after F3-1 ships. Can be done in parallel.
 
 ---
 
+## Wave 6: Frontend Architecture (DataTable migrations)
+
+Can be done in parallel with Wave 3. Each migration step is independent once F7-1 is done.
+
+| Feature | Epic | Depends On | Status | Notes |
+|---------|------|-----------|--------|-------|
+| **F7-1** DataTable component — core build | E7 | — | Done | Reusable table component with sort, filter, pagination, bulk actions, column visibility. |
+| **F7-2** Migrate transactions table | E7 | F7-1 | Done | Reference migration. All columns sortable; sort params wired to backend. |
+| **F7-3** Migrate rules table | E7 | F7-1 | Done | Simpler: no filter bar, no pagination, no bulk ops. |
+| **F7-4** Migrate report tables | E7 | F7-1 | Planned | Three read-only tables: category breakdown ×2 and P&L by property. |
+| **F7-5** Migrate dashboard mini-table | E7 | F7-1 | Planned | Minimum config — no controls. |
+
+---
+
 ## Notes
 
 - **Dependency graph**: Each feature lists all blocking dependencies. No feature should be started until its "Depends On" items are complete.

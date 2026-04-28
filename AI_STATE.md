@@ -24,11 +24,11 @@ None.
 
 ## Task breakdown (current focus)
 
-- [ ] F7-3-1: Audit rules table in `app.js` and `index.html` — list symbols and HTML to replace
-- [ ] F7-3-2: Add `<div id="rules-table-wrap">` to `index.html`; remove static rules table markup
-- [ ] F7-3-3: Wire `DataTable.create()` in `app.js` — columns, `fetchData`, `renderRow`, no filter/pagination/bulk
-- [ ] F7-3-4: Delete dead code from `app.js`
-- [ ] F7-3-5: Smoke-test on homedev — rules render, delete works, no regressions
+- [x] F7-3-1: Audit rules table in `app.js` and `index.html` — list symbols and HTML to replace
+- [x] F7-3-2: Add `<div id="rules-table-wrap">` to `index.html`; remove static rules table markup
+- [x] F7-3-3: Wire `DataTable.create()` in `app.js` — columns, `fetchData`, `renderRow`, no filter/pagination/bulk
+- [x] F7-3-4: Delete dead code from `app.js`
+- [-] F7-3-5: Smoke-test on homedev — rules render, delete works, no regressions
 
 ---
 
@@ -56,7 +56,7 @@ Relevant epic docs:
 
 ## Next step
 
-F7-3-1: Read `renderRules` in `app.js` and the rules section of `index.html` to audit what needs replacing.
+F7-3-5: Deploy to homedev and smoke-test — rules page renders, add rule works, delete rule works, no regressions on transactions or other pages.
 
 ---
 
@@ -76,6 +76,11 @@ F7-3-1: Read `renderRules` in `app.js` and the rules section of `index.html` to 
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
 - `docs/epics/07-frontend-architecture.md`
+- `frontend/index.html`
+- `frontend/js/app.js`
+- `version.json`
+- `docs/epics/07-frontend-architecture.md`
+- `docs/roadmap.md`
 
 ---
 
