@@ -10,9 +10,9 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Type: feature
 - Epic: E7 Frontend Architecture
-- ID: F7-3
-- Title: Migrate rules table to DataTable
-- Short summary: Replace the hand-rolled rules table in `app.js` with a `DataTable.create()` call. No filter bar, no pagination, no bulk ops — simpler than F7-2. Validates DataTable is not over-fitted to the transactions use case.
+- ID: F7-4
+- Title: Migrate report tables to DataTable
+- Short summary: Replace three hand-rolled report tables (income by cat, expenses by cat, P&L by property) with DataTable.create() instances. No filter/pagination/bulk; column visibility enabled. Data computed once in renderReports(), stored in module-level vars, refreshed on each filter change.
 
 ---
 
@@ -24,11 +24,10 @@ None.
 
 ## Task breakdown (current focus)
 
-- [x] F7-3-1: Audit rules table in `app.js` and `index.html` — list symbols and HTML to replace
-- [x] F7-3-2: Add `<div id="rules-table-wrap">` to `index.html`; remove static rules table markup
-- [x] F7-3-3: Wire `DataTable.create()` in `app.js` — columns, `fetchData`, `renderRow`, no filter/pagination/bulk
-- [x] F7-3-4: Delete dead code from `app.js`
-- [-] F7-3-5: Smoke-test on homedev — rules render, delete works, no regressions
+- [x] F7-4-1: Replace three static tables in `index.html` with wrap divs; keep card/grid structure
+- [x] F7-4-2: Add module-level data vars and `initReportTables()` in `app.js`; update `renderReports()` to populate vars and call `.refresh()`
+- [x] F7-4-3: Delete dead DOM-write code from `renderReports()`
+- [-] F7-4-4: Smoke-test on homedev — all three tables render, column visibility works, filter bar still drives data
 
 ---
 
@@ -56,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-F7-3-5: Deploy to homedev and smoke-test — rules page renders, add rule works, delete rule works, no regressions on transactions or other pages.
+F7-4-4: Deploy to homedev and smoke-test — all three report tables render, column visibility toggles work, filter bar (property/date) still drives data correctly, no regressions on other pages.
 
 ---
 
@@ -81,6 +80,7 @@ F7-3-5: Deploy to homedev and smoke-test — rules page renders, add rule works,
 - `version.json`
 - `docs/epics/07-frontend-architecture.md`
 - `docs/roadmap.md`
+- `AI_STATE.md`
 
 ---
 

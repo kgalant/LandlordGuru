@@ -295,40 +295,15 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
         <div class="card">
-          <div class="card-header"><span class="card-title" data-i18n="reports.incomeByCat"></span></div>
-          <table>
-            <thead><tr>
-              <th data-i18n="reports.col.category"></th>
-              <th class="amount-cell" data-i18n="reports.col.amount"></th>
-              <th class="amount-cell" data-i18n="reports.col.count"></th>
-            </tr></thead>
-            <tbody id="rep-income-cats"></tbody>
-          </table>
+          <div id="rep-income-table-wrap"></div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title" data-i18n="reports.expensesByCat"></span></div>
-          <table>
-            <thead><tr>
-              <th data-i18n="reports.col.category"></th>
-              <th class="amount-cell" data-i18n="reports.col.amount"></th>
-              <th class="amount-cell" data-i18n="reports.col.count"></th>
-            </tr></thead>
-            <tbody id="rep-expense-cats"></tbody>
-          </table>
+          <div id="rep-expense-table-wrap"></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header"><span class="card-title" data-i18n="reports.pnlByProperty"></span></div>
-        <table>
-          <thead><tr>
-            <th data-i18n="reports.col.property"></th>
-            <th class="amount-cell" data-i18n="reports.col.income"></th>
-            <th class="amount-cell" data-i18n="reports.col.expenses"></th>
-            <th class="amount-cell" data-i18n="reports.col.net"></th>
-          </tr></thead>
-          <tbody id="rep-pnl-apt"></tbody>
-        </table>
+        <div id="rep-pnl-table-wrap"></div>
       </div>
     </div>
 

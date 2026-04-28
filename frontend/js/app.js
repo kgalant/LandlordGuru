@@ -1082,6 +1082,68 @@ async function doImport(saveMappings) {
 
 // ── Reports ───────────────────────────────────────────────
 
+let repIncomeTable  = null;
+let repExpenseTable = null;
+let repPnlTable     = null;
+let _repIncCats  = [];
+let _repExpCats  = [];
+let _repPnlRows  = [];
+
+function initReportTables() {
+  repIncomeTable = DataTable.create({
+    containerId: 'rep-income-table-wrap',
+    title: t('reports.incomeByCat'),
+    columns: [
+      { key: 'category', label: t('reports.col.category'), sortable: true },
+      { key: 'amount',   label: t('reports.col.amount'),   sortable: true },
+      { key: 'count',    label: t('reports.col.count'),    sortable: true },
+    ],
+    fetchData: async () => ({ data: _repIncCats,  total: _repIncCats.length }),
+    renderRow: (c) => `<tr>
+      <td data-col="category">${Reports.categoryLabel(c.category)}</td>
+      <td data-col="amount" class="amount-cell positive">${c.amount.toLocaleString()}</td>
+      <td data-col="count"  class="amount-cell muted">${c.count}</td>
+    </tr>`,
+    columnVisibility: { enabled: true, storageKey: 'datatable-rep-income' },
+  });
+
+  repExpenseTable = DataTable.create({
+    containerId: 'rep-expense-table-wrap',
+    title: t('reports.expensesByCat'),
+    columns: [
+      { key: 'category', label: t('reports.col.category'), sortable: true },
+      { key: 'amount',   label: t('reports.col.amount'),   sortable: true },
+      { key: 'count',    label: t('reports.col.count'),    sortable: true },
+    ],
+    fetchData: async () => ({ data: _repExpCats, total: _repExpCats.length }),
+    renderRow: (c) => `<tr>
+      <td data-col="category">${Reports.categoryLabel(c.category)}</td>
+      <td data-col="amount" class="amount-cell negative">${c.amount.toLocaleString()}</td>
+      <td data-col="count"  class="amount-cell muted">${c.count}</td>
+    </tr>`,
+    columnVisibility: { enabled: true, storageKey: 'datatable-rep-expense' },
+  });
+
+  repPnlTable = DataTable.create({
+    containerId: 'rep-pnl-table-wrap',
+    title: t('reports.pnlByProperty'),
+    columns: [
+      { key: 'property',  label: t('reports.col.property'),  sortable: true },
+      { key: 'income',    label: t('reports.col.income'),    sortable: true },
+      { key: 'expenses',  label: t('reports.col.expenses'),  sortable: true },
+      { key: 'net',       label: t('reports.col.net'),       sortable: true },
+    ],
+    fetchData: async () => ({ data: _repPnlRows, total: _repPnlRows.length }),
+    renderRow: (d) => `<tr>
+      <td data-col="property">${d.name}</td>
+      <td data-col="income"   class="amount-cell positive">${Reports.fmt(d.income,   d.currency)}</td>
+      <td data-col="expenses" class="amount-cell negative">${Reports.fmt(d.expenses, d.currency)}</td>
+      <td data-col="net"      class="amount-cell ${d.net >= 0 ? 'positive' : 'negative'}">${Reports.fmt(d.net, d.currency)}</td>
+    </tr>`,
+    columnVisibility: { enabled: true, storageKey: 'datatable-rep-pnl' },
+  });
+}
+
 function setReportYear(year) {
   if (!year) { renderReports(); return; }
   document.getElementById('rep-from').value = `${year}-01-01`;
@@ -1106,15 +1168,17 @@ function setReportPeriod(preset) {
 }
 
 function renderReports() {
-  const propId   = document.getElementById('rep-apt')?.value  || 'all';
-  const dateFrom = document.getElementById('rep-from')?.value || '';
-  const dateTo   = document.getElementById('rep-to')?.value   || '';
+  if (!repIncomeTable) initReportTables();
 
-  const filtered   = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
+  const propId     = document.getElementById('rep-apt')?.value  || 'all';
+  const dateFrom   = document.getElementById('rep-from')?.value || '';
+  const dateTo     = document.getElementById('rep-to')?.value   || '';
+
+  const filtered     = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
   const visibleProps = propId !== 'all'
     ? State.properties.filter(p => p.id === propId)
     : State.properties;
-  const summary  = Reports.pnl(filtered, visibleProps);
+  const summary      = Reports.pnl(filtered, visibleProps);
 
   document.getElementById('rep-metrics').innerHTML = `
     <div class="metric"><div class="m-label">${t('reports.metrics.totalIncome')}</div><div class="m-value positive">${Reports.fmtDKK(summary.totals.income_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
@@ -1123,26 +1187,14 @@ function renderReports() {
     <div class="metric"><div class="m-label">${t('reports.metrics.transactions')}</div><div class="m-value">${filtered.length}</div><div class="m-sub">${t('reports.metrics.inPeriod')}</div></div>
   `;
 
-  const cats    = Reports.categoryBreakdown(filtered);
-  const incCats = cats.filter(c => c.type === 'income');
-  const expCats = cats.filter(c => c.type === 'expense');
+  const cats  = Reports.categoryBreakdown(filtered);
+  _repIncCats = cats.filter(c => c.type === 'income');
+  _repExpCats = cats.filter(c => c.type === 'expense');
+  _repPnlRows = Object.values(summary.byProperty);
 
-  document.getElementById('rep-income-cats').innerHTML = incCats.length
-    ? incCats.map(c => `<tr><td>${Reports.categoryLabel(c.category)}</td><td class="amount-cell positive">${c.amount.toLocaleString()}</td><td class="amount-cell muted">${c.count}</td></tr>`).join('')
-    : `<tr><td colspan="3" class="muted">${t('reports.noIncome')}</td></tr>`;
-
-  document.getElementById('rep-expense-cats').innerHTML = expCats.length
-    ? expCats.map(c => `<tr><td>${Reports.categoryLabel(c.category)}</td><td class="amount-cell negative">${c.amount.toLocaleString()}</td><td class="amount-cell muted">${c.count}</td></tr>`).join('')
-    : `<tr><td colspan="3" class="muted">${t('reports.noExpenses')}</td></tr>`;
-
-  document.getElementById('rep-pnl-apt').innerHTML = Object.entries(summary.byProperty).map(([, data]) => `
-    <tr>
-      <td>${data.name}</td>
-      <td class="amount-cell positive">${Reports.fmt(data.income, data.currency)}</td>
-      <td class="amount-cell negative">${Reports.fmt(data.expenses, data.currency)}</td>
-      <td class="amount-cell ${data.net>=0?'positive':'negative'}">${Reports.fmt(data.net, data.currency)}</td>
-    </tr>
-  `).join('');
+  repIncomeTable.refresh();
+  repExpenseTable.refresh();
+  repPnlTable.refresh();
 }
 
 // ── Properties ────────────────────────────────────────────

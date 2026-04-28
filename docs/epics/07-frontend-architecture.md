@@ -160,8 +160,8 @@ Migrate the rules table. Simpler than transactions: no filter bar, no pagination
 
 ---
 
-### F7-4 Migrate report tables to DataTable `[Planned]`
-**Status:** Planned
+### F7-4 Migrate report tables to DataTable `[Done]`
+**Status:** Done
 
 Migrate the three read-only report tables: category breakdown ×2 and P&L by property.
 
