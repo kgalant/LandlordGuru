@@ -86,8 +86,8 @@ F7-3-5: Deploy to homedev and smoke-test — rules page renders, add rule works,
 
 ## Automation log (latest only)
 
-- 2026-04-28 09:00:00 [F7-2 Done; F7-3 set as current focus]
+- 2026-04-28 09:30:00 [F7-3 Done — rules table migrated to DataTable]
   - branch: main
-  - last_commit: a57c080
-  - changed_files: AI_STATE.md, docs/epics/07-frontend-architecture.md, .claude/ai_state_archive.json
-  - git_status: M AI_STATE.md, M docs/epics/07-frontend-architecture.md
+  - last_commit: f246d85
+  - changed_files: frontend/index.html, frontend/js/app.js, version.json, docs/epics/07-frontend-architecture.md, docs/roadmap.md, AI_STATE.md
+  - git_status: clean
