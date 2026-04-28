@@ -256,8 +256,9 @@ function initTxTable() {
         key: 'description', label: t('tx.col.description'), sortable: true,defaultVisible: true,
         filter: { type: 'text', placeholder: t('common.search') },
       },
-      { key: 'source', label: t('tx.col.source'), sortable: true,defaultVisible: true },
-      { key: 'amount', label: t('tx.col.amount'), sortable: true,  defaultVisible: true },
+      { key: 'source',   label: t('tx.col.source'), sortable: true,  defaultVisible: true },
+      { key: 'amount',   label: t('tx.col.amount'), sortable: true,  defaultVisible: true },
+      { key: '_actions', label: '',                 sortable: false, defaultVisible: true },
     ],
     fetchData: async (params) => {
       const filters = { page: params.page, limit: params.limit };

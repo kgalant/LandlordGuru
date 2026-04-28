@@ -55,6 +55,8 @@ export const Api = (() => {
     if (filters.search)      params.append('search',      filters.search);
     if (filters.page)        params.append('page',        filters.page);
     if (filters.limit)       params.append('limit',       filters.limit);
+    if (filters.sort_col)    params.append('sort_col',    filters.sort_col);
+    if (filters.sort_dir)    params.append('sort_dir',    filters.sort_dir);
     if (params.toString()) path += '?' + params.toString();
     return request('GET', path);
   }
