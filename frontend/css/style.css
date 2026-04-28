@@ -357,7 +357,7 @@ textarea { resize: vertical; min-height: 70px; }
 }
 
 #tx-table-wrap {
-  height: calc(100vh - var(--nav-h, 52px) - 3rem); /* 3rem = main top + bottom padding */
+  height: calc(100vh - var(--nav-h, 52px) - 4rem); /* 3rem main padding + 1rem card margin-bottom */
 }
 
 /* ── Sticky import preview header + column headers ────────── */

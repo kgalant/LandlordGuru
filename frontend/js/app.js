@@ -181,7 +181,7 @@ function renderDashboard() {
 
   const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
   document.getElementById('dash-recent-tx').innerHTML = recent.length
-    ? recent.map(tx => txRow(tx, false)).join('')
+    ? recent.map(tx => dashTxRow(tx)).join('')
     : `<tr><td colspan="5" class="empty-state">${t('dashboard.noTx')}</td></tr>`;
 }
 
@@ -258,7 +258,7 @@ function initTxTable() {
       },
       { key: 'source',   label: t('tx.col.source'), sortable: true,  defaultVisible: true },
       { key: 'amount',   label: t('tx.col.amount'), sortable: true,  defaultVisible: true },
-      { key: '_actions', label: '',                 sortable: false, defaultVisible: true },
+      { key: '_actions', label: '',                 sortable: false, defaultVisible: true, width: '4rem' },
     ],
     fetchData: async (params) => {
       const filters = { page: params.page, limit: params.limit };
@@ -289,6 +289,20 @@ function initTxTable() {
       storageKey: 'datatable-tx-columns',
     },
   });
+}
+
+function dashTxRow(tx) {
+  const prop   = State.properties.find(p => p.id === tx.property_id);
+  const catLbl = Reports.categoryLabel(tx.category);
+  const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
+  const currency = tx.currency || prop?.currency || '';
+  return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
+    <td>${tx.date}</td>
+    <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
+    <td>${tx.description}</td>
+    <td><span class="tag tag-${tx.type}">${catLbl}</span></td>
+    <td class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, currency)}<span class="muted" style="font-size:11px;margin-left:4px">${currency}</span></td>
+  </tr>`;
 }
 
 function txRow(tx) {

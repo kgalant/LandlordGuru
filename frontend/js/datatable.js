@@ -78,6 +78,7 @@ const DataTable = (() => {
       const hasFilters = cols.some(c => c.filter);
       const hasBulk    = bulk.length > 0;
       const hasPager   = pag.enabled;
+      const colGroup   = _buildColGroup(cols, hasBulk);
 
       return `
 <div class="dt-wrap">
@@ -85,10 +86,10 @@ const DataTable = (() => {
   ${_buildBulkBar(bulk)}
   ${_buildFilterBar(cols, hasFilters)}
   <div class="dt-col-headers">
-    <table><thead><tr id="${containerId}-col-hdr"></tr></thead></table>
+    <table>${colGroup}<thead><tr id="${containerId}-col-hdr"></tr></thead></table>
   </div>
   <div class="dt-body">
-    <table><tbody id="${containerId}-body"></tbody></table>
+    <table>${colGroup}<tbody id="${containerId}-body"></tbody></table>
   </div>
   <div class="dt-footer${hasPager ? '' : ' dt-hidden'}" id="${containerId}-footer">
     <span class="dt-page-info" id="${containerId}-page-info"></span>
@@ -96,6 +97,12 @@ const DataTable = (() => {
     ${hasPager ? _buildLimitSelect(pag) : ''}
   </div>
 </div>`;
+    }
+
+    function _buildColGroup(cols, hasBulk) {
+      let html = hasBulk ? '<col style="width:2rem">' : '';
+      cols.forEach(c => { html += c.width ? `<col style="width:${c.width}">` : '<col>'; });
+      return `<colgroup>${html}</colgroup>`;
     }
 
     function _buildHeaderBar(title, actions, cv) {
