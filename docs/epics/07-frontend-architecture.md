@@ -176,8 +176,8 @@ Migrate the three read-only report tables: category breakdown ×2 and P&L by pro
 
 ---
 
-### F7-5 Migrate dashboard mini-table to DataTable `[Planned]`
-**Status:** Planned
+### F7-5 Migrate dashboard mini-table to DataTable `[Done]`
+**Status:** Done
 
 Migrate the dashboard recent-transactions mini-table (5 rows, read-only, no controls).
 

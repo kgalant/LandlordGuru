@@ -122,6 +122,30 @@ function populateAllDropdowns() {
 
 // ── Dashboard ─────────────────────────────────────────────
 
+let dashRecentTable = null;
+
+function initDashRecentTable() {
+  dashRecentTable = DataTable.create({
+    containerId: 'dash-recent-table-wrap',
+    title: t('dashboard.recentTx'),
+    actions: [
+      { label: t('dashboard.viewAll'), onclick: "showPage('transactions', document.querySelector('nav button:nth-child(2)'))" },
+    ],
+    columns: [
+      { key: 'date',        label: t('tx.col.date'),        sortable: false },
+      { key: 'property',    label: t('tx.col.property'),    sortable: false },
+      { key: 'description', label: t('tx.col.description'), sortable: false },
+      { key: 'category',    label: t('tx.col.category'),    sortable: false },
+      { key: 'amount',      label: t('tx.col.amount'),      sortable: false },
+    ],
+    fetchData: async () => {
+      const recent = [...State.transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+      return { data: recent, total: recent.length };
+    },
+    renderRow: (tx) => dashTxRow(tx),
+  });
+}
+
 function renderDashboard() {
   const txs  = State.transactions;
   const props = State.properties;
@@ -179,10 +203,7 @@ function renderDashboard() {
         </div>`;
       }).join('');
 
-  const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
-  document.getElementById('dash-recent-tx').innerHTML = recent.length
-    ? recent.map(tx => dashTxRow(tx)).join('')
-    : `<tr><td colspan="5" class="empty-state">${t('dashboard.noTx')}</td></tr>`;
+  if (!dashRecentTable) initDashRecentTable(); else dashRecentTable.refresh();
 }
 
 // ── Transactions table ────────────────────────────────────

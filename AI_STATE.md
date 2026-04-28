@@ -10,9 +10,9 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Type: feature
 - Epic: E7 Frontend Architecture
-- ID: F7-4
-- Title: Migrate report tables to DataTable
-- Short summary: Replace three hand-rolled report tables (income by cat, expenses by cat, P&L by property) with DataTable.create() instances. No filter/pagination/bulk; column visibility enabled. Data computed once in renderReports(), stored in module-level vars, refreshed on each filter change.
+- ID: F7-5
+- Title: Migrate dashboard mini-table to DataTable
+- Short summary: Replace the hand-rolled recent-transactions mini-table on the dashboard with DataTable.create(). No filter bar, no pagination, no bulk ops, no column visibility. fetchData returns top-8 transactions sorted by date from State. "View all" button moves into DataTable actions.
 
 ---
 
@@ -24,10 +24,9 @@ None.
 
 ## Task breakdown (current focus)
 
-- [x] F7-4-1: Replace three static tables in `index.html` with wrap divs; keep card/grid structure
-- [x] F7-4-2: Add module-level data vars and `initReportTables()` in `app.js`; update `renderReports()` to populate vars and call `.refresh()`
-- [x] F7-4-3: Delete dead DOM-write code from `renderReports()`
-- [-] F7-4-4: Smoke-test on homedev — all three tables render, column visibility works, filter bar still drives data
+- [x] F7-5-1: Replace static mini-table in `index.html` with `<div id="dash-recent-table-wrap">`; remove card-header title+button (moves to DataTable)
+- [x] F7-5-2: Add `initDashRecentTable()` and wire into `renderDashboard()` in `app.js`; delete dead `dash-recent-tx` DOM write
+- [-] F7-5-3: Smoke-test on homedev — dashboard mini-table renders, View all works, no regressions
 
 ---
 
@@ -55,7 +54,7 @@ Relevant epic docs:
 
 ## Next step
 
-F7-4-4: Deploy to homedev and smoke-test — all three report tables render, column visibility toggles work, filter bar (property/date) still drives data correctly, no regressions on other pages.
+F7-5-3: Deploy to homedev and smoke-test — dashboard mini-table renders top-8 recent transactions, "View all" navigates to transactions page, no regressions on other pages.
 
 ---
 

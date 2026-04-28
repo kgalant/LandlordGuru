@@ -68,7 +68,7 @@ Can be done in parallel with Wave 3. Each migration step is independent once F7-
 | **F7-2** Migrate transactions table | E7 | F7-1 | Done | Reference migration. All columns sortable; sort params wired to backend. |
 | **F7-3** Migrate rules table | E7 | F7-1 | Done | Simpler: no filter bar, no pagination, no bulk ops. |
 | **F7-4** Migrate report tables | E7 | F7-1 | Done | Three read-only tables: category breakdown ×2 and P&L by property. Column visibility enabled. |
-| **F7-5** Migrate dashboard mini-table | E7 | F7-1 | Planned | Minimum config — no controls. |
+| **F7-5** Migrate dashboard mini-table | E7 | F7-1 | Done | Minimum config — no controls. "View all" in DataTable actions. |
 
 ---
 

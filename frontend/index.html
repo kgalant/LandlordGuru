@@ -52,22 +52,7 @@
       <div class="metric-grid" id="dash-metrics"></div>
       <div class="apt-grid"    id="dash-apt-cards"></div>
       <div class="card">
-        <div class="card-header">
-          <span class="card-title" data-i18n="dashboard.recentTx"></span>
-          <button class="btn btn-sm btn-secondary"
-            onclick="showPage('transactions', document.querySelector('nav button:nth-child(2)'))"
-            data-i18n="dashboard.viewAll"></button>
-        </div>
-        <div class="table-wrap">
-          <table><thead><tr>
-            <th data-i18n="tx.col.date"></th>
-            <th data-i18n="tx.col.property"></th>
-            <th data-i18n="tx.col.description"></th>
-            <th data-i18n="tx.col.category"></th>
-            <th class="amount-cell" data-i18n="tx.col.amount"></th>
-          </tr></thead>
-          <tbody id="dash-recent-tx"></tbody></table>
-        </div>
+        <div id="dash-recent-table-wrap"></div>
       </div>
     </div>
 
