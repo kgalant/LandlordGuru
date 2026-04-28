@@ -33,7 +33,7 @@ echo "[2/4] Pulling latest changes..."
 git pull origin main
 GIT_PULL_EXIT=$?
 GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-node -e "require('fs').writeFileSync('frontend/build.json', JSON.stringify({git_commit:'$GIT_COMMIT',timestamp:new Date().toISOString()}))"
+echo "{\"git_commit\":\"$GIT_COMMIT\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > frontend/build.json
 
 echo "[3/4] Running database migrations..."
 cd backend
