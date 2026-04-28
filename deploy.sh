@@ -91,9 +91,12 @@ fi
 echo ""
 
 # Summary
+deployed_commit=$(echo "$remote_output" | grep -oP 'commit: \K[a-f0-9]+' | tail -1)
+
 if [[ ${#step_errors[@]} -eq 0 ]]; then
     echo "Deployment complete — all steps succeeded."
     echo "Your changes are live on the dev server."
+    [[ -n "$deployed_commit" ]] && echo "Server is running commit: $deployed_commit"
 else
     echo "Deployment finished with ${#step_errors[@]} error(s):"
     for err in "${step_errors[@]}"; do
