@@ -15,11 +15,12 @@ export function initVersionBadge() {
   // ── Fetch version data ─────────────────────────────────────
 
   async function _load() {
-    const [vj, api] = await Promise.all([
+    const [vj, bj, api] = await Promise.all([
       fetch('version.json').then(r => r.json()).catch(() => ({})),
+      fetch('build.json').then(r => r.json()).catch(() => ({})),
       _pingApi(),
     ]);
-    _frontend = { version: vj.version || '?', commit: vj.build?.git_commit || '?' };
+    _frontend = { version: vj.version || '?', commit: bj.git_commit || vj.build?.git_commit || '?' };
     _backend  = { version: api.version || '?', environment: api.environment || '?', commit: api.commit || '?' };
     _label.textContent = _labelText();
   }

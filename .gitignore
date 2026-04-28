@@ -15,6 +15,9 @@ backend/node_modules/
 frontend/dist/
 frontend/build/
 
+# Generated at deploy time by deploy.sh / deploy.ps1
+frontend/build.json
+
 # OS files
 .DS_Store
 Thumbs.db
