@@ -258,7 +258,7 @@ function initTxTable() {
       },
       { key: 'source',   label: t('tx.col.source'), sortable: true,  defaultVisible: true },
       { key: 'amount',   label: t('tx.col.amount'), sortable: true,  defaultVisible: true },
-      { key: '_actions', label: '',                 sortable: false, defaultVisible: true, width: '4rem' },
+      { key: '_actions', label: '',                 sortable: false, defaultVisible: true, width: '5rem' },
     ],
     fetchData: async (params) => {
       const filters = { page: params.page, limit: params.limit };
