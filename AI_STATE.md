@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
-- Epic: E7 Frontend Architecture
-- ID: F7-5
-- Title: Migrate dashboard mini-table to DataTable
-- Short summary: Replace the hand-rolled recent-transactions mini-table on the dashboard with DataTable.create(). No filter bar, no pagination, no bulk ops, no column visibility. fetchData returns top-8 transactions sorted by date from State. "View all" button moves into DataTable actions.
+- Type: —
+- Epic: —
+- ID: —
+- Title: Pending selection
+- Short summary: F7-5 closed out. Next focus to be selected from Wave 3 candidates: F2-2, F2-6, F2-7.
 
 ---
 
@@ -26,7 +26,7 @@ None.
 
 - [x] F7-5-1: Replace static mini-table in `index.html` with `<div id="dash-recent-table-wrap">`; remove card-header title+button (moves to DataTable)
 - [x] F7-5-2: Add `initDashRecentTable()` and wire into `renderDashboard()` in `app.js`; delete dead `dash-recent-tx` DOM write
-- [-] F7-5-3: Smoke-test on homedev — dashboard mini-table renders, View all works, no regressions
+- [x] F7-5-3: Smoke-test on homedev — confirmed passing; also fixed DataTable column header alignment (amount/count/income/expenses/net headers now right-aligned to match data cells)
 
 ---
 
@@ -54,7 +54,7 @@ Relevant epic docs:
 
 ## Next step
 
-F7-5-3: Deploy to homedev and smoke-test — dashboard mini-table renders top-8 recent transactions, "View all" navigates to transactions page, no regressions on other pages.
+Select next focus from Wave 3 candidates (F2-2, F2-6, F2-7) or known bugs (B2-1-1, B3-1-1, F7-B1).
 
 ---
 
@@ -64,29 +64,24 @@ F7-5-3: Deploy to homedev and smoke-test — dashboard mini-table renders top-8 
   - `cd /home/kim/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
 
 - Last result:
-  - Date/time: 2026-04-28 09:00:00
-  - Outcome: 161/161 tests passing. F7-2 smoke-tested and confirmed Done.
+  - Date/time: 2026-04-30 00:00:00
+  - Outcome: 161/161 tests passing. F7-5 smoke-tested on homedev and confirmed Done. Header alignment fix verified.
 
 ---
 
 ## Files touched this session
 
-- `AI_STATE.md`
-- `.claude/ai_state_archive.json`
-- `docs/epics/07-frontend-architecture.md`
-- `frontend/index.html`
+- `frontend/js/datatable.js`
 - `frontend/js/app.js`
-- `version.json`
-- `docs/epics/07-frontend-architecture.md`
-- `docs/roadmap.md`
+- `.claude/ai_state_archive.json`
 - `AI_STATE.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-28 10:30:00 [F7-5 Done — dashboard mini-table migrated to DataTable]
+- 2026-04-30 00:00:00 [F7-5 smoke-tested — DataTable header alignment fix applied and confirmed]
   - branch: main
-  - last_commit: 47f3f91
-  - changed_files: frontend/index.html, frontend/js/app.js, version.json, docs/epics/07-frontend-architecture.md, docs/roadmap.md, AI_STATE.md
+  - last_commit: fc1dc31
+  - changed_files: frontend/js/app.js, frontend/js/datatable.js, AI_STATE.md
   - git_status: clean

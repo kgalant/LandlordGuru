@@ -203,5 +203,13 @@
     "last_commit": "47f3f91",
     "changed_files": ["frontend/index.html", "frontend/js/app.js", "version.json", "docs/epics/07-frontend-architecture.md", "docs/roadmap.md", "AI_STATE.md"],
     "git_status": "clean"
+  },
+  {
+    "timestamp": "2026-04-30 00:00:00",
+    "phase": "[F7-5 smoke-tested — DataTable header alignment fix applied and confirmed]",
+    "branch": "main",
+    "last_commit": "fc1dc31",
+    "changed_files": ["frontend/js/app.js", "frontend/js/datatable.js", "AI_STATE.md"],
+    "git_status": "clean"
   }
 ]
