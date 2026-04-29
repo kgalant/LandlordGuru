@@ -199,7 +199,8 @@ const DataTable = (() => {
           const cls      = isActive ? 'dt-sort-indicator dt-sort-active' : 'dt-sort-indicator';
           indicator = `<span class="${cls}">${arrow}</span>`;
         }
-        html += `<th${hidden} class="${sortCls}" data-sort-key="${c.key}">${_esc(c.label)}${indicator}</th>`;
+        const alignStyle = c.align ? ` style="text-align:${c.align}"` : '';
+        html += `<th${hidden}${alignStyle} class="${sortCls}" data-sort-key="${c.key}">${_esc(c.label)}${indicator}</th>`;
       });
 
       hdr.innerHTML = html;

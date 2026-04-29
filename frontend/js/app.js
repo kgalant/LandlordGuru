@@ -136,7 +136,7 @@ function initDashRecentTable() {
       { key: 'property',    label: t('tx.col.property'),    sortable: false },
       { key: 'description', label: t('tx.col.description'), sortable: false },
       { key: 'category',    label: t('tx.col.category'),    sortable: false },
-      { key: 'amount',      label: t('tx.col.amount'),      sortable: false },
+      { key: 'amount',      label: t('tx.col.amount'),      sortable: false, align: 'right' },
     ],
     fetchData: async () => {
       const recent = [...State.transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
@@ -278,7 +278,7 @@ function initTxTable() {
         filter: { type: 'text', placeholder: t('common.search') },
       },
       { key: 'source',   label: t('tx.col.source'), sortable: true,  defaultVisible: true },
-      { key: 'amount',   label: t('tx.col.amount'), sortable: true,  defaultVisible: true },
+      { key: 'amount',   label: t('tx.col.amount'), sortable: true,  defaultVisible: true, align: 'right' },
       { key: '_actions', label: '',                 sortable: false, defaultVisible: true, width: '5rem' },
     ],
     fetchData: async (params) => {
@@ -1116,8 +1116,8 @@ function initReportTables() {
     title: t('reports.incomeByCat'),
     columns: [
       { key: 'category', label: t('reports.col.category'), sortable: true },
-      { key: 'amount',   label: t('reports.col.amount'),   sortable: true },
-      { key: 'count',    label: t('reports.col.count'),    sortable: true },
+      { key: 'amount',   label: t('reports.col.amount'),   sortable: true, align: 'right' },
+      { key: 'count',    label: t('reports.col.count'),    sortable: true, align: 'right' },
     ],
     fetchData: async () => ({ data: _repIncCats,  total: _repIncCats.length }),
     renderRow: (c) => `<tr>
@@ -1133,8 +1133,8 @@ function initReportTables() {
     title: t('reports.expensesByCat'),
     columns: [
       { key: 'category', label: t('reports.col.category'), sortable: true },
-      { key: 'amount',   label: t('reports.col.amount'),   sortable: true },
-      { key: 'count',    label: t('reports.col.count'),    sortable: true },
+      { key: 'amount',   label: t('reports.col.amount'),   sortable: true, align: 'right' },
+      { key: 'count',    label: t('reports.col.count'),    sortable: true, align: 'right' },
     ],
     fetchData: async () => ({ data: _repExpCats, total: _repExpCats.length }),
     renderRow: (c) => `<tr>
@@ -1150,9 +1150,9 @@ function initReportTables() {
     title: t('reports.pnlByProperty'),
     columns: [
       { key: 'property',  label: t('reports.col.property'),  sortable: true },
-      { key: 'income',    label: t('reports.col.income'),    sortable: true },
-      { key: 'expenses',  label: t('reports.col.expenses'),  sortable: true },
-      { key: 'net',       label: t('reports.col.net'),       sortable: true },
+      { key: 'income',    label: t('reports.col.income'),    sortable: true, align: 'right' },
+      { key: 'expenses',  label: t('reports.col.expenses'),  sortable: true, align: 'right' },
+      { key: 'net',       label: t('reports.col.net'),       sortable: true, align: 'right' },
     ],
     fetchData: async () => ({ data: _repPnlRows, total: _repPnlRows.length }),
     renderRow: (d) => `<tr>
