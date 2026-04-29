@@ -108,7 +108,7 @@ Example:
 - [-] S2: Implement validation and all‑or‑nothing batch insert in the backend route.  
 - [ ] S3: Wire import endpoint into UI and show validation errors.
 
-(For naming: use F<epic>-<number> for features, e.g. F2-1, F3-4; use B<epic>-<feature>-<number> for bugs, e.g. B2-1-1, B3-2-1.)
+(For naming: use F<epic>-<number> for features, e.g. F2-1, F3-4; use B<epic>-<feature>-<number> for bugs, e.g. B2-2-1, B3-2-1.)
 
 ---
 
@@ -130,7 +130,7 @@ Suggested content:
 Example:
 
 - Next candidate features: `F2-2`, `F3-1`, `F5-4`  
-- Known bugs: `B2-1-1`, `B3-1-1`  
+- Known bugs: `B2-2-1`, `B3-2-1`  
 - Relevant epic docs:
   - `docs/epics/01-workspace-user-management.md`   (Epic 1)
   - `docs/epics/02-account-property-management.md` (Epic 2)
