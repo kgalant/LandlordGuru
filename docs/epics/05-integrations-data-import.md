@@ -117,7 +117,7 @@ Show the user all parsed rows with their proposed category and property before c
 - Rows with errors (unparseable date/amount) are shown in red and excluded from the import
 - User can override category and property per-row before importing
 - "Import N rows" button submits the validated rows to `POST /api/transactions/import` (F3-4)
-- Duplicate rows (same date + amount + description already in workspace) are highlighted with a warning
+- Duplicate rows are detected, visually flagged, and defaulted to ignored — see F5-12 for the full spec (key, trigger logic, hover detail, and auto-ignore behaviour)
 - Rows in a non-reporting currency are excluded from the importable set if no
   rate exists in `currency_rates` for the transaction date; a message
   identifies the missing rate and links to the rate management UI (F2-9)
@@ -224,6 +224,89 @@ Visually flag notes fields that are required but empty, so the user can fill the
 - The "Import N rows" button (or submission flow) should block import and show a validation message if any non-ignored row still has a required-note category with an empty notes field.
 
 **Scope:** Frontend only (`index.html` import preview section). No backend changes required — the backend already enforces this via HTTP 422.
+
+---
+
+### F5-12 Duplicate detection and auto-ignore in import preview `[MVP]`
+**Status:** Planned
+
+During the import preview (F5-5), each parsed row is checked against existing workspace transactions. Matched rows are visually flagged, defaulted to ignored, and show the matching existing transaction on hover/click so the user can make an informed decision before importing.
+
+#### Duplicate key
+
+A row is a duplicate if an existing transaction in the same workspace matches **all four** fields:
+
+| Field | Source | Match rule |
+|---|---|---|
+| `property_id` | Property selected for that row in the preview | Exact match |
+| `date` | Date parsed from CSV | Exact date match |
+| `description` | Current description value for that row — original CSV value, or user override if one has been entered | Case-insensitive exact string match against `raw_description` on existing transactions |
+| `amount` | Absolute amount parsed from CSV | Exact numeric equality |
+
+Property is always required in the key — the same date/description/amount combination can legitimately occur across different properties. If `property_id` is not yet set on a row, that row is left in a **pending** state until the user assigns a property.
+
+#### Backend — new endpoint
+
+`POST /api/transactions/import/check`
+
+- **Input:** array of `{ property_id, date, description, amount }` objects — one per row, order preserved
+- **Output:** array of the same length — each element is `null` (no match) or a match object:
+  ```json
+  {
+    "id": 1042,
+    "date": "2024-03-01",
+    "description": "Rent March",
+    "amount": "1500.00",
+    "created_at": "2024-03-15T09:12:00Z",
+    "import_batch": "3f2a…"
+  }
+  ```
+- Workspace-scoped; read-only and idempotent
+- Property resolution: resolves `property_id` → associated account IDs via `account_properties` join when matching `account_id` on existing transactions
+- If multiple existing transactions match, returns the most recently created one
+
+#### Frontend — import preview behaviour
+
+**At preview load:**
+- All rows that already have `property_id` set (by rules, bank profile, or defaults) are sent in a single batch call to `POST /api/transactions/import/check`
+- Rows without a property assigned yet show a neutral state — no duplicate badge, ignore not forced — until property is set
+
+**When the user assigns a property to a row:**
+- Trigger `POST /api/transactions/import/check` for that single row with its current `{ property_id, date, description, amount }` values
+- Update the row's duplicate status immediately on response
+
+**When the user overrides a description on a row:**
+- Re-trigger the check for that row on blur/change, since description is part of the key
+- Update the row's duplicate status on response
+
+**Duplicate row visual treatment:**
+- Amber/yellow row background
+- A "Duplicate" badge in a status column
+- Hovering or clicking the badge shows a popover/tooltip with the matching existing transaction: date, description, amount, and "Imported on [date]" derived from `created_at`
+- The row's ignore flag is set to `true` by default
+
+**User overrides:**
+- The user can uncheck ignore on any duplicate row to include it in the import (e.g. re-importing after a correction)
+- If a re-check returns no match (user changed property or description), the duplicate badge is cleared and ignore reverts to `false` unless the user had manually set it
+
+**Import count:** "Import N rows" excludes all ignored rows regardless of reason.
+
+#### Acceptance criteria
+
+1. At preview load, rows with property already set are batch-checked before the table renders.
+2. Rows without a property show no badge and no forced ignore until property is assigned.
+3. When the user assigns a property to a row, the check fires and updates that row immediately.
+4. When the user overrides a row's description, the check re-fires for that row on blur/change.
+5. Duplicate rows show an amber background and a "Duplicate" badge.
+6. Hovering or clicking the "Duplicate" badge shows a popover/tooltip: existing transaction's date, description, amount, and "Imported on [date]".
+7. Duplicate rows have `ignore = true` by default.
+8. The user can override `ignore` on any row regardless of duplicate status.
+9. If a re-check returns no match, the badge is cleared and ignore reverts to `false` (unless the user had manually set ignore).
+10. The import count excludes all ignored rows.
+11. The check endpoint is strictly workspace-scoped and read-only.
+12. If multiple existing transactions match the key, the most recently created one is shown in the popover.
+
+**Dependencies:** F5-5 (import preview host), F3-4 (import endpoint context), F3-1 (transaction data model)
 
 ---
 

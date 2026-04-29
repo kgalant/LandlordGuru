@@ -94,7 +94,7 @@ Accept a parsed list of transactions from the frontend and insert them as a batc
 - All rows share a generated `import_batch` UUID (for rollback and audit)
 - Each row is validated before any are inserted (all-or-nothing within a batch)
 - Returns: count of rows inserted, the `import_batch` ID, and any validation errors per row
-- Duplicate detection: rows with identical `(date, amount, raw_description, property_id)` within the same workspace are flagged (not blocked — user decides)
+- Duplicate detection: before inserting, the endpoint (or a dedicated pre-check call — see F5-12) checks each incoming row against existing workspace transactions using the key `(property_id, date, raw_description, amount)`. The full UX spec — visual flagging, auto-ignore default, per-row hover detail, and check trigger logic — is in F5-12.
 - `source` field is set from the bank profile name provided by the client
 
 **Dependencies:** F5-1 (CSV parsing) produces the validated row array that this endpoint receives.
