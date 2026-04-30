@@ -591,7 +591,11 @@ function onRowSelect(i) {
 
 function onRowFieldChange(i, field, value) {
   State.importRows[i][field] = value;
-  if (field === 'category') State.importRows[i].type = Importer.categoryToType(value, State.transactionCategories);
+  if (field === 'category') {
+    State.importRows[i].type = Importer.categoryToType(value, State.transactionCategories);
+    State.importRows[i]._userPickedCategory = true;
+  }
+  if (field === '_storeMapping' && value) State.importRows[i]._userPickedCategory = true;
   _applyRowStyle(i);
 
   const bulkOn = document.getElementById('bulk-update-toggle')?.checked;
@@ -599,7 +603,11 @@ function onRowFieldChange(i, field, value) {
     State.importRows.forEach((row, j) => {
       if (j === i || !row._selected) return;
       row[field] = value;
-      if (field === 'category') row.type = Importer.categoryToType(value, State.transactionCategories);
+      if (field === 'category') {
+        row.type = Importer.categoryToType(value, State.transactionCategories);
+        row._userPickedCategory = true;
+      }
+      if (field === '_storeMapping' && value) row._userPickedCategory = true;
       _syncRowDOM(j, field, value);
       _applyRowStyle(j);
     });
@@ -622,6 +630,10 @@ function _applyRowStyle(i) {
   const row = State.importRows[i];
   if (row._ignored) tr.classList.add('preview-row-ignored');
   else              tr.classList.remove('preview-row-ignored');
+
+  const warnResolved = row._ignored || row._autoMatched || row._descMappingMatched || row._userPickedCategory || row._storeMapping;
+  if (warnResolved) tr.classList.remove('preview-row-warn');
+  else              tr.classList.add('preview-row-warn');
 
   const notesEl = document.getElementById('row-notes-' + i);
   if (notesEl) {
@@ -856,7 +868,7 @@ function runImportPreview() {
   applyDescMappings(result.rows, profileKey);
 
   // Initialise per-row UI flags
-  State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _storeMapping: false }));
+  State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _storeMapping: false, _userPickedCategory: false }));
 
   document.getElementById('import-preview-title').textContent =
     `Preview — ${result.rows.length} rows from ${result.profileLabel}`;
