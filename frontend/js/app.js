@@ -1705,11 +1705,13 @@ function toggleAddCategoryForm() {
   }
 }
 
-function onCatLabelInput() {
-  const label = document.getElementById('cat-label').value;
+function onCatLabelBlur() {
+  const label  = document.getElementById('cat-label').value.trim();
   const codeEl = document.getElementById('cat-value');
-  // Auto-derive code from label: lowercase, spaces→underscore, strip non-alphanumeric
-  codeEl.value = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  if (!label || codeEl.value.trim()) return;
+  const slug   = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const suffix = Math.random().toString(36).slice(2, 5);
+  codeEl.value = `${slug}_${suffix}`;
 }
 
 async function submitAddCategory() {
