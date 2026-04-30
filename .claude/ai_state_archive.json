@@ -336,5 +336,13 @@
     "last_commit": "644ec50",
     "changed_files": "AI_STATE.md, AI_STATE-GUIDE.md",
     "git_status": "M AI_STATE.md, M AI_STATE-GUIDE.md"
+  },
+  {
+    "timestamp": "2026-04-30",
+    "label": "F5-4 done \u2014 description mappings migrated to backend",
+    "branch": "main",
+    "last_commit": "1485143",
+    "changed_files": "backend/src/db/migrations/016_description_mappings.js, backend/src/routes/description-mappings.js, backend/src/app.js, backend/tests/description-mappings.test.js, frontend/js/api.js, frontend/js/app.js, docs/data-model.md, docs/epics/05-integrations-data-import.md, version.json",
+    "git_status": "clean after commit"
   }
 ]

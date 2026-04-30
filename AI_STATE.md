@@ -12,7 +12,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 - Epic: E5 Integrations and Data Import
 - ID: F5-4
 - Title: Description mappings backend
-- Short summary: Migrate user-captured description→category+property mappings from localStorage to the backend so they survive device changes.
+- Short summary: Done. All subtasks complete, smoke-tested on homedev.
 
 ---
 
@@ -55,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Confirm commit for F5-4 with user, then select next focus from roadmap.
+Read `docs/roadmap.md` and select the next focus from Wave 3 candidates (F2-2, F2-6, F2-7); confirm with user before starting.
 
 ---
 
@@ -66,30 +66,20 @@ Confirm commit for F5-4 with user, then select next focus from roadmap.
 
 - Last result:
   - Date/time: 2026-04-30
-  - Outcome: 184/184 tests passing. F5-4 all subtasks done.
+  - Outcome: 184/184 tests passing. F5-4 smoke-tested on homedev — mappings persist across devices, localStorage no longer used.
 
 ---
 
 ## Files touched this session
 
-- `AI_STATE.md`
-- `backend/src/db/migrations/016_description_mappings.js`
-- `backend/src/routes/description-mappings.js`
-- `backend/src/app.js`
-- `backend/tests/description-mappings.test.js`
-- `backend/.env.test` (new, git-ignored)
-- `frontend/js/api.js`
-- `frontend/js/app.js`
-- `docs/data-model.md`
-- `docs/epics/05-integrations-data-import.md`
-- `version.json`
+None (session end).
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-30 [F5-4 done — description mappings migrated to backend]
+- 2026-04-30 [F5-4 done — smoke-tested, closing out]
   - branch: main
-  - last_commit: 415d05a
-  - changed_files: backend/src/db/migrations/016_description_mappings.js, backend/src/routes/description-mappings.js, backend/src/app.js, backend/tests/description-mappings.test.js, frontend/js/api.js, frontend/js/app.js, docs/data-model.md, docs/epics/05-integrations-data-import.md, version.json
-  - git_status: M backend/src/app.js, M docs/data-model.md, M docs/epics/05-integrations-data-import.md, M frontend/js/api.js, M frontend/js/app.js, M version.json, ?? backend/src/db/migrations/016_description_mappings.js, ?? backend/src/routes/description-mappings.js, ?? backend/tests/description-mappings.test.js
+  - last_commit: 1485143
+  - changed_files: none
+  - git_status: clean
