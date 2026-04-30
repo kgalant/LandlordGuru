@@ -12,7 +12,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 - Epic: E2 Account and Property Management
 - ID: F2-2
 - Title: Property list UI
-- Short summary: Frontend view for the property portfolio — list, filter, and navigate to individual properties. Depends on F2-1 (Property CRUD API, done).
+- Short summary: Frontend view showing all active properties with key fields; archived toggle; clicking a property opens its edit view.
 
 ---
 
@@ -24,7 +24,10 @@ None.
 
 ## Task breakdown (current focus)
 
-- [-] F2-2-1: Read F2-2 spec in `docs/epics/02-account-property-management.md` and define full task breakdown with user confirmation.
+- [-] F2-2-1: Backend — add `?include_archived=true` support to `GET /api/properties`; return `active` field on each row; add/update tests
+- [ ] F2-2-2: Frontend — "Show archived" toggle; re-fetch with flag when toggled; show archived badge on archived cards
+- [ ] F2-2-3: Frontend — make whole property card clickable (opens edit modal), not just the Edit button; keep Delete button separate
+- [ ] F2-2-4: Smoke-test full flow; update epic doc status to Done; commit
 
 ---
 
@@ -35,8 +38,8 @@ None.
 - Known bugs: F7-B1 (property column sorts by ID not name — needs properties join in transactions API)
 - Backlog chores: F6-7 (consolidate version numbering — three files, two are authoritative, root version.json appears unused)
 - Backlog features: F1-11, F1-12, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11 (polish/UX, low priority)
-- Next MVP candidates (Wave 3): F2-6, F2-7 (after F2-2)
-- Frontend architecture: F7-1 through F7-5 (DataTable component + migrations) — all Done
+- Next MVP candidates (Wave 3): F2-6, F2-7 (after F2-2 ships)
+- Frontend architecture: F7-1 through F7-5 (DataTable component + migrations)
 
 Relevant epic docs:
 
@@ -52,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Read F2-2 spec in `docs/epics/02-account-property-management.md`, then propose a full task breakdown for user confirmation before writing any code.
+Implement `?include_archived=true` in `GET /api/properties` (backend/src/routes/properties.js line ~56): when param is truthy, drop the `active: true` filter; return `active` field on each row. Add tests.
 
 ---
 
@@ -63,24 +66,21 @@ Read F2-2 spec in `docs/epics/02-account-property-management.md`, then propose a
 
 - Last result:
   - Date/time: 2026-04-30
-  - Outcome: 192/192 tests passing. F1-9b smoke-tested and confirmed in browser.
+  - Outcome: 192/192 tests passing. F1-9b smoke-tested and committed.
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `docs/epics/01-workspace-user-management.md`
-- `docs/roadmap.md`
-- `version.json`
 - `.claude/ai_state_archive.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-30 [F1-9b done — smoke-tested; closing out, switching focus to F2-2]
+- 2026-04-30 F2-2 set as current focus
   - branch: main
-  - last_commit: 34059d9
-  - changed_files: AI_STATE.md, docs/epics/01-workspace-user-management.md, docs/roadmap.md, version.json, .claude/ai_state_archive.json
-  - git_status: M (pre-commit)
+  - last_commit: 26a8639
+  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: clean
