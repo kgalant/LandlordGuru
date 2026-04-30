@@ -29,7 +29,7 @@ function flatCats() {
 
 // Resolves a category label using API data first, then i18n fallback
 function catLabel(key) {
-  return catLabel(key, flatCats());
+  return Reports.categoryLabel(key, flatCats());
 }
 
 // ── Boot ──────────────────────────────────────────────────
