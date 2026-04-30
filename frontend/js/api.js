@@ -133,6 +133,20 @@ export const Api = (() => {
     return request('DELETE', `/currency-rates/${id}`);
   }
 
+  // ── Description mappings ───────────────────────────────────
+
+  async function getDescMappings() {
+    return request('GET', '/description-mappings');
+  }
+
+  async function saveDescMapping(data) {
+    return request('POST', '/description-mappings', data);
+  }
+
+  async function deleteDescMapping(id) {
+    return request('DELETE', `/description-mappings/${id}`);
+  }
+
   // ── Batch import ────────────────────────────────────────────
   // Creates multiple transactions with a shared import_batch ID
 
@@ -153,6 +167,7 @@ export const Api = (() => {
     getWorkspaceSettings, updateWorkspaceSettings,
     getTransactionCategories, createTransactionCategory, deleteTransactionCategory,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
+    getDescMappings, saveDescMapping, deleteDescMapping,
     createTransactionBatch,
   };
 })();

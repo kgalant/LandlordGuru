@@ -15,6 +15,7 @@ let State = {
   properties:   [],
   transactions: [],
   rules:        [],
+  descMappings: [],
   editingTxId:  null,
   editingAptId: null,
   importRows:   [],
@@ -40,16 +41,18 @@ async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
     // v2 mode: data from backend API
-    const [props, txs, rules, wsSettings, rates] = await Promise.all([
+    const [props, txs, rules, descMappings, wsSettings, rates] = await Promise.all([
       Api.getProperties(),
       Api.getTransactions({ limit: 10000 }),
       Api.getRules(),
+      Api.getDescMappings(),
       Api.getWorkspaceSettings(),
       Api.getCurrencyRates(),
     ]);
     State.properties        = props;
     State.transactions      = (txs.data ?? txs).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
     State.rules             = rules;
+    State.descMappings      = descMappings;
     State.workspaceSettings = wsSettings;
     State.currencyRates     = rates;
     window.LAST_SYNC = new Date();
@@ -499,47 +502,41 @@ function onProfileChange() {
   document.getElementById('import-currency-group').style.display = profile.currency ? 'none' : 'block';
 }
 
-// ── Description mappings (localStorage) ──────────────────
-// Structure: [{ bank_profile, user_id, keyword, category, updated_at }]
-// Composite unique key: (bank_profile, user_id, keyword)
+// ── Description mappings (backend API) ───────────────────
+// State.descMappings holds all mappings for the current user's workspace:
+// user-specific (user_id = current user) and global (user_id = null).
+// bank_profile = '' means "any profile".
 
-const DESC_MAPPINGS_KEY = 'lg_desc_mappings_v1';
-
-function getDescMappings() {
-  try { return JSON.parse(localStorage.getItem(DESC_MAPPINGS_KEY) || '[]'); }
-  catch(e) { return []; }
-}
-
-function applyDescMappings(rows, profileKey, userId = '') {
-  const mappings = getDescMappings();
+function applyDescMappings(rows, profileKey) {
+  const mappings = State.descMappings;
   if (!mappings.length) return;
   rows.forEach(row => {
     const desc = (row.raw_description || row.description || '').toLowerCase();
-    // User-specific first, then global (empty user_id)
+    const profileMatch = m => m.bank_profile === profileKey || m.bank_profile === '';
+    const keywordMatch = m => desc.includes(m.keyword.toLowerCase());
+    // User-specific first, then global (user_id === null)
     const match =
-      mappings.find(m => m.user_id === userId && (m.bank_profile === profileKey || m.bank_profile === '') && desc.includes(m.keyword.toLowerCase())) ||
-      (userId !== '' ? mappings.find(m => m.user_id === '' && (m.bank_profile === profileKey || m.bank_profile === '') && desc.includes(m.keyword.toLowerCase())) : null);
+      mappings.find(m => m.user_id !== null && profileMatch(m) && keywordMatch(m)) ||
+      mappings.find(m => m.user_id === null && profileMatch(m) && keywordMatch(m));
     if (match) {
-      row.category          = match.category;
-      row.type              = Importer.categoryToType(match.category);
+      row.category           = match.category;
+      row.type               = Importer.categoryToType(match.category);
       row._descMappingMatched = true;
-      row._autoMatched      = false;
+      row._autoMatched       = false;
     }
   });
 }
 
-function saveDescMappingsForRows(rows, profileKey, userId = '') {
-  const mappings = getDescMappings();
-  rows.forEach(row => {
-    if (!row._storeMapping || row._ignored) return;
+async function saveDescMappingsForRows(rows, profileKey) {
+  const toStore = rows.filter(r => r._storeMapping && !r._ignored);
+  for (const row of toStore) {
     const keyword = (row.raw_description || row.description || '').trim();
-    if (!keyword) return;
-    const idx = mappings.findIndex(m => m.bank_profile === profileKey && m.user_id === userId && m.keyword === keyword);
-    const entry = { bank_profile: profileKey, user_id: userId, keyword, category: row.category, updated_at: new Date().toISOString() };
-    if (idx >= 0) mappings[idx] = entry;
-    else mappings.push(entry);
-  });
-  localStorage.setItem(DESC_MAPPINGS_KEY, JSON.stringify(mappings));
+    if (!keyword) continue;
+    await Api.saveDescMapping({ bank_profile: profileKey, keyword, category: row.category, scope: 'global' });
+  }
+  if (toStore.length) {
+    State.descMappings = await Api.getDescMappings();
+  }
 }
 
 // ── Row selection ─────────────────────────────────────────
@@ -1006,13 +1003,13 @@ function goToMappingConfirmOrImport() {
   if (!toStore.length) { doImport(false); return; }
 
   // Build mapping confirmation lists
-  const existing = getDescMappings();
+  const existing = State.descMappings;
   const toAdd    = [];
   const toUpdate = [];
 
   toStore.forEach(row => {
     const keyword = (row.raw_description || row.description || '').trim();
-    const found   = existing.find(m => m.bank_profile === profileKey && m.user_id === '' && m.keyword === keyword);
+    const found   = existing.find(m => m.bank_profile === profileKey && m.user_id === null && m.keyword === keyword);
     if (found) {
       if (found.category !== row.category)
         toUpdate.push({ keyword, oldCat: found.category, newCat: row.category });
@@ -1075,7 +1072,7 @@ async function doImport(saveMappings) {
     if (!confirm(t('import.confirmMissing', { count: missing.length }))) return;
   }
 
-  if (saveMappings) saveDescMappingsForRows(activeRows, profileKey);
+  if (saveMappings) await saveDescMappingsForRows(activeRows, profileKey);
 
   setLoading(true, t('status.importing'));
   try {

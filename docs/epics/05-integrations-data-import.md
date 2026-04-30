@@ -85,7 +85,7 @@ Apply saved rules to automatically assign category and property to imported rows
 ---
 
 ### F5-4 Description mappings `[MVP]`
-**Status:** Planned (backend)
+**Status:** Done
 
 User-captured mappings from a specific description string to a category + property. Finer-grained than keyword rules.
 

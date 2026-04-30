@@ -24,10 +24,10 @@ None.
 
 ## Task breakdown (current focus)
 
-- [ ] F5-4-1: Add migration for `description_mappings` table; define schema and unique key `(workspace_id, bank_profile, user_id, keyword)`
-- [ ] F5-4-2: Implement `GET`, `POST` (upsert), and `DELETE` routes at `/api/description-mappings`
-- [ ] F5-4-3: Add backend tests for all three endpoints
-- [ ] F5-4-4: Update frontend to read from API instead of localStorage on import preview load; write to API when a mapping is saved
+- [x] F5-4-1: Add migration for `description_mappings` table; define schema and unique key `(workspace_id, bank_profile, user_id, keyword)`
+- [x] F5-4-2: Implement `GET`, `POST` (upsert), and `DELETE` routes at `/api/description-mappings`
+- [x] F5-4-3: Add backend tests for all three endpoints
+- [x] F5-4-4: Update frontend to read from API instead of localStorage on import preview load; write to API when a mapping is saved
 
 ---
 
@@ -55,32 +55,41 @@ Relevant epic docs:
 
 ## Next step
 
-Add migration for `description_mappings` table (F5-4-1).
+Confirm commit for F5-4 with user, then select next focus from roadmap.
 
 ---
 
 ## Validation
 
 - Commands to run:
-  - `cd /home/kim/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
+  - `cd /home/kim/dev/landlordguru-dev/backend && node_modules/.bin/jest --forceExit`
 
 - Last result:
-  - Date/time: 2026-04-30 00:00:00
-  - Outcome: 161/161 tests passing. F7-5 smoke-tested on homedev and confirmed Done. Header alignment fix verified.
+  - Date/time: 2026-04-30
+  - Outcome: 184/184 tests passing. F5-4 all subtasks done.
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `AI_STATE-GUIDE.md`
+- `backend/src/db/migrations/016_description_mappings.js`
+- `backend/src/routes/description-mappings.js`
+- `backend/src/app.js`
+- `backend/tests/description-mappings.test.js`
+- `backend/.env.test` (new, git-ignored)
+- `frontend/js/api.js`
+- `frontend/js/app.js`
+- `docs/data-model.md`
+- `docs/epics/05-integrations-data-import.md`
+- `version.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-30 [housekeeping — removed phantom bug IDs B2-1-1/B3-1-1; set F5-4 as current focus]
+- 2026-04-30 [F5-4 done — description mappings migrated to backend]
   - branch: main
-  - last_commit: 644ec50
-  - changed_files: AI_STATE.md, AI_STATE-GUIDE.md
-  - git_status: M AI_STATE.md, M AI_STATE-GUIDE.md
+  - last_commit: 415d05a
+  - changed_files: backend/src/db/migrations/016_description_mappings.js, backend/src/routes/description-mappings.js, backend/src/app.js, backend/tests/description-mappings.test.js, frontend/js/api.js, frontend/js/app.js, docs/data-model.md, docs/epics/05-integrations-data-import.md, version.json
+  - git_status: M backend/src/app.js, M docs/data-model.md, M docs/epics/05-integrations-data-import.md, M frontend/js/api.js, M frontend/js/app.js, M version.json, ?? backend/src/db/migrations/016_description_mappings.js, ?? backend/src/routes/description-mappings.js, ?? backend/tests/description-mappings.test.js

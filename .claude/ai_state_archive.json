@@ -3,16 +3,21 @@
     "timestamp": "2026-04-18 17:41:25",
     "phase": "[lifecycle]",
     "branch": "main",
-    "last_commit": "fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 → v2.7.0)",
-    "changed_files": ["AI_STATE.md"],
+    "last_commit": "fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 \u2192 v2.7.0)",
+    "changed_files": [
+      "AI_STATE.md"
+    ],
     "git_status": "M AI_STATE.md"
   },
   {
     "timestamp": "2026-04-18 18:22:59",
     "phase": "[lifecycle]",
     "branch": "main",
-    "last_commit": "fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 → v2.7.0)",
-    "changed_files": ["AI_STATE.md", "CLAUDE.md"],
+    "last_commit": "fa18b0f Milestone 6: Rules API with logging from day 1 (v2.6.0 \u2192 v2.7.0)",
+    "changed_files": [
+      "AI_STATE.md",
+      "CLAUDE.md"
+    ],
     "git_status": "M AI_STATE.md\nM CLAUDE.md\n?? .claude/ai_state_archive.json"
   },
   {
@@ -23,10 +28,19 @@
   },
   {
     "timestamp": "2026-04-18 23:30:00",
-    "phase": "account management deep-dive — hierarchy, currency rates, versioning",
+    "phase": "account management deep-dive \u2014 hierarchy, currency rates, versioning",
     "branch": "main",
     "lastcommit": "46f2322",
-    "changedfiles": ["docs/DESIGN-DISCUSSION.md", "docs/epics/01-workspace-user-management.md", "docs/epics/02-account-property-management.md", "docs/epics/03-transaction-management.md", "docs/epics/04-reporting-analytics.md", "docs/epics/05-integrations-data-import.md", "docs/epics/06-architecture-backend.md", "AI_STATE.md"],
+    "changedfiles": [
+      "docs/DESIGN-DISCUSSION.md",
+      "docs/epics/01-workspace-user-management.md",
+      "docs/epics/02-account-property-management.md",
+      "docs/epics/03-transaction-management.md",
+      "docs/epics/04-reporting-analytics.md",
+      "docs/epics/05-integrations-data-import.md",
+      "docs/epics/06-architecture-backend.md",
+      "AI_STATE.md"
+    ],
     "gitstatus": "M AI_STATE.md, M docs/DESIGN-DISCUSSION.md, ..."
   },
   {
@@ -34,7 +48,10 @@
     "phase": "F1-7 complete: update epic docs to mark done",
     "branch": "main",
     "lastcommit": "a987b0f",
-    "changedfiles": ["docs/epics/01-workspace-user-management.md", "AI_STATE.md"],
+    "changedfiles": [
+      "docs/epics/01-workspace-user-management.md",
+      "AI_STATE.md"
+    ],
     "gitstatus": "M docs/epics/01-workspace-user-management.md, M AI_STATE.md"
   },
   {
@@ -42,7 +59,10 @@
     "phase": "[lifecycle]",
     "branch": "main",
     "last_commit": "1a3444a Update E1 epic: mark F1-6 workspace settings as Done",
-    "changed_files": ["AI_STATE.md", "backend/tests/workspace.test.js"],
+    "changed_files": [
+      "AI_STATE.md",
+      "backend/tests/workspace.test.js"
+    ],
     "git_status": "M AI_STATE.md, M backend/tests/workspace.test.js"
   },
   {
@@ -50,23 +70,34 @@
     "phase": "[documentation update]",
     "branch": "main",
     "last_commit": "3586d4f Verify F2-1 Property CRUD complete; fix test seed isolation",
-    "changed_files": ["docs/roadmap.md", "AI_STATE.md"],
+    "changed_files": [
+      "docs/roadmap.md",
+      "AI_STATE.md"
+    ],
     "git_status": "M docs/roadmap.md\nM AI_STATE.md"
   },
   {
     "timestamp": "2026-04-20 21:50:00",
     "phase": "[F2-4 complete]",
     "branch": "main",
-    "last_commit": "97b2bbf F2-9: Currency rate management — migration, API, tests, UI (v2.2.0 → v2.3.0)",
-    "changed_files": ["AI_STATE.md", "backend/src/routes/accounts.js", "backend/tests/accounts.test.js", "backend/src/app.js"],
+    "last_commit": "97b2bbf F2-9: Currency rate management \u2014 migration, API, tests, UI (v2.2.0 \u2192 v2.3.0)",
+    "changed_files": [
+      "AI_STATE.md",
+      "backend/src/routes/accounts.js",
+      "backend/tests/accounts.test.js",
+      "backend/src/app.js"
+    ],
     "git_status": "M AI_STATE.md\nM backend/src/app.js\nM backend/tests/accounts.test.js\nM docs/roadmap.md\n?? backend/src/routes/accounts.js"
   },
   {
     "timestamp": "2026-04-21 18:00:00",
     "phase": "[F3-1 focus set]",
     "branch": "main",
-    "last_commit": "ae56ae6 F2-4: Account CRUD — REST API with hierarchy, cycle detection, and atomic reassignment on delete",
-    "changed_files": ["AI_STATE.md", "docs/roadmap.md"],
+    "last_commit": "ae56ae6 F2-4: Account CRUD \u2014 REST API with hierarchy, cycle detection, and atomic reassignment on delete",
+    "changed_files": [
+      "AI_STATE.md",
+      "docs/roadmap.md"
+    ],
     "git_status": "M AI_STATE.md, M docs/roadmap.md"
   },
   {
@@ -74,7 +105,11 @@
     "phase": "[F3-1 complete]",
     "branch": "main",
     "last_commit": "60bc039 Switch focus to F3-1 Transaction CRUD API; mark F1-6 done in roadmap",
-    "changed_files": ["AI_STATE.md", "backend/src/routes/transactions.js", "backend/tests/transactions.test.js"],
+    "changed_files": [
+      "AI_STATE.md",
+      "backend/src/routes/transactions.js",
+      "backend/tests/transactions.test.js"
+    ],
     "git_status": "M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js"
   },
   {
@@ -82,15 +117,30 @@
     "phase": "[F3-2 done]",
     "branch": "main",
     "last_commit": "0aecd4d F3-1 done: clean up AI_STATE, archive automation log, switch focus to F3-2",
-    "changed_files": ["frontend/index.html", "frontend/css/style.css", "frontend/js/strings.js", "docs/epics/03-transaction-management.md", ".claude/settings.json", ".claude/ai_state_archive.json", "AI_STATE.md"],
+    "changed_files": [
+      "frontend/index.html",
+      "frontend/css/style.css",
+      "frontend/js/strings.js",
+      "docs/epics/03-transaction-management.md",
+      ".claude/settings.json",
+      ".claude/ai_state_archive.json",
+      "AI_STATE.md"
+    ],
     "git_status": "M frontend/index.html, M frontend/css/style.css, ..."
   },
   {
     "timestamp": "2026-04-22 22:30:00",
     "phase": "[backlog review; F1-9a spec added]",
     "branch": "main",
-    "last_commit": "ec7206f B3-2-1: Fix tx footer string-concatenation — parse amount to float on load (v2.4.2 → v2.4.3)",
-    "changed_files": ["AI_STATE.md", ".claude/ai_state_archive.json", "docs/epics/01-workspace-user-management.md", "docs/epics/02-account-property-management.md", "docs/epics/05-integrations-data-import.md", "docs/roadmap.md"],
+    "last_commit": "ec7206f B3-2-1: Fix tx footer string-concatenation \u2014 parse amount to float on load (v2.4.2 \u2192 v2.4.3)",
+    "changed_files": [
+      "AI_STATE.md",
+      ".claude/ai_state_archive.json",
+      "docs/epics/01-workspace-user-management.md",
+      "docs/epics/02-account-property-management.md",
+      "docs/epics/05-integrations-data-import.md",
+      "docs/roadmap.md"
+    ],
     "git_status": "M .claude/ai_state_archive.json, M .claude/settings.json, M AI_STATE.md, ..."
   },
   {
@@ -98,7 +148,10 @@
     "phase": "[F1-9a complete]",
     "branch": "main",
     "last_commit": "6e2d8f0 F1-9a: Transaction category management",
-    "changed_files": [".claude/settings.json", "AI_STATE.md"],
+    "changed_files": [
+      ".claude/settings.json",
+      "AI_STATE.md"
+    ],
     "git_status": "M .claude/settings.json\nM AI_STATE.md"
   },
   {
@@ -106,46 +159,66 @@
     "phase": "[lifecycle]",
     "branch": "main",
     "last_commit": "9520755",
-    "changed_files": ["AI_STATE.md"]
+    "changed_files": [
+      "AI_STATE.md"
+    ]
   },
   {
     "timestamp": "2026-04-25 22:30:00",
-    "phase": "[F3-9 polish — unified sticky header, pagination row, filter not obscured]",
+    "phase": "[F3-9 polish \u2014 unified sticky header, pagination row, filter not obscured]",
     "branch": "main",
     "last_commit": "90ceed7",
-    "changed_files": ["AI_STATE.md", "frontend/index.html", "frontend/css/style.css"],
+    "changed_files": [
+      "AI_STATE.md",
+      "frontend/index.html",
+      "frontend/css/style.css"
+    ],
     "git_status": "M AI_STATE.md, M frontend/index.html, M frontend/css/style.css"
   },
   {
     "timestamp": "2026-04-25 22:41:11",
     "phase": "[F3-9 all polish complete]",
     "branch": "main",
-    "last_commit": "ec6d8af F3-9 polish: fix pagination layout — shrink to content, push buttons right",
-    "changed_files": ["deploy.ps1"],
+    "last_commit": "ec6d8af F3-9 polish: fix pagination layout \u2014 shrink to content, push buttons right",
+    "changed_files": [
+      "deploy.ps1"
+    ],
     "git_status": "M deploy.ps1"
   },
   {
     "timestamp": "2026-04-26 06:14:00",
-    "phase": "[F5-3 verified Done — doc/roadmap update]",
+    "phase": "[F5-3 verified Done \u2014 doc/roadmap update]",
     "branch": "main",
     "last_commit": "262ad7a F5-3 verified Done; fix stale roadmap (F2-4, F2-9, F3-1, F5-3)",
-    "changed_files": ["AI_STATE.md", "docs/epics/05-integrations-data-import.md", "docs/roadmap.md", ".claude/ai_state_archive.json"],
+    "changed_files": [
+      "AI_STATE.md",
+      "docs/epics/05-integrations-data-import.md",
+      "docs/roadmap.md",
+      ".claude/ai_state_archive.json"
+    ],
     "git_status": "clean"
   },
   {
     "timestamp": "2026-04-26 09:30:00",
     "phase": "[chore: deploy.sh committed]",
     "branch": "main",
-    "last_commit": "eb7d4d8 chore: add deploy.sh — bash port of deploy.ps1, auto-detects homedev vs remote",
-    "changed_files": ["deploy.sh", "AI_STATE.md", ".claude/ai_state_archive.json"],
+    "last_commit": "eb7d4d8 chore: add deploy.sh \u2014 bash port of deploy.ps1, auto-detects homedev vs remote",
+    "changed_files": [
+      "deploy.sh",
+      "AI_STATE.md",
+      ".claude/ai_state_archive.json"
+    ],
     "git_status": "clean"
   },
   {
     "timestamp": "2026-04-26 11:00:00",
-    "phase": "[F6-6 done — smoke test passed]",
+    "phase": "[F6-6 done \u2014 smoke test passed]",
     "branch": "main",
-    "last_commit": "8eba2bf chore: update AI_STATE — F6-6 committed, smoke test pending",
-    "changed_files": ["docs/epics/06-architecture-backend.md", "AI_STATE.md"],
+    "last_commit": "8eba2bf chore: update AI_STATE \u2014 F6-6 committed, smoke test pending",
+    "changed_files": [
+      "docs/epics/06-architecture-backend.md",
+      "AI_STATE.md"
+    ],
     "git_status": "M docs/epics/06-architecture-backend.md, M AI_STATE.md"
   },
   {
@@ -153,15 +226,25 @@
     "phase": "[F5-11 set as current focus]",
     "branch": "main",
     "last_commit": "8eba2bf",
-    "changed_files": ["AI_STATE.md", ".claude/ai_state_archive.json"],
+    "changed_files": [
+      "AI_STATE.md",
+      ".claude/ai_state_archive.json"
+    ],
     "git_status": "M AI_STATE.md, M .claude/ai_state_archive.json"
   },
   {
     "timestamp": "2026-04-26",
-    "phase": "[F5-11 done — committed c5540df; F6-7 added to backlog 3be0e88]",
+    "phase": "[F5-11 done \u2014 committed c5540df; F6-7 added to backlog 3be0e88]",
     "branch": "main",
     "last_commit": "3be0e88",
-    "changed_files": ["frontend/js/app.js", "frontend/js/strings.js", "frontend/version.json", "docs/epics/06-architecture-backend.md", "AI_STATE.md", ".claude/ai_state_archive.json"],
+    "changed_files": [
+      "frontend/js/app.js",
+      "frontend/js/strings.js",
+      "frontend/version.json",
+      "docs/epics/06-architecture-backend.md",
+      "AI_STATE.md",
+      ".claude/ai_state_archive.json"
+    ],
     "git_status": "clean"
   },
   {
@@ -169,7 +252,12 @@
     "phase": "[F7-1 focus set]",
     "branch": "main",
     "last_commit": "7c2ede1",
-    "changed_files": ["docs/epics/07-frontend-architecture.md", "docs/epics/00-index.md", "AI_STATE.md", ".claude/ai_state_archive.json"],
+    "changed_files": [
+      "docs/epics/07-frontend-architecture.md",
+      "docs/epics/00-index.md",
+      "AI_STATE.md",
+      ".claude/ai_state_archive.json"
+    ],
     "git_status": "clean"
   },
   {
@@ -177,39 +265,76 @@
     "phase": "[F7-2 Done; F7-3 set as current focus]",
     "branch": "main",
     "last_commit": "a57c080",
-    "changed_files": ["AI_STATE.md", "docs/epics/07-frontend-architecture.md", ".claude/ai_state_archive.json"],
+    "changed_files": [
+      "AI_STATE.md",
+      "docs/epics/07-frontend-architecture.md",
+      ".claude/ai_state_archive.json"
+    ],
     "git_status": "clean"
   },
   {
     "timestamp": "2026-04-28 09:30:00",
-    "phase": "[F7-3 Done — rules table migrated to DataTable]",
+    "phase": "[F7-3 Done \u2014 rules table migrated to DataTable]",
     "branch": "main",
     "last_commit": "f246d85",
-    "changed_files": ["frontend/index.html", "frontend/js/app.js", "version.json", "docs/epics/07-frontend-architecture.md", "docs/roadmap.md", "AI_STATE.md"],
+    "changed_files": [
+      "frontend/index.html",
+      "frontend/js/app.js",
+      "version.json",
+      "docs/epics/07-frontend-architecture.md",
+      "docs/roadmap.md",
+      "AI_STATE.md"
+    ],
     "git_status": "clean"
   },
   {
     "timestamp": "2026-04-28 10:00:00",
-    "phase": "[F7-4 Done — report tables migrated to DataTable]",
+    "phase": "[F7-4 Done \u2014 report tables migrated to DataTable]",
     "branch": "main",
     "last_commit": "59fafa8",
-    "changed_files": ["frontend/index.html", "frontend/js/app.js", "version.json", "docs/epics/07-frontend-architecture.md", "docs/roadmap.md", "AI_STATE.md"],
+    "changed_files": [
+      "frontend/index.html",
+      "frontend/js/app.js",
+      "version.json",
+      "docs/epics/07-frontend-architecture.md",
+      "docs/roadmap.md",
+      "AI_STATE.md"
+    ],
     "git_status": "clean"
   },
   {
     "timestamp": "2026-04-28 10:30:00",
-    "phase": "[F7-5 Done — dashboard mini-table migrated to DataTable]",
+    "phase": "[F7-5 Done \u2014 dashboard mini-table migrated to DataTable]",
     "branch": "main",
     "last_commit": "47f3f91",
-    "changed_files": ["frontend/index.html", "frontend/js/app.js", "version.json", "docs/epics/07-frontend-architecture.md", "docs/roadmap.md", "AI_STATE.md"],
+    "changed_files": [
+      "frontend/index.html",
+      "frontend/js/app.js",
+      "version.json",
+      "docs/epics/07-frontend-architecture.md",
+      "docs/roadmap.md",
+      "AI_STATE.md"
+    ],
     "git_status": "clean"
   },
   {
     "timestamp": "2026-04-30 00:00:00",
-    "phase": "[F7-5 smoke-tested — DataTable header alignment fix applied and confirmed]",
+    "phase": "[F7-5 smoke-tested \u2014 DataTable header alignment fix applied and confirmed]",
     "branch": "main",
     "last_commit": "fc1dc31",
-    "changed_files": ["frontend/js/app.js", "frontend/js/datatable.js", "AI_STATE.md"],
+    "changed_files": [
+      "frontend/js/app.js",
+      "frontend/js/datatable.js",
+      "AI_STATE.md"
+    ],
     "git_status": "clean"
+  },
+  {
+    "timestamp": "2026-04-30",
+    "label": "housekeeping \u2014 removed phantom bug IDs B2-1-1/B3-1-1; set F5-4 as current focus",
+    "branch": "main",
+    "last_commit": "644ec50",
+    "changed_files": "AI_STATE.md, AI_STATE-GUIDE.md",
+    "git_status": "M AI_STATE.md, M AI_STATE-GUIDE.md"
   }
 ]

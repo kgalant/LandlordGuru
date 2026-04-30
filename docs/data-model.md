@@ -315,31 +315,31 @@ Snapshot of exchange rates for audit purposes. Not used for bookkeeping — info
 
 ---
 
-## Description mappings (client-side only)
+## Description mappings
 
-Named description-to-category mappings captured at import time. Stored in `localStorage`
-under the key `lg_desc_mappings_v1`. Structure is an array that maps directly to a future
-DB table. Composite unique key: `(bank_profile, user_id, keyword)` — upsert on save.
+Named description-to-category mappings captured at import time. Stored in the
+`description_mappings` table (F5-4). Composite unique key:
+`(workspace_id, bank_profile, user_id, keyword)`.
 
-```json
-[
-  {
-    "bank_profile": "jyske_bank",
-    "user_id":      "",
-    "keyword":      "RICHARD SABUMBA HUSLEJE",
-    "category":     "rent",
-    "updated_at":   "2026-04-12T10:00:00.000Z"
-  }
-]
-```
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID PK | |
+| `workspace_id` | UUID FK → workspaces | |
+| `user_id` | UUID FK → users, nullable | NULL = global (workspace-wide) mapping |
+| `bank_profile` | varchar(100) | Empty string = any profile |
+| `keyword` | varchar(255) | Matched case-insensitively as a substring of the description |
+| `category` | varchar(50) | |
+| `property_id` | UUID FK → properties, nullable | |
+| `created_at` / `updated_at` | timestamp | |
+| `created_by` / `updated_by` | UUID FK → users | |
 
-`user_id` is empty string for now; will be populated once user auth is introduced.
-`bank_profile` can be empty to match any profile.
+`POST /api/description-mappings` upserts by `(workspace_id, user_id, bank_profile, keyword)`.
+Pass `scope: 'global'` to create a workspace-wide mapping (user_id = null).
 
 Priority when applying at preview time:
-1. User-specific description mapping (`user_id` matches current user)
-2. Global description mapping (`user_id` is empty)
-3. Rules from the Rules sheet
+1. User-specific description mapping (`user_id` = current user)
+2. Global description mapping (`user_id` is null)
+3. Auto-categorisation rules (F5-3)
 4. Default (rent if positive amount, other_expense if negative)
 
 ---
@@ -415,10 +415,10 @@ When a workspace is deleted, all its data cascades (properties, transactions, ru
 
 When a user is deleted, their FK references (`created_by`, `last_modified_by`) set to NULL, preserving the audit trail.
 
-### Client-side storage (unchanged from v1)
+### Client-side storage
 
-These remain in browser `localStorage` and are never persisted to the database:
-- Column mappings: `lg_col_mappings_v1` (CSV import preferences)
-- Description mappings: `lg_desc_mappings_v1` (manually captured category hints)
+These remain in browser `localStorage` and are not persisted to the database:
+- Column mappings: `lg_col_mappings_v1` (CSV import column/profile preferences)
 
-They are per-browser/device and sync'ed via the UI, not stored on the server yet.
+Description mappings (`lg_desc_mappings_v1`) were migrated to the backend in F5-4 and are
+no longer stored in localStorage.
