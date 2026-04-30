@@ -54,7 +54,7 @@ Start these after F3-1 ships. Can be done in parallel.
 | **F3-3** Category validation | E3 | F3-1 | Done | Backend validation for category taxonomy (income, expense, etc.). |
 | **F5-3** Auto-categorisation rules backend | E5 | F3-1 | Done | Rules API (GET/POST/PATCH/DELETE /api/rules); client-side matching already implemented. |
 | **F3-6** Reconciliation marking | E3 | F3-1 | Planned | Mark transactions as verified against bank statements. |
-| **F1-9a** Transaction category management | E1 | F1-6, F3-3 | Planned | Workspace owners can add custom categories. Uses generic `workspace_enum_values` table — forward-compatible with F1-9. F3-3 validation becomes dynamic (queries DB). |
+| **F1-9a** Transaction category management | E1 | F1-6, F3-3 | Done | Workspace owners can add custom categories. Uses generic `workspace_enum_values` table — forward-compatible with F1-9. F3-3 validation becomes dynamic (queries DB). |
 
 ---
 

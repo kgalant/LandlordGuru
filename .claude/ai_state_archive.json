@@ -352,5 +352,13 @@
     "last_commit": "1485143",
     "changed_files": "none",
     "git_status": "clean"
+  },
+  {
+    "timestamp": "2026-04-30",
+    "label": "F1-9b spec added, set as current focus",
+    "branch": "main",
+    "last_commit": "57e291c",
+    "changed_files": "AI_STATE.md, docs/epics/01-workspace-user-management.md",
+    "git_status": "clean (spec only, no code yet)"
   }
 ]

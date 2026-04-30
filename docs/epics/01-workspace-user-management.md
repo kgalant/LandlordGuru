@@ -312,7 +312,7 @@ This feature is a scoped MVP subset of F1-9. It is intentionally designed so tha
 ---
 
 ### F1-9b Category labels, per-workspace built-in overrides, and active/inactive toggle `[MVP]`
-**Status:** In progress
+**Status:** Done
 
 Enhance the transaction category management UI (F1-9a) with:
 1. Separate **label** (display name, free text) and **code/value** (immutable slug identifier) for every category
