@@ -12,13 +12,14 @@ import { decodeToken } from './auth.js';
 // ── Global state ──────────────────────────────────────────
 
 let State = {
-  properties:   [],
-  transactions: [],
-  rules:        [],
-  descMappings: [],
-  editingTxId:  null,
-  editingAptId: null,
-  importRows:   [],
+  properties:           [],
+  transactions:         [],
+  rules:                [],
+  descMappings:         [],
+  transactionCategories: {},
+  editingTxId:          null,
+  editingAptId:         null,
+  importRows:           [],
 };
 
 // ── Boot ──────────────────────────────────────────────────
@@ -41,20 +42,22 @@ async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
     // v2 mode: data from backend API
-    const [props, txs, rules, descMappings, wsSettings, rates] = await Promise.all([
+    const [props, txs, rules, descMappings, wsSettings, rates, txCategories] = await Promise.all([
       Api.getProperties(),
       Api.getTransactions({ limit: 10000 }),
       Api.getRules(),
       Api.getDescMappings(),
       Api.getWorkspaceSettings(),
       Api.getCurrencyRates(),
+      Api.getTransactionCategories(),
     ]);
-    State.properties        = props;
-    State.transactions      = (txs.data ?? txs).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
-    State.rules             = rules;
-    State.descMappings      = descMappings;
-    State.workspaceSettings = wsSettings;
-    State.currencyRates     = rates;
+    State.properties             = props;
+    State.transactions           = (txs.data ?? txs).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
+    State.rules                  = rules;
+    State.descMappings           = descMappings;
+    State.workspaceSettings      = wsSettings;
+    State.currencyRates          = rates;
+    State.transactionCategories  = txCategories;
     window.LAST_SYNC = new Date();
     populateAllDropdowns();
     renderCurrentPage();
@@ -434,7 +437,7 @@ async function saveTxModal() {
   if (CATEGORIES.expense?.items[cat]?.requiresNote && !notes) { toast(t('tx.toast.noteReq'), 'error'); return; }
 
   const prop = State.properties.find(p => p.id === propId);
-  const type = Importer.categoryToType(cat);
+  const type = Importer.categoryToType(cat, State.transactionCategories);
 
   setLoading(true, t('status.saving'));
   try {
@@ -520,7 +523,7 @@ function applyDescMappings(rows, profileKey) {
       mappings.find(m => m.user_id === null && profileMatch(m) && keywordMatch(m));
     if (match) {
       row.category           = match.category;
-      row.type               = Importer.categoryToType(match.category);
+      row.type               = Importer.categoryToType(match.category, State.transactionCategories);
       row._descMappingMatched = true;
       row._autoMatched       = false;
     }
@@ -578,7 +581,7 @@ function onRowSelect(i) {
 
 function onRowFieldChange(i, field, value) {
   State.importRows[i][field] = value;
-  if (field === 'category') State.importRows[i].type = Importer.categoryToType(value);
+  if (field === 'category') State.importRows[i].type = Importer.categoryToType(value, State.transactionCategories);
   _applyRowStyle(i);
 
   const bulkOn = document.getElementById('bulk-update-toggle')?.checked;
@@ -586,7 +589,7 @@ function onRowFieldChange(i, field, value) {
     State.importRows.forEach((row, j) => {
       if (j === i || !row._selected) return;
       row[field] = value;
-      if (field === 'category') row.type = Importer.categoryToType(value);
+      if (field === 'category') row.type = Importer.categoryToType(value, State.transactionCategories);
       _syncRowDOM(j, field, value);
       _applyRowStyle(j);
     });
@@ -852,7 +855,7 @@ function runImportPreview() {
     const propOpts = State.properties.map(p =>
       `<option value="${p.id}"${p.id === row.property_id ? ' selected' : ''}>${p.name}</option>`
     ).join('');
-    const catOpts = Importer.buildCategoryOptions(row.category);
+    const catOpts = Importer.buildCategoryOptions(row.category, State.transactionCategories);
     let matchTag = '';
     if      (row._descMappingMatched) matchTag = '<span class="tag tag-mapping">mapped</span> ';
     else if (row._autoMatched)        matchTag = '<span class="tag tag-auto">auto</span> ';
@@ -1352,7 +1355,7 @@ function initRulesTable() {
       return `<tr>
         <td data-col="bank_profile" style="font-size:12px">${profile}</td>
         <td data-col="keyword"><code style="font-size:12px;background:var(--bg3);padding:2px 6px;border-radius:4px">${r.keyword}</code></td>
-        <td data-col="category"><span class="tag tag-${Importer.categoryToType(r.category)}">${Reports.categoryLabel(r.category)}</span></td>
+        <td data-col="category"><span class="tag tag-${Importer.categoryToType(r.category, State.transactionCategories)}">${Reports.categoryLabel(r.category)}</span></td>
         <td data-col="property" style="font-size:12px">${prop ? prop.name : '—'}</td>
         <td data-col="_actions"><button class="btn btn-sm btn-danger" onclick="deleteRule(${r.id})">✕</button></td>
       </tr>`;

@@ -254,14 +254,36 @@ export const Importer = (() => {
 
   // ── Helpers ───────────────────────────────────────────────
 
-  function categoryToType(category) {
+  function categoryToType(category, apiCategories) {
+    if (apiCategories) {
+      for (const [bucket, items] of Object.entries(apiCategories)) {
+        if (items.some(item => item.value === category)) return bucket;
+      }
+    }
     for (const [type, group] of Object.entries(CATEGORIES)) {
       if (group.items[category]) return type;
     }
     return 'expense';
   }
 
-  function buildCategoryOptions(selectedCategory) {
+  const BUCKET_ORDER = ['income', 'expense', 'deposit', 'transfer'];
+
+  function buildCategoryOptions(selectedCategory, apiCategories) {
+    if (apiCategories && Object.keys(apiCategories).length > 0) {
+      let html = '';
+      for (const bucket of BUCKET_ORDER) {
+        const items = apiCategories[bucket];
+        if (!items || items.length === 0) continue;
+        html += `<optgroup label="${t('categories.' + bucket)}">`;
+        for (const item of items) {
+          const sel = item.value === selectedCategory ? ' selected' : '';
+          const label = item.is_builtin ? t('categories.items.' + item.value) : item.value;
+          html += `<option value="${item.value}"${sel}>${label}</option>`;
+        }
+        html += `</optgroup>`;
+      }
+      return html;
+    }
     let html = '';
     for (const [typeKey, typeGroup] of Object.entries(CATEGORIES)) {
       html += `<optgroup label="${t('categories.' + typeKey)}">`;

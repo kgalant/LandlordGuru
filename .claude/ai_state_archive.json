@@ -344,5 +344,13 @@
     "last_commit": "1485143",
     "changed_files": "backend/src/db/migrations/016_description_mappings.js, backend/src/routes/description-mappings.js, backend/src/app.js, backend/tests/description-mappings.test.js, frontend/js/api.js, frontend/js/app.js, docs/data-model.md, docs/epics/05-integrations-data-import.md, version.json",
     "git_status": "clean after commit"
+  },
+  {
+    "timestamp": "2026-04-30",
+    "label": "F5-4 done \u2014 smoke-tested, closing out",
+    "branch": "main",
+    "last_commit": "1485143",
+    "changed_files": "none",
+    "git_status": "clean"
   }
 ]

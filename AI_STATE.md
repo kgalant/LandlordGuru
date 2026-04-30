@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
+- Type: bug
 - Epic: E5 Integrations and Data Import
-- ID: F5-4
-- Title: Description mappings backend
-- Short summary: Done. All subtasks complete, smoke-tested on homedev.
+- ID: B5-4-1
+- Title: Import category dropdown ignores custom categories
+- Short summary: Import preview built category options from the hardcoded CATEGORIES constant; custom categories added via the API never appeared. Fixed by fetching from API at boot and passing to buildCategoryOptions/categoryToType.
 
 ---
 
@@ -24,10 +24,8 @@ None.
 
 ## Task breakdown (current focus)
 
-- [x] F5-4-1: Add migration for `description_mappings` table; define schema and unique key `(workspace_id, bank_profile, user_id, keyword)`
-- [x] F5-4-2: Implement `GET`, `POST` (upsert), and `DELETE` routes at `/api/description-mappings`
-- [x] F5-4-3: Add backend tests for all three endpoints
-- [x] F5-4-4: Update frontend to read from API instead of localStorage on import preview load; write to API when a mapping is saved
+- [x] B5-4-1-1: Modify `buildCategoryOptions` and `categoryToType` in importer.js to accept optional `apiCategories` param
+- [x] B5-4-1-2: Fetch `getTransactionCategories()` in `refreshAll()`, store in `State.transactionCategories`, pass to all call sites
 
 ---
 
@@ -55,7 +53,7 @@ Relevant epic docs:
 
 ## Next step
 
-Read `docs/roadmap.md` and select the next focus from Wave 3 candidates (F2-2, F2-6, F2-7); confirm with user before starting.
+Confirm and execute commit for B5-4-1, then select next focus from roadmap Wave 3 candidates (F2-2, F2-6, F2-7).
 
 ---
 
@@ -66,20 +64,23 @@ Read `docs/roadmap.md` and select the next focus from Wave 3 candidates (F2-2, F
 
 - Last result:
   - Date/time: 2026-04-30
-  - Outcome: 184/184 tests passing. F5-4 smoke-tested on homedev — mappings persist across devices, localStorage no longer used.
+  - Outcome: 184/184 tests passing (no backend changes in this fix; frontend-only).
 
 ---
 
 ## Files touched this session
 
-None (session end).
+- `AI_STATE.md`
+- `frontend/js/importer.js`
+- `frontend/js/app.js`
+- `.claude/settings.local.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-04-30 [F5-4 done — smoke-tested, closing out]
+- 2026-04-30 [B5-4-1 fix — import category dropdown now shows custom categories]
   - branch: main
   - last_commit: 1485143
-  - changed_files: none
-  - git_status: clean
+  - changed_files: frontend/js/importer.js, frontend/js/app.js, .claude/settings.local.json
+  - git_status: M frontend/js/importer.js, M frontend/js/app.js, M .claude/settings.local.json
