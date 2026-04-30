@@ -1826,4 +1826,6 @@ Object.assign(window, {
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,
   saveSettings, toggleAddRateForm, submitAddRate, deleteRate,
   toggleAddCategoryForm, submitAddCategory, deleteCategoryItem,
+  onCatLabelBlur, toggleCategoryActive,
+  openEditCategoryForm, submitEditCategory, closeEditCategoryForm,
 });
