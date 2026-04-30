@@ -123,10 +123,14 @@ export const Reports = (() => {
 
   function fmtDKK(amount) { return fmt(amount, 'DKK'); }
 
-  function categoryLabel(catKey) {
+  // apiCategories: optional flat array from State.transactionCategories (all buckets merged)
+  function categoryLabel(catKey, apiCategories) {
+    if (apiCategories) {
+      const found = apiCategories.find(c => c.value === catKey);
+      if (found) return found.label;
+    }
     const s = t('categories.items.' + catKey);
     if (s !== 'categories.items.' + catKey) return s;
-    // fallback to CATEGORIES object
     for (const group of Object.values(CATEGORIES)) {
       if (group.items[catKey]) return group.items[catKey].label;
     }

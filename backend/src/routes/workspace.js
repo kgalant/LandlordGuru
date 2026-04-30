@@ -100,27 +100,68 @@ router.patch('/settings', requireAuth, async (req, res) => {
 // ---------------------------------------------------------------------------
 
 // GET /api/workspace/enums/transaction-categories
-// Returns all active categories (built-ins + custom for this workspace)
-// grouped by type_bucket. Accessible to all workspace members.
+// Returns categories (built-ins + custom for this workspace) grouped by type_bucket.
+// ?include_inactive=true — include inactive rows (for the settings UI).
+// Effective label and is_active for built-ins are resolved from workspace_enum_overrides.
+// Accessible to all workspace members.
 router.get('/enums/transaction-categories', requireAuth, async (req, res) => {
   try {
     const { workspace_id } = req;
+    const includeInactive = req.query.include_inactive === 'true';
 
-    const rows = await db('workspace_enum_values')
-      .where('enum_type', 'transaction_category')
-      .where('is_active', true)
-      .where(function () {
-        this.whereNull('workspace_id').orWhere('workspace_id', workspace_id);
+    const rows = await db('workspace_enum_values as wev')
+      .leftJoin('workspace_enum_overrides as weo', function () {
+        this.on('weo.enum_value_id', 'wev.id').andOn('weo.workspace_id', db.raw('?', [workspace_id]));
       })
-      .select('id', 'type_bucket', 'value', 'is_builtin')
-      .orderBy(['type_bucket', 'value']);
+      .where('wev.enum_type', 'transaction_category')
+      .where(function () {
+        this.whereNull('wev.workspace_id').orWhere('wev.workspace_id', workspace_id);
+      })
+      .modify(function (qb) {
+        if (!includeInactive) {
+          // built-ins: active unless override says false; custom: use own is_active
+          qb.where(function () {
+            this
+              .where(function () {
+                // built-in with no override or override.is_active = true
+                this.where('wev.is_builtin', true)
+                  .where(function () {
+                    this.whereNull('weo.is_active').orWhere('weo.is_active', true);
+                  });
+              })
+              .orWhere(function () {
+                // custom with is_active = true
+                this.where('wev.is_builtin', false).where('wev.is_active', true);
+              });
+          });
+        }
+      })
+      .select(
+        'wev.id',
+        'wev.type_bucket',
+        'wev.value',
+        'wev.is_builtin',
+        db.raw('COALESCE(weo.label, wev.label) AS label'),
+        db.raw(`
+          CASE
+            WHEN wev.is_builtin THEN COALESCE(weo.is_active, true)
+            ELSE wev.is_active
+          END AS is_active
+        `)
+      )
+      .orderBy(['wev.type_bucket', 'wev.value']);
 
-    // Group by type_bucket
     const grouped = {};
     for (const row of rows) {
       const bucket = row.type_bucket || 'other';
       if (!grouped[bucket]) grouped[bucket] = [];
-      grouped[bucket].push({ id: row.id, value: row.value, is_builtin: row.is_builtin });
+      grouped[bucket].push({
+        id:         row.id,
+        value:      row.value,
+        label:      row.label,
+        is_builtin: row.is_builtin,
+        is_active:  row.is_active,
+      });
     }
 
     await req.logger.info('workspace.enums.transaction-categories.read', { workspace_id });
@@ -148,7 +189,7 @@ router.post('/enums/transaction-categories', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Only workspace owners can manage categories' });
     }
 
-    const { type_bucket, value } = req.body;
+    const { type_bucket, value, label } = req.body;
 
     if (!type_bucket || !String(type_bucket).trim()) {
       return res.status(400).json({ error: 'type_bucket is required' });
@@ -156,9 +197,13 @@ router.post('/enums/transaction-categories', requireAuth, async (req, res) => {
     if (!value || !String(value).trim()) {
       return res.status(400).json({ error: 'value is required' });
     }
+    if (!label || !String(label).trim()) {
+      return res.status(400).json({ error: 'label is required' });
+    }
 
     const bucket = String(type_bucket).trim().toLowerCase();
     const val    = String(value).trim().toLowerCase();
+    const lbl    = String(label).trim();
 
     // Check uniqueness across built-ins and custom values for this workspace
     const existing = await db('workspace_enum_values')
@@ -171,32 +216,120 @@ router.post('/enums/transaction-categories', requireAuth, async (req, res) => {
       .first();
 
     if (existing) {
-      return res.status(409).json({ error: `Category '${val}' already exists in '${bucket}'` });
+      return res.status(409).json({ error: `Category code '${val}' already exists in '${bucket}'` });
     }
 
     const [created] = await db('workspace_enum_values')
       .insert({
         workspace_id,
-        enum_type:  'transaction_category',
+        enum_type:   'transaction_category',
         type_bucket: bucket,
         value:       val,
+        label:       lbl,
         is_builtin:  false,
         is_active:   true,
         created_by:  user_id,
       })
-      .returning(['id', 'type_bucket', 'value', 'is_builtin']);
+      .returning(['id', 'type_bucket', 'value', 'label', 'is_builtin', 'is_active']);
 
     await req.logger.info('workspace.enums.transaction-categories.created', {
       workspace_id,
       user_id,
       type_bucket: bucket,
       value: val,
+      label: lbl,
     });
     res.status(201).json(created);
   } catch (err) {
     await req.logger.error('workspace.enums.transaction-categories.create.failed', { error: err.message });
     console.error('POST /api/workspace/enums/transaction-categories error:', err.message);
     res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
+// PATCH /api/workspace/enums/transaction-categories/:id
+// Updates label and/or is_active for any category. Owner only.
+// For built-in categories: upserts a per-workspace row in workspace_enum_overrides.
+// For custom categories: updates the workspace_enum_values row directly.
+router.patch('/enums/transaction-categories/:id', requireAuth, async (req, res) => {
+  try {
+    const { workspace_id, user } = req;
+    const user_id = user.id;
+
+    const wUser = await db('workspace_users')
+      .where({ workspace_id, user_id })
+      .select('role')
+      .first();
+
+    if (!wUser || wUser.role !== 'owner') {
+      return res.status(403).json({ error: 'Only workspace owners can manage categories' });
+    }
+
+    const { id } = req.params;
+    const { label, is_active } = req.body;
+
+    if (label === undefined && is_active === undefined) {
+      return res.status(400).json({ error: 'At least one of label or is_active is required' });
+    }
+    if (label !== undefined && !String(label).trim()) {
+      return res.status(400).json({ error: 'label cannot be empty' });
+    }
+
+    const category = await db('workspace_enum_values')
+      .where('id', id)
+      .where('enum_type', 'transaction_category')
+      .where(function () {
+        this.whereNull('workspace_id').orWhere('workspace_id', workspace_id);
+      })
+      .first();
+
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    if (category.is_builtin) {
+      // Upsert into workspace_enum_overrides for per-workspace customisation
+      const overrideData = { updated_at: db.fn.now(), updated_by: user_id };
+      if (label    !== undefined) overrideData.label     = String(label).trim();
+      if (is_active !== undefined) overrideData.is_active = Boolean(is_active);
+
+      await db('workspace_enum_overrides')
+        .insert({ workspace_id, enum_value_id: id, ...overrideData })
+        .onConflict(['workspace_id', 'enum_value_id'])
+        .merge(overrideData);
+
+      // Return effective values
+      const override = await db('workspace_enum_overrides')
+        .where({ workspace_id, enum_value_id: id })
+        .first();
+
+      return res.json({
+        id:         category.id,
+        value:      category.value,
+        label:      override.label     ?? category.label,
+        is_active:  override.is_active ?? true,
+        is_builtin: true,
+      });
+    }
+
+    // Custom category — direct update
+    const updateData = {};
+    if (label    !== undefined) updateData.label     = String(label).trim();
+    if (is_active !== undefined) updateData.is_active = Boolean(is_active);
+
+    const [updated] = await db('workspace_enum_values')
+      .where('id', id)
+      .update(updateData)
+      .returning(['id', 'value', 'label', 'is_active', 'is_builtin']);
+
+    await req.logger.info('workspace.enums.transaction-categories.updated', {
+      workspace_id, user_id, category_id: id, ...updateData,
+    });
+    res.json(updated);
+  } catch (err) {
+    await req.logger.error('workspace.enums.transaction-categories.update.failed', { error: err.message });
+    console.error('PATCH /api/workspace/enums/transaction-categories/:id error:', err.message);
+    res.status(500).json({ error: 'Failed to update category' });
   }
 });
 

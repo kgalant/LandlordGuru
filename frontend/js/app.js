@@ -22,6 +22,16 @@ let State = {
   importRows:           [],
 };
 
+// Returns flat array of all category objects from the grouped State
+function flatCats() {
+  return Object.values(State.transactionCategories).flat();
+}
+
+// Resolves a category label using API data first, then i18n fallback
+function catLabel(key) {
+  return catLabel(key, flatCats());
+}
+
 // ── Boot ──────────────────────────────────────────────────
 
 async function boot() {
@@ -320,7 +330,7 @@ function initTxTable() {
 
 function dashTxRow(tx) {
   const prop   = State.properties.find(p => p.id === tx.property_id);
-  const catLbl = Reports.categoryLabel(tx.category);
+  const catLbl = catLabel(tx.category);
   const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
   const currency = tx.currency || prop?.currency || '';
   return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
@@ -334,7 +344,7 @@ function dashTxRow(tx) {
 
 function txRow(tx) {
   const prop   = State.properties.find(p => p.id === tx.property_id);
-  const catLbl = Reports.categoryLabel(tx.category);
+  const catLbl = catLabel(tx.category);
   const srcLbl = tx.source === 'manual' ? t('common.manual') : (BANK_PROFILES[tx.source]?.label || tx.source);
   const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
   const currency = tx.currency || prop?.currency || '';
@@ -945,7 +955,7 @@ function goToStaticPreview() {
       html += `<div class="tree-cat">
         <div class="tree-cat-header" onclick="toggleTree(this)">
           <span class="tree-toggle">▼</span>
-          <span>${Reports.categoryLabel(cat)}</span>
+          <span>${catLabel(cat)}</span>
           <span class="tree-meta">${catMeta}</span>
         </div>
         <div class="tree-cat-body">
@@ -1031,7 +1041,7 @@ function goToMappingConfirmOrImport() {
       <div class="table-wrap" style="margin-bottom:1rem"><table><thead><tr>
         ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colCat'))}
       </tr></thead><tbody>
-        ${toAdd.map(m => `<tr>${td(m.keyword)}<td style="padding:3px 8px"><span class="tag">${Reports.categoryLabel(m.category)}</span></td></tr>`).join('')}
+        ${toAdd.map(m => `<tr>${td(m.keyword)}<td style="padding:3px 8px"><span class="tag">${catLabel(m.category)}</span></td></tr>`).join('')}
       </tbody></table></div>`;
   }
 
@@ -1041,8 +1051,8 @@ function goToMappingConfirmOrImport() {
         ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colWas'))}${th(t('import.mappingConfirm.colNow'))}
       </tr></thead><tbody>
         ${toUpdate.map(m => `<tr>${td(m.keyword)}
-          <td style="padding:3px 8px"><span class="tag">${Reports.categoryLabel(m.oldCat)}</span></td>
-          <td style="padding:3px 8px"><span class="tag">${Reports.categoryLabel(m.newCat)}</span></td>
+          <td style="padding:3px 8px"><span class="tag">${catLabel(m.oldCat)}</span></td>
+          <td style="padding:3px 8px"><span class="tag">${catLabel(m.newCat)}</span></td>
         </tr>`).join('')}
       </tbody></table></div>`;
   }
@@ -1121,7 +1131,7 @@ function initReportTables() {
     ],
     fetchData: async () => ({ data: _repIncCats,  total: _repIncCats.length }),
     renderRow: (c) => `<tr>
-      <td data-col="category">${Reports.categoryLabel(c.category)}</td>
+      <td data-col="category">${catLabel(c.category)}</td>
       <td data-col="amount" class="amount-cell positive">${c.amount.toLocaleString()}</td>
       <td data-col="count"  class="amount-cell muted">${c.count}</td>
     </tr>`,
@@ -1138,7 +1148,7 @@ function initReportTables() {
     ],
     fetchData: async () => ({ data: _repExpCats, total: _repExpCats.length }),
     renderRow: (c) => `<tr>
-      <td data-col="category">${Reports.categoryLabel(c.category)}</td>
+      <td data-col="category">${catLabel(c.category)}</td>
       <td data-col="amount" class="amount-cell negative">${c.amount.toLocaleString()}</td>
       <td data-col="count"  class="amount-cell muted">${c.count}</td>
     </tr>`,
@@ -1355,7 +1365,7 @@ function initRulesTable() {
       return `<tr>
         <td data-col="bank_profile" style="font-size:12px">${profile}</td>
         <td data-col="keyword"><code style="font-size:12px;background:var(--bg3);padding:2px 6px;border-radius:4px">${r.keyword}</code></td>
-        <td data-col="category"><span class="tag tag-${Importer.categoryToType(r.category, State.transactionCategories)}">${Reports.categoryLabel(r.category)}</span></td>
+        <td data-col="category"><span class="tag tag-${Importer.categoryToType(r.category, State.transactionCategories)}">${catLabel(r.category)}</span></td>
         <td data-col="property" style="font-size:12px">${prop ? prop.name : '—'}</td>
         <td data-col="_actions"><button class="btn btn-sm btn-danger" onclick="deleteRule(${r.id})">✕</button></td>
       </tr>`;
@@ -1625,7 +1635,7 @@ async function renderTransactionCategories() {
 
   let grouped;
   try {
-    grouped = await Api.getTransactionCategories();
+    grouped = await Api.getTransactionCategoriesAll();
   } catch(e) {
     loading.style.display = 'none';
     container.innerHTML = `<p style="padding:1rem;color:var(--danger)">Failed to load categories: ${e.message}</p>`;
@@ -1641,23 +1651,35 @@ async function renderTransactionCategories() {
 
   const html = buckets.map(bucket => {
     const cats = grouped[bucket];
-    const label = BUCKET_LABELS[bucket] || bucket;
+    const bucketLabel = BUCKET_LABELS[bucket] || bucket;
     const rows = cats.map(c => {
-      const lockIcon = c.is_builtin
-        ? '<span title="Built-in — cannot be deleted" style="color:var(--text-muted);font-size:13px">🔒</span>'
+      const inactiveMark = !c.is_active
+        ? '<span style="color:var(--text-muted);font-size:11px;margin-left:4px">(inactive)</span>'
+        : '';
+      const editBtn = isOwner
+        ? `<button class="btn btn-secondary btn-sm" onclick="openEditCategoryForm('${c.id}','${escAttr(c.label)}','${escAttr(c.value)}')">Edit</button>`
+        : '';
+      const toggleBtn = isOwner
+        ? `<button class="btn btn-secondary btn-sm" onclick="toggleCategoryActive('${c.id}',${!c.is_active})">${c.is_active ? 'Deactivate' : 'Activate'}</button>`
         : '';
       const deleteBtn = (!c.is_builtin && isOwner)
-        ? `<button class="btn btn-danger btn-sm" onclick="deleteCategoryItem('${c.id}','${c.value}')">Delete</button>`
+        ? `<button class="btn btn-danger btn-sm" onclick="deleteCategoryItem('${c.id}','${escAttr(c.label)}')">Delete</button>`
         : '';
       return `
-        <tr>
-          <td style="padding:0.4rem 0.5rem">${c.value}${lockIcon ? ' ' + lockIcon : ''}</td>
-          <td style="padding:0.4rem 0.5rem;text-align:right">${deleteBtn}</td>
+        <tr style="${!c.is_active ? 'opacity:0.55' : ''}">
+          <td style="padding:0.4rem 0.5rem">
+            <span>${escHtml(c.label)}</span>${inactiveMark}
+            <span style="color:var(--text-muted);font-size:11px;margin-left:6px">${escHtml(c.value)}</span>
+            ${c.is_builtin ? '<span title="Built-in" style="color:var(--text-muted);font-size:11px;margin-left:4px">🔒</span>' : ''}
+          </td>
+          <td style="padding:0.4rem 0.5rem;text-align:right;white-space:nowrap">
+            ${editBtn} ${toggleBtn} ${deleteBtn}
+          </td>
         </tr>`;
     }).join('');
     return `
       <div style="margin-bottom:1.5rem">
-        <div style="font-weight:600;padding:0.5rem 0;border-bottom:1px solid var(--border)">${label}</div>
+        <div style="font-weight:600;padding:0.5rem 0;border-bottom:1px solid var(--border)">${bucketLabel}</div>
         <table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table>
       </div>`;
   }).join('');
@@ -1665,37 +1687,93 @@ async function renderTransactionCategories() {
   container.innerHTML = html;
 }
 
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+}
+
 function toggleAddCategoryForm() {
   const form = document.getElementById('add-category-form');
   const visible = form.style.display !== 'none';
   form.style.display = visible ? 'none' : 'block';
   if (!visible) {
-    document.getElementById('cat-bucket').value = 'income';
-    document.getElementById('cat-value').value = '';
+    document.getElementById('cat-bucket').value  = 'income';
+    document.getElementById('cat-label').value   = '';
+    document.getElementById('cat-value').value   = '';
   }
+}
+
+function onCatLabelInput() {
+  const label = document.getElementById('cat-label').value;
+  const codeEl = document.getElementById('cat-value');
+  // Auto-derive code from label: lowercase, spaces→underscore, strip non-alphanumeric
+  codeEl.value = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
 }
 
 async function submitAddCategory() {
   const type_bucket = document.getElementById('cat-bucket').value;
+  const label       = document.getElementById('cat-label').value.trim();
   const value       = document.getElementById('cat-value').value.trim().toLowerCase();
 
-  if (!value) { toast('Category value is required', 'error'); return; }
+  if (!label) { toast('Label is required', 'error'); return; }
+  if (!value) { toast('Code is required', 'error'); return; }
 
   try {
-    await Api.createTransactionCategory({ type_bucket, value });
+    await Api.createTransactionCategory({ type_bucket, value, label });
     toggleAddCategoryForm();
     await renderTransactionCategories();
+    State.transactionCategories = await Api.getTransactionCategories();
     toast('Category added', 'success');
   } catch(e) {
     toast(e.message, 'error');
   }
 }
 
-async function deleteCategoryItem(id, value) {
-  if (!confirm(`Delete category '${value}'?`)) return;
+function openEditCategoryForm(id, currentLabel, code) {
+  document.getElementById('edit-cat-id').value      = id;
+  document.getElementById('edit-cat-label').value   = currentLabel;
+  document.getElementById('edit-cat-code').value    = code;
+  document.getElementById('edit-category-form').style.display = 'block';
+}
+
+function closeEditCategoryForm() {
+  document.getElementById('edit-category-form').style.display = 'none';
+}
+
+async function submitEditCategory() {
+  const id    = document.getElementById('edit-cat-id').value;
+  const label = document.getElementById('edit-cat-label').value.trim();
+  if (!label) { toast('Label cannot be empty', 'error'); return; }
+  try {
+    await Api.updateTransactionCategory(id, { label });
+    closeEditCategoryForm();
+    await renderTransactionCategories();
+    State.transactionCategories = await Api.getTransactionCategories();
+    toast('Category updated', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function toggleCategoryActive(id, newActive) {
+  try {
+    await Api.updateTransactionCategory(id, { is_active: newActive });
+    await renderTransactionCategories();
+    State.transactionCategories = await Api.getTransactionCategories();
+    toast(newActive ? 'Category activated' : 'Category deactivated', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function deleteCategoryItem(id, label) {
+  if (!confirm(`Delete category '${label}'?`)) return;
   try {
     await Api.deleteTransactionCategory(id);
     await renderTransactionCategories();
+    State.transactionCategories = await Api.getTransactionCategories();
     toast('Category deleted', 'success');
   } catch(e) {
     toast(e.message, 'error');

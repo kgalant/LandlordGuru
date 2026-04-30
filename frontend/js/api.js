@@ -115,8 +115,16 @@ export const Api = (() => {
     return request('POST', '/workspace/enums/transaction-categories', data);
   }
 
+  async function updateTransactionCategory(id, data) {
+    return request('PATCH', `/workspace/enums/transaction-categories/${id}`, data);
+  }
+
   async function deleteTransactionCategory(id) {
     return request('DELETE', `/workspace/enums/transaction-categories/${id}`);
+  }
+
+  async function getTransactionCategoriesAll() {
+    return request('GET', '/workspace/enums/transaction-categories?include_inactive=true');
   }
 
   // ── Currency Rates ───────────────────────────────────────────
@@ -165,7 +173,8 @@ export const Api = (() => {
     getTransactions, createTransaction, updateTransaction, deleteTransaction,
     getRules, createRule, updateRule, deleteRule,
     getWorkspaceSettings, updateWorkspaceSettings,
-    getTransactionCategories, createTransactionCategory, deleteTransactionCategory,
+    getTransactionCategories, getTransactionCategoriesAll,
+    createTransactionCategory, updateTransactionCategory, deleteTransactionCategory,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     getDescMappings, saveDescMapping, deleteDescMapping,
     createTransactionBatch,

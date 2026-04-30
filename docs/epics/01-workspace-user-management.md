@@ -306,7 +306,47 @@ This feature is a scoped MVP subset of F1-9. It is intentionally designed so tha
 
 **Notes:**
 - The `workspace_enum_values` table is the single source of truth for all configurable enums in the system. When F1-9 is built, it adds new `enum_type` values to the same table and a generic UI that lists all enum types — this feature's UI becomes one entry in that list.
+- F1-9b adds a companion `workspace_enum_overrides` table (per-workspace label/is_active overrides for built-in rows). This table is also fully generic and is reused by F1-9 for all other enum types — no new tables required.
 - Archived/inactive categories are hidden from all dropdowns but remain queryable so historical transactions using them are not broken.
+
+---
+
+### F1-9b Category labels, per-workspace built-in overrides, and active/inactive toggle `[MVP]`
+**Status:** In progress
+
+Enhance the transaction category management UI (F1-9a) with:
+1. Separate **label** (display name, free text) and **code/value** (immutable slug identifier) for every category
+2. Per-workspace label and active/inactive overrides for built-in categories (different workspaces can customise built-in labels or hide built-ins they don't use)
+3. Active/inactive toggle for all categories (built-in and custom)
+4. Edit-label button on all categories (edits label only, never the code)
+5. UI always shows the label; code shown as secondary text
+
+**Architecture (forward-compatible with F1-9):**
+
+- Add `label` column (varchar 255, not null) to `workspace_enum_values`; seed built-in labels at migration time (e.g. `rent` → "Rent", `maintenance_repair` → "Maintenance & Repair"); generic — applies to all enum types, not just categories
+- New table **`workspace_enum_overrides`**`(id, workspace_id FK, enum_value_id FK → workspace_enum_values, label nullable, is_active boolean, updated_at, updated_by FK)` — stores per-workspace customisations for any built-in enum value; unique on `(workspace_id, enum_value_id)`; fully generic: reused by F1-9 for property models, account types, etc. without any new tables
+- GET resolves effective label and is_active: for built-ins, check override row first; for custom, use the row directly
+- Custom values' `is_active` and `label` live on their own `workspace_enum_values` row (no override table needed)
+- PATCH endpoint is generic from day one (`/api/workspace/enums/:enum_type/:id`) — F1-9 just adds new `enum_type` values; for built-ins it upserts into `workspace_enum_overrides`; for custom it updates the row directly
+- `Reports.categoryLabel(code)` resolves label from `State.transactionCategories` (API-fetched) with i18n fallback
+
+**API changes:**
+- `GET /api/workspace/enums/transaction-categories` — response shape gains `label`, `is_active` fields; inactive values excluded by default (use `?include_inactive=true` for the settings UI)
+- `POST /api/workspace/enums/transaction-categories` — body gains required `label` field alongside `value` (code)
+- `PATCH /api/workspace/enums/:enum_type/:id` — new generic endpoint; accepts `{ label?, is_active? }`; owner only; handles built-in (upsert override) and custom (direct update) transparently
+- `DELETE` — unchanged
+
+**Acceptance criteria:**
+- Adding a custom category requires both a label (free text) and a code (lowercase slug, unique per workspace + bucket); code is immutable after creation
+- Code uniqueness is validated and a clear error is shown if it conflicts
+- All categories (built-in and custom) show an Edit button (owner only) that opens an inline form for editing the label; code field is read-only in the edit form
+- All categories (built-in and custom) show an Active/Inactive toggle (owner only); inactive categories are hidden from all dropdowns but remain in the settings list
+- Built-in categories: label and is_active overrides are workspace-scoped; two workspaces can have different labels for "Rent" and one can hide "inter_account" without affecting the other
+- `Reports.categoryLabel()` and all dropdowns use the API-returned label, not i18n keys
+- Non-owner users see the list as read-only (no edit, no toggle)
+
+**Dependencies:**
+- F1-9a (done — provides the table and API base)
 
 ---
 

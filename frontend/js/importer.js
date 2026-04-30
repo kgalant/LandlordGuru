@@ -277,7 +277,7 @@ export const Importer = (() => {
         html += `<optgroup label="${t('categories.' + bucket)}">`;
         for (const item of items) {
           const sel = item.value === selectedCategory ? ' selected' : '';
-          const label = item.is_builtin ? t('categories.items.' + item.value) : item.value;
+          const label = item.label || item.value;
           html += `<option value="${item.value}"${sel}>${label}</option>`;
         }
         html += `</optgroup>`;

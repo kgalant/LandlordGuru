@@ -405,13 +405,36 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Category value</label>
-              <input type="text" id="cat-value" placeholder="e.g. parking_fee" style="text-transform:lowercase">
+              <label>Label <span style="color:var(--text-muted);font-size:12px">(display name)</span></label>
+              <input type="text" id="cat-label" placeholder="e.g. Parking Fee" oninput="onCatLabelInput()">
+            </div>
+            <div class="form-group">
+              <label>Code <span style="color:var(--text-muted);font-size:12px">(unique identifier, auto-derived)</span></label>
+              <input type="text" id="cat-value" placeholder="e.g. parking_fee" style="font-family:monospace">
             </div>
           </div>
           <div class="btn-row" style="margin-top:0.5rem">
             <button class="btn btn-primary btn-sm" onclick="submitAddCategory()">Save category</button>
             <button class="btn btn-secondary btn-sm" onclick="toggleAddCategoryForm()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Edit category label form (hidden by default) -->
+        <div id="edit-category-form" style="display:none;padding:0.75rem;background:var(--surface-2,#f5f5f5);border-radius:6px;margin-top:0.5rem">
+          <input type="hidden" id="edit-cat-id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Label</label>
+              <input type="text" id="edit-cat-label" placeholder="Display name">
+            </div>
+            <div class="form-group">
+              <label>Code <span style="color:var(--text-muted);font-size:12px">(read-only)</span></label>
+              <input type="text" id="edit-cat-code" readonly style="font-family:monospace;opacity:0.65">
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:0.5rem">
+            <button class="btn btn-primary btn-sm" onclick="submitEditCategory()">Save</button>
+            <button class="btn btn-secondary btn-sm" onclick="closeEditCategoryForm()">Cancel</button>
           </div>
         </div>
 

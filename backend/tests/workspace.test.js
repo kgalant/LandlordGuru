@@ -135,7 +135,11 @@ describe('Workspace Settings API', () => {
         expect(res.status).toBe(200);
         expect(res.body).toHaveProperty('income');
         expect(res.body).toHaveProperty('expense');
-        expect(res.body.income.some((c) => c.value === 'rent' && c.is_builtin)).toBe(true);
+        const rent = res.body.income.find((c) => c.value === 'rent');
+        expect(rent).toBeDefined();
+        expect(rent.is_builtin).toBe(true);
+        expect(rent.label).toBe('Rent');
+        expect(rent.is_active).toBe(true);
         expect(res.body.expense.some((c) => c.value === 'insurance' && c.is_builtin)).toBe(true);
       });
 
@@ -145,6 +149,7 @@ describe('Workspace Settings API', () => {
           enum_type:   'transaction_category',
           type_bucket: 'income',
           value:       'custom_income',
+          label:       'Custom Income',
           is_builtin:  false,
           is_active:   true,
         });
@@ -180,10 +185,11 @@ describe('Workspace Settings API', () => {
         const res = await request(app)
           .post('/api/workspace/enums/transaction-categories')
           .set('Authorization', `Bearer ${ownerToken}`)
-          .send({ type_bucket: 'income', value: 'parking_fee' });
+          .send({ type_bucket: 'income', value: 'parking_fee', label: 'Parking Fee' });
 
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty('value', 'parking_fee');
+        expect(res.body).toHaveProperty('label', 'Parking Fee');
         expect(res.body).toHaveProperty('is_builtin', false);
       });
 
@@ -191,7 +197,7 @@ describe('Workspace Settings API', () => {
         const res = await request(app)
           .post('/api/workspace/enums/transaction-categories')
           .set('Authorization', `Bearer ${memberToken}`)
-          .send({ type_bucket: 'income', value: 'parking_fee' });
+          .send({ type_bucket: 'income', value: 'parking_fee', label: 'Parking Fee' });
 
         expect(res.status).toBe(403);
       });
@@ -200,7 +206,7 @@ describe('Workspace Settings API', () => {
         const res = await request(app)
           .post('/api/workspace/enums/transaction-categories')
           .set('Authorization', `Bearer ${ownerToken}`)
-          .send({ value: 'parking_fee' });
+          .send({ value: 'parking_fee', label: 'Parking Fee' });
 
         expect(res.status).toBe(400);
         expect(res.body.error).toMatch(/type_bucket/);
@@ -210,22 +216,32 @@ describe('Workspace Settings API', () => {
         const res = await request(app)
           .post('/api/workspace/enums/transaction-categories')
           .set('Authorization', `Bearer ${ownerToken}`)
-          .send({ type_bucket: 'income' });
+          .send({ type_bucket: 'income', label: 'Parking Fee' });
 
         expect(res.status).toBe(400);
         expect(res.body.error).toMatch(/value/);
+      });
+
+      it('returns 400 when label is missing', async () => {
+        const res = await request(app)
+          .post('/api/workspace/enums/transaction-categories')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({ type_bucket: 'income', value: 'parking_fee' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/label/);
       });
 
       it('returns 409 for duplicate value within same bucket', async () => {
         await request(app)
           .post('/api/workspace/enums/transaction-categories')
           .set('Authorization', `Bearer ${ownerToken}`)
-          .send({ type_bucket: 'income', value: 'parking_fee' });
+          .send({ type_bucket: 'income', value: 'parking_fee', label: 'Parking Fee' });
 
         const res = await request(app)
           .post('/api/workspace/enums/transaction-categories')
           .set('Authorization', `Bearer ${ownerToken}`)
-          .send({ type_bucket: 'income', value: 'parking_fee' });
+          .send({ type_bucket: 'income', value: 'parking_fee', label: 'Parking Fee 2' });
 
         expect(res.status).toBe(409);
       });
@@ -234,9 +250,139 @@ describe('Workspace Settings API', () => {
         const res = await request(app)
           .post('/api/workspace/enums/transaction-categories')
           .set('Authorization', `Bearer ${ownerToken}`)
-          .send({ type_bucket: 'income', value: 'rent' });
+          .send({ type_bucket: 'income', value: 'rent', label: 'Rent Custom' });
 
         expect(res.status).toBe(409);
+      });
+    });
+
+    describe('PATCH /api/workspace/enums/transaction-categories/:id', () => {
+      it('owner can update label of a custom category', async () => {
+        const [cat] = await db('workspace_enum_values')
+          .insert({
+            workspace_id: testWorkspaceId,
+            enum_type:   'transaction_category',
+            type_bucket: 'expense',
+            value:       'patch_test_cat',
+            label:       'Original Label',
+            is_builtin:  false,
+            is_active:   true,
+          })
+          .returning('id');
+
+        const res = await request(app)
+          .patch(`/api/workspace/enums/transaction-categories/${cat.id}`)
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({ label: 'Updated Label' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.label).toBe('Updated Label');
+      });
+
+      it('owner can deactivate a custom category', async () => {
+        const [cat] = await db('workspace_enum_values')
+          .insert({
+            workspace_id: testWorkspaceId,
+            enum_type:   'transaction_category',
+            type_bucket: 'expense',
+            value:       'deactivate_test',
+            label:       'Deactivate Test',
+            is_builtin:  false,
+            is_active:   true,
+          })
+          .returning('id');
+
+        const res = await request(app)
+          .patch(`/api/workspace/enums/transaction-categories/${cat.id}`)
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({ is_active: false });
+
+        expect(res.status).toBe(200);
+        expect(res.body.is_active).toBe(false);
+      });
+
+      it('owner can override label of a built-in category per workspace', async () => {
+        const builtin = await db('workspace_enum_values')
+          .where({ enum_type: 'transaction_category', value: 'rent', is_builtin: true })
+          .first();
+
+        const res = await request(app)
+          .patch(`/api/workspace/enums/transaction-categories/${builtin.id}`)
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({ label: 'Monthly Rent' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.label).toBe('Monthly Rent');
+        expect(res.body.is_builtin).toBe(true);
+
+        // Confirm the override is visible in GET
+        const getRes = await request(app)
+          .get('/api/workspace/enums/transaction-categories')
+          .set('Authorization', `Bearer ${ownerToken}`);
+        const rent = getRes.body.income.find((c) => c.value === 'rent');
+        expect(rent.label).toBe('Monthly Rent');
+      });
+
+      it('owner can deactivate a built-in category for this workspace', async () => {
+        const builtin = await db('workspace_enum_values')
+          .where({ enum_type: 'transaction_category', value: 'inter_account', is_builtin: true })
+          .first();
+
+        const res = await request(app)
+          .patch(`/api/workspace/enums/transaction-categories/${builtin.id}`)
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({ is_active: false });
+
+        expect(res.status).toBe(200);
+        expect(res.body.is_active).toBe(false);
+
+        // Confirm it's excluded from default GET
+        const getRes = await request(app)
+          .get('/api/workspace/enums/transaction-categories')
+          .set('Authorization', `Bearer ${ownerToken}`);
+        const transfer = getRes.body.transfer || [];
+        expect(transfer.some((c) => c.value === 'inter_account')).toBe(false);
+
+        // Confirm it's included with ?include_inactive=true
+        const allRes = await request(app)
+          .get('/api/workspace/enums/transaction-categories?include_inactive=true')
+          .set('Authorization', `Bearer ${ownerToken}`);
+        expect(allRes.body.transfer.some((c) => c.value === 'inter_account')).toBe(true);
+      });
+
+      it('returns 403 for non-owner', async () => {
+        const builtin = await db('workspace_enum_values')
+          .where({ enum_type: 'transaction_category', value: 'rent', is_builtin: true })
+          .first();
+
+        const res = await request(app)
+          .patch(`/api/workspace/enums/transaction-categories/${builtin.id}`)
+          .set('Authorization', `Bearer ${memberToken}`)
+          .send({ label: 'Sneaky Rename' });
+
+        expect(res.status).toBe(403);
+      });
+
+      it('returns 400 when body is empty', async () => {
+        const builtin = await db('workspace_enum_values')
+          .where({ enum_type: 'transaction_category', value: 'rent', is_builtin: true })
+          .first();
+
+        const res = await request(app)
+          .patch(`/api/workspace/enums/transaction-categories/${builtin.id}`)
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({});
+
+        expect(res.status).toBe(400);
+      });
+
+      it('returns 404 for non-existent id', async () => {
+        const res = await request(app)
+          .patch('/api/workspace/enums/transaction-categories/00000000-0000-0000-0000-000000000000')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({ label: 'Test' });
+
+        expect(res.status).toBe(404);
       });
     });
 
@@ -248,6 +394,7 @@ describe('Workspace Settings API', () => {
             enum_type:   'transaction_category',
             type_bucket: 'income',
             value:       'to_be_deleted',
+            label:       'To Be Deleted',
             is_builtin:  false,
             is_active:   true,
           })
@@ -270,6 +417,7 @@ describe('Workspace Settings API', () => {
             enum_type:   'transaction_category',
             type_bucket: 'income',
             value:       'member_cannot_delete',
+            label:       'Member Cannot Delete',
             is_builtin:  false,
             is_active:   true,
           })
@@ -311,6 +459,7 @@ describe('Workspace Settings API', () => {
             enum_type:   'transaction_category',
             type_bucket: 'income',
             value:       'in_use_cat',
+            label:       'In Use Cat',
             is_builtin:  false,
             is_active:   true,
           })
