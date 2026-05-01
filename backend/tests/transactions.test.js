@@ -477,6 +477,135 @@ describe('POST /api/transactions — currency rate validation', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// POST /api/transactions/import (F3-4)
+// ---------------------------------------------------------------------------
+describe('POST /api/transactions/import', () => {
+  const BATCH_ROW = {
+    date:        '2026-03-01',
+    type:        'income',
+    category:    'rent',
+    amount:      1500,
+    currency:    'USD',
+    description: 'March rent',
+    source:      'jyske_bank',
+  };
+
+  it('inserts all rows and returns 201 with inserted count and import_batch UUID', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW, { ...BATCH_ROW, description: 'April rent', date: '2026-04-01' }]);
+
+    expect(res.status).toBe(201);
+    expect(res.body.inserted).toBe(2);
+    expect(typeof res.body.import_batch).toBe('string');
+    expect(res.body.import_batch).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('all inserted rows share the same import_batch', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW, { ...BATCH_ROW, date: '2026-04-01' }]);
+
+    expect(res.status).toBe(201);
+    const { import_batch } = res.body;
+
+    const rows = await db('transactions').where({ import_batch }).select('id');
+    expect(rows.length).toBe(2);
+  });
+
+  it('returns 422 with per-row errors when any row fails validation', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        BATCH_ROW,
+        { ...BATCH_ROW, type: 'invalid_type' },
+        { ...BATCH_ROW, amount: -50 },
+      ]);
+
+    expect(res.status).toBe(422);
+    expect(Array.isArray(res.body.errors)).toBe(true);
+    const rowNums = res.body.errors.map(e => e.row);
+    expect(rowNums).toContain(1);
+    expect(rowNums).toContain(2);
+  });
+
+  it('inserts nothing when any row fails validation (all-or-nothing)', async () => {
+    const countBefore = await db('transactions').where('workspace_id', WORKSPACE_ID).count('id as n').first();
+
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW, { ...BATCH_ROW, amount: -1 }]);
+
+    const countAfter = await db('transactions').where('workspace_id', WORKSPACE_ID).count('id as n').first();
+    expect(parseInt(countAfter.n, 10)).toBe(parseInt(countBefore.n, 10));
+  });
+
+  it('returns 400 for an empty array', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([]);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 for a non-array body', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ rows: [BATCH_ROW] });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .send([BATCH_ROW]);
+
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 422 when any row has a currency with no rate', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW, { ...BATCH_ROW, currency: 'DKK' }]);
+
+    expect(res.status).toBe(422);
+    expect(res.body.errors[0].row).toBe(1);
+    expect(res.body.errors[0].errors[0]).toMatch(/DKK/);
+  });
+
+  it('uses row source field when provided', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ ...BATCH_ROW, source: 'nordea_dk' }]);
+
+    expect(res.status).toBe(201);
+    const [row] = await db('transactions').where({ import_batch: res.body.import_batch });
+    expect(row.source).toBe('nordea_dk');
+  });
+
+  it('defaults source to "import" when not provided', async () => {
+    const { source: _s, ...rowNoSource } = BATCH_ROW;
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([rowNoSource]);
+
+    expect(res.status).toBe(201);
+    const [row] = await db('transactions').where({ import_batch: res.body.import_batch });
+    expect(row.source).toBe('import');
+  });
+});
+
 describe('PATCH /api/transactions/:id — currency rate validation', () => {
   const { WORKSPACE_ID: WS } = require('./helpers');
   const db2 = require('../src/db/knex');

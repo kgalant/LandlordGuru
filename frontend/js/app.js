@@ -1112,10 +1112,9 @@ async function doImport(saveMappings) {
         account_id: prop?.account_id ?? null,
       };
     });
-    const result = await Api.createTransactionBatch(toSave);
-    const batchId = result.batchId;
-    // Backend doesn't return all transactions, so we'll refresh after import
-    toast(t('import.toast.done', { count: activeRows.length, batchId }), 'success');
+    const result = await Api.importTransactions(toSave);
+    const batchId = result.import_batch;
+    toast(t('import.toast.done', { count: result.inserted, batchId }), 'success');
     State.importRows = [];
     clearImport();
     await refreshAll();

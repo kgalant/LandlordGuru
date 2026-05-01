@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const db = require('../db/knex');
 const { requireAuth } = require('../middleware/auth');
@@ -250,6 +251,105 @@ router.post('/', requireAuth, async (req, res) => {
     await req.logger.error('transaction.create.failed', { error: err.message });
     console.error('POST /api/transactions error:', err.message);
     res.status(500).json({ error: 'Failed to create transaction' });
+  }
+});
+
+// POST /api/transactions/import
+// Accepts an array of transaction objects, validates all rows, then inserts
+// atomically under a shared import_batch UUID. All-or-nothing: any validation
+// failure aborts the entire batch before any row is written.
+router.post('/import', requireAuth, async (req, res) => {
+  const rows = req.body;
+  if (!Array.isArray(rows) || !rows.length) {
+    return res.status(400).json({ error: 'Request body must be a non-empty array of transaction objects' });
+  }
+
+  const workspace_id = req.workspace_id;
+  const user_id = req.user.id;
+
+  await req.logger.info('transaction.import.started', { row_count: rows.length });
+
+  // Validate all rows up front; collect per-row errors
+  const rowErrors = [];
+  for (let i = 0; i < rows.length; i++) {
+    const errs = await validateFields(rows[i], workspace_id, true);
+    if (errs.length) rowErrors.push({ row: i, errors: errs });
+  }
+  if (rowErrors.length) {
+    return res.status(422).json({ errors: rowErrors });
+  }
+
+  // Validate all unique account_ids belong to this workspace in one query
+  const accountIds = [...new Set(rows.map(r => r.account_id).filter(Boolean))];
+  if (accountIds.length) {
+    const validIds = await db('accounts')
+      .where('workspace_id', workspace_id)
+      .whereIn('id', accountIds)
+      .pluck('id');
+    const validSet = new Set(validIds);
+    const badRows = rows
+      .map((r, i) => ({ i, account_id: r.account_id }))
+      .filter(({ account_id }) => account_id && !validSet.has(account_id));
+    if (badRows.length) {
+      return res.status(422).json({
+        errors: badRows.map(({ i, account_id }) => ({
+          row: i,
+          errors: [`account_id ${account_id} not found in this workspace`],
+        })),
+      });
+    }
+  }
+
+  // Check currency rates for any non-reporting-currency rows
+  const workspace = await db('workspaces').where({ id: workspace_id }).first('reporting_currency');
+  const reportingCurrency = workspace.reporting_currency;
+  const rateErrors = [];
+  for (let i = 0; i < rows.length; i++) {
+    const txCurrency = rows[i].currency.trim().toUpperCase();
+    if (txCurrency !== reportingCurrency) {
+      const rate = await resolveRate(workspace_id, txCurrency, reportingCurrency, rows[i].date);
+      if (!rate) {
+        rateErrors.push({
+          row: i,
+          errors: [`No exchange rate found for ${txCurrency} → ${reportingCurrency} on or before ${rows[i].date}`],
+        });
+      }
+    }
+  }
+  if (rateErrors.length) {
+    return res.status(422).json({ errors: rateErrors });
+  }
+
+  const import_batch = crypto.randomUUID();
+
+  try {
+    await db.transaction(async (trx) => {
+      const inserts = rows.map(row => ({
+        workspace_id,
+        date:             row.date,
+        account_id:       row.account_id || null,
+        type:             row.type,
+        category:         row.category,
+        amount:           parseFloat(row.amount),
+        currency:         row.currency.trim().toUpperCase(),
+        description:      row.description     || null,
+        raw_description:  row.raw_description || null,
+        source:           row.source          || 'import',
+        import_batch,
+        notes:            row.notes           || null,
+        reconciled:       row.reconciled      || false,
+        created_by:       user_id,
+        last_modified_by: user_id,
+      }));
+      await trx('transactions').insert(inserts);
+    });
+
+    await req.logger.info('transaction.import.success', { inserted: rows.length, import_batch });
+    res.status(201).json({ inserted: rows.length, import_batch });
+  } catch (err) {
+    await req.logger.error('transaction.import.failed', { error: err.message });
+    console.error('POST /api/transactions/import error:', err.message);
+    res.status(500).json({ error: 'Failed to import transactions' });
   }
 });
 

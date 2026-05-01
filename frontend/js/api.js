@@ -157,16 +157,9 @@ export const Api = (() => {
   }
 
   // ── Batch import ────────────────────────────────────────────
-  // Creates multiple transactions with a shared import_batch ID
 
-  async function createTransactionBatch(txList) {
-    const batchId = 'import_' + Date.now();
-    const created = [];
-    for (const tx of txList) {
-      const row = await createTransaction({ ...tx, import_batch: batchId });
-      created.push(row);
-    }
-    return { batchId, created };
+  async function importTransactions(txList) {
+    return request('POST', '/transactions/import', txList);
   }
 
   return {
@@ -178,6 +171,6 @@ export const Api = (() => {
     createTransactionCategory, updateTransactionCategory, deleteTransactionCategory,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     getDescMappings, saveDescMapping, deleteDescMapping,
-    createTransactionBatch,
+    importTransactions,
   };
 })();
