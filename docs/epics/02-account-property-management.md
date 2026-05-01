@@ -102,7 +102,7 @@ Create, view, edit, and archive properties.
 ---
 
 ### F2-2 Property list UI `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Frontend view showing all active properties with key fields.
 

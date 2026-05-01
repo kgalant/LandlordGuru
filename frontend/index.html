@@ -296,7 +296,13 @@
     <div id="page-properties" class="page">
       <div class="card-header" style="margin-bottom:1rem">
         <span style="font-size:15px;font-weight:500" data-i18n="property.title"></span>
-        <button class="btn btn-primary btn-sm" onclick="openPropertyModal()" data-i18n="property.addBtn"></button>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="show-archived-toggle" onchange="onShowArchivedToggle(this.checked)">
+            <span data-i18n="property.showArchived"></span>
+          </label>
+          <button class="btn btn-primary btn-sm" onclick="openPropertyModal()" data-i18n="property.addBtn"></button>
+        </div>
       </div>
       <div id="apt-list"></div>
     </div>

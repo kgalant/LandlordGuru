@@ -45,19 +45,28 @@ function validateFields(body, requireAll) {
 }
 
 // GET /api/properties
-// Returns all active properties in the workspace, sorted by name
-// Each property includes its linked account_id (via account_properties)
+// Returns properties in the workspace, sorted by name.
+// By default only active properties are returned.
+// Pass ?include_archived=true to include archived (active=false) properties.
+// Each property includes its linked account_id (via account_properties).
 router.get('/', requireAuth, async (req, res) => {
   try {
-    await req.logger.info('property.list.started');
+    const includeArchived = req.query.include_archived === 'true';
+    await req.logger.info('property.list.started', { include_archived: includeArchived });
 
-    const properties = await db('properties as p')
+    const query = db('properties as p')
       .leftJoin('account_properties as ap', 'ap.property_id', 'p.id')
-      .where({ 'p.workspace_id': req.workspace_id, 'p.active': true })
+      .where('p.workspace_id', req.workspace_id)
       .select('p.*', 'ap.account_id')
       .orderBy('p.name', 'asc');
 
-    await req.logger.info('property.list.success', { property_count: properties.length });
+    if (!includeArchived) {
+      query.where('p.active', true);
+    }
+
+    const properties = await query;
+
+    await req.logger.info('property.list.success', { property_count: properties.length, include_archived: includeArchived });
     res.json(properties);
   } catch (err) {
     await req.logger.error('property.list.failed', { error: err.message });

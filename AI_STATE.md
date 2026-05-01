@@ -24,10 +24,10 @@ None.
 
 ## Task breakdown (current focus)
 
-- [-] F2-2-1: Backend — add `?include_archived=true` support to `GET /api/properties`; return `active` field on each row; add/update tests
-- [ ] F2-2-2: Frontend — "Show archived" toggle; re-fetch with flag when toggled; show archived badge on archived cards
-- [ ] F2-2-3: Frontend — make whole property card clickable (opens edit modal), not just the Edit button; keep Delete button separate
-- [ ] F2-2-4: Smoke-test full flow; update epic doc status to Done; commit
+- [x] F2-2-1: Backend — add `?include_archived=true` support to `GET /api/properties`; return `active` field on each row; add/update tests
+- [x] F2-2-2: Frontend — "Show archived" toggle; re-fetch with flag when toggled; show archived badge on archived cards
+- [x] F2-2-3: Frontend — make whole property card clickable (opens edit modal), not just the Edit button; keep Delete button separate
+- [x] F2-2-4: Smoke-test full flow; update epic doc status to Done; commit
 
 ---
 
@@ -55,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Implement `?include_archived=true` in `GET /api/properties` (backend/src/routes/properties.js line ~56): when param is truthy, drop the `active: true` filter; return `active` field on each row. Add tests.
+Select next focus from Wave 3 candidates: F2-6 or F2-7. Read roadmap to confirm ordering.
 
 ---
 
@@ -65,13 +65,20 @@ Implement `?include_archived=true` in `GET /api/properties` (backend/src/routes/
   - `cd /home/kim/dev/landlordguru-dev/backend && node_modules/.bin/jest --forceExit`
 
 - Last result:
-  - Date/time: 2026-04-30
-  - Outcome: 192/192 tests passing. F1-9b smoke-tested and committed.
+  - Date/time: 2026-05-01 10:03:49
+  - Outcome: 195/195 tests passing. F2-2 complete.
 
 ---
 
 ## Files touched this session
 
+- `backend/src/routes/properties.js`
+- `backend/tests/properties.test.js`
+- `frontend/index.html`
+- `frontend/js/api.js`
+- `frontend/js/app.js`
+- `frontend/js/strings.js`
+- `docs/epics/02-account-property-management.md`
 - `AI_STATE.md`
 - `.claude/ai_state_archive.json`
 
@@ -79,8 +86,8 @@ Implement `?include_archived=true` in `GET /api/properties` (backend/src/routes/
 
 ## Automation log (latest only)
 
-- 2026-04-30 F2-2 set as current focus
+- 2026-05-01 13:30:00 F2-2 done — property list UI committed (v2.12.0)
   - branch: main
-  - last_commit: 26a8639
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
-  - git_status: clean
+  - last_commit: 0c88ee3
+  - changed_files: backend/src/routes/properties.js, backend/tests/properties.test.js, frontend/index.html, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, docs/epics/02-account-property-management.md, version.json, AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: clean after commit

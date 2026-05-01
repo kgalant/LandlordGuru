@@ -278,6 +278,8 @@ export const I18n = (() => {
           totalMonthly: 'Total monthly',
           tenant:       'Tenant',
         },
+        showArchived:    'Show archived',
+        archivedBadge:   'Archived',
         toast: {
           saved:          'Property saved.',
           saveFailed:     'Save failed: {error}',

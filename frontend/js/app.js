@@ -11,6 +11,8 @@ import { decodeToken } from './auth.js';
 
 // ── Global state ──────────────────────────────────────────
 
+let showArchivedProperties = false;
+
 let State = {
   properties:           [],
   transactions:         [],
@@ -1242,6 +1244,13 @@ function renderReports() {
 
 // ── Properties ────────────────────────────────────────────
 
+async function onShowArchivedToggle(checked) {
+  showArchivedProperties = checked;
+  State.properties = await Api.getProperties({ includeArchived: showArchivedProperties });
+  renderPropertyList();
+}
+window.onShowArchivedToggle = onShowArchivedToggle;
+
 function renderPropertyList() {
   const list = document.getElementById('apt-list');
   if (!State.properties.length) {
@@ -1249,16 +1258,18 @@ function renderPropertyList() {
     return;
   }
   list.innerHTML = State.properties.map(p => `
-    <div class="card">
+    <div class="card" style="cursor:pointer${!p.active ? ';opacity:0.65' : ''}" onclick="openPropertyModal('${p.id}')">
       <div class="card-header">
         <div>
           <span class="badge badge-${p.country.toLowerCase()}">${t('country.' + p.country)} · ${p.currency}</span>
           <span class="badge badge-model" style="margin-left:6px">${t('property.model.' + (p.model || 'longterm'))}</span>
+          ${!p.active ? `<span class="badge" style="margin-left:6px;background:#6c757d;color:#fff">${t('property.archivedBadge')}</span>` : ''}
           <div class="apt-name" style="margin-top:4px">${p.name}</div>
           <div style="font-size:12px;color:var(--text2)">${p.address}</div>
         </div>
-        <button class="btn btn-sm btn-secondary" onclick="openPropertyModal('${p.id}')">${t('common.edit')}</button>
-          ${window.AUTH_TOKEN ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="archiveProperty('${p.id}')">${t('common.delete')}</button>` : ''}
+        <div onclick="event.stopPropagation()">
+          ${window.AUTH_TOKEN && p.active ? `<button class="btn btn-sm btn-secondary" onclick="archiveProperty('${p.id}')">${t('common.delete')}</button>` : ''}
+        </div>
       </div>
       <div class="metric-grid" style="margin-top:1rem;margin-bottom:0">
         <div class="metric"><div class="m-label">${t('property.metric.rent')}</div><div class="m-value" style="font-size:16px">${p.rent   ? Reports.fmt(p.rent, p.currency) : '—'}</div></div>

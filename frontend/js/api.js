@@ -25,8 +25,9 @@ export const Api = (() => {
 
   // ── Properties ────────────────────────────────────────────
 
-  async function getProperties() {
-    return request('GET', '/properties');
+  async function getProperties({ includeArchived = false } = {}) {
+    const qs = includeArchived ? '?include_archived=true' : '';
+    return request('GET', `/properties${qs}`);
   }
 
   async function createProperty(data) {

@@ -128,6 +128,66 @@ describe('GET /api/properties', () => {
     expect(res.body[1].account_id).toBeDefined();
   });
 
+  it('returns active field on each property', async () => {
+    await request(app)
+      .post('/api/properties')
+      .set('Authorization', `Bearer ${token}`)
+      .send(VALID_PROPERTY);
+
+    const res = await request(app)
+      .get('/api/properties')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body[0].active).toBe(true);
+  });
+
+  it('excludes archived properties by default', async () => {
+    const created = await request(app)
+      .post('/api/properties')
+      .set('Authorization', `Bearer ${token}`)
+      .send(VALID_PROPERTY);
+
+    await request(app)
+      .delete(`/api/properties/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const res = await request(app)
+      .get('/api/properties')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.find(p => p.id === created.body.id)).toBeUndefined();
+  });
+
+  it('includes archived properties when ?include_archived=true', async () => {
+    const active = await request(app)
+      .post('/api/properties')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_PROPERTY, name: 'Active One' });
+
+    const archived = await request(app)
+      .post('/api/properties')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_PROPERTY, name: 'Archived One' });
+
+    await request(app)
+      .delete(`/api/properties/${archived.body.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const res = await request(app)
+      .get('/api/properties?include_archived=true')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(2);
+
+    const activeRow = res.body.find(p => p.id === active.body.id);
+    const archivedRow = res.body.find(p => p.id === archived.body.id);
+    expect(activeRow.active).toBe(true);
+    expect(archivedRow.active).toBe(false);
+  });
+
   it('returns 401 without a token', async () => {
     const res = await request(app).get('/api/properties');
     expect(res.status).toBe(401);
