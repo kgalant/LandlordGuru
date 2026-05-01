@@ -1257,7 +1257,15 @@ function renderPropertyList() {
     list.innerHTML = `<div class="empty-state"><strong>${t('property.noProperties')}</strong>${t('property.noPropertiesSub')}</div>`;
     return;
   }
-  list.innerHTML = State.properties.map(p => `
+  const sorted = [...State.properties].sort((a, b) => {
+    if (a.active !== b.active) return a.active ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+  list.innerHTML = sorted.map(p => {
+    const rent   = parseFloat(p.rent)   || 0;
+    const aconto = parseFloat(p.aconto) || 0;
+    const total  = rent + aconto;
+    return `
     <div class="card" style="cursor:pointer${!p.active ? ';opacity:0.65' : ''}" onclick="openPropertyModal('${p.id}')">
       <div class="card-header">
         <div>
@@ -1272,13 +1280,14 @@ function renderPropertyList() {
         </div>
       </div>
       <div class="metric-grid" style="margin-top:1rem;margin-bottom:0">
-        <div class="metric"><div class="m-label">${t('property.metric.rent')}</div><div class="m-value" style="font-size:16px">${p.rent   ? Reports.fmt(p.rent, p.currency) : '—'}</div></div>
-        <div class="metric"><div class="m-label">${t('property.metric.aconto')}</div><div class="m-value" style="font-size:16px">${p.aconto ? Reports.fmt(p.aconto, p.currency) : '—'}</div></div>
-        <div class="metric"><div class="m-label">${t('property.metric.totalMonthly')}</div><div class="m-value" style="font-size:16px">${(p.rent||p.aconto) ? Reports.fmt(p.rent+p.aconto, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.rent')}</div><div class="m-value" style="font-size:16px">${rent   ? Reports.fmt(rent, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.aconto')}</div><div class="m-value" style="font-size:16px">${aconto ? Reports.fmt(aconto, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.totalMonthly')}</div><div class="m-value" style="font-size:16px">${total  ? Reports.fmt(total, p.currency) : '—'}</div></div>
         <div class="metric"><div class="m-label">${t('property.metric.tenant')}</div><div class="m-value" style="font-size:13px;margin-top:4px">${p.tenant || '—'}</div></div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function openPropertyModal(propId) {
