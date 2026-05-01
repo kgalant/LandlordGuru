@@ -85,7 +85,7 @@ Enforce the category taxonomy on the backend.
 ---
 
 ### F3-4 Bulk CSV import endpoint `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Accept a parsed list of transactions from the frontend and insert them as a batch.
 

@@ -310,6 +310,68 @@ Property is always required in the key — the same date/description/amount comb
 
 ---
 
+### F5-13 Group-by-status and float-selected in import preview `[MVP]`
+**Status:** Backlog
+
+Two independent toggle buttons in the import preview toolbar that control row display order. Both are frontend-only; no backend changes required.
+
+---
+
+#### Feature A — Group by status
+
+A "Group" toggle button. When active, rows are split into five collapsible sections with labelled divider headers. Within each section, original parse order is preserved.
+
+**Section order (top → bottom):**
+
+| # | Label | Condition |
+|---|-------|-----------|
+| 1 | Unreviewed | No rule match, no user change, not ignored, not duplicate |
+| 2 | Auto-matched | Rule applied (`_autoMatched`), not manually overridden, not ignored, not duplicate |
+| 3 | Reviewed | `_userPickedCategory` or `_userPickedProperty` is `true`, not ignored, not duplicate |
+| 4 | Duplicate | `_isDuplicate === true` — F5-12 placeholder; shown regardless of ignore state |
+| 5 | Ignored | `_ignored === true && !_isDuplicate` |
+
+Rows belong to exactly one section; precedence follows the order above (e.g. a row that is both `_isDuplicate` and `_userPickedCategory` falls into Duplicate, not Reviewed).
+
+**Section headers:**
+- Each header shows the section label and live row count, e.g. `Unreviewed (12)`.
+- Clicking the header collapses or expands that section's rows.
+- Collapsed sections show only the header line (row count still visible).
+- All sections start expanded. Collapse state is local to the session (not persisted).
+
+**`_isDuplicate` flag (code placeholder for F5-12):**
+- Added to every row in `State.importRows` at parse time, defaulting to `false`.
+- The section classification logic evaluates it, so wiring F5-12 later only requires setting the flag — no structural changes to the grouping code.
+- No visible Duplicate section is rendered while the flag is always `false` (the section is suppressed when empty).
+
+**`_userPickedProperty` flag:**
+- Added alongside the existing `_userPickedCategory` flag.
+- Set to `true` the first time the user changes the property dropdown on a row.
+- Used solely for section classification (Reviewed vs Auto-matched/Unreviewed).
+
+---
+
+#### Feature B — Float selected to top
+
+A separate "Float selected" toggle button in the same toolbar. When active, all rows with `_selected === true` are pulled into a `Selected (N)` section rendered above all group sections (or above the flat list if grouping is off). Floated rows are absent from their original section while floating.
+
+**Deselect behaviour while float is active:** unchecking a row's checkbox immediately moves it back to its section (or parse position if grouping is off) — the floated section always exactly mirrors the live selection.
+
+**Composability with grouping:**
+
+| Grouping | Float | Result |
+|----------|-------|--------|
+| Off | Off | Flat parse order |
+| On | Off | Five collapsible sections |
+| Off | On | `Selected` section at top; remaining rows in parse order |
+| On | On | `Selected` section at top; remaining rows in their five sections below |
+
+**Scope:** `frontend/index.html` import preview section and `frontend/js/app.js` render logic. No backend changes.
+
+**Dependencies:** F5-5 (import preview host); F5-12 to activate the Duplicate section.
+
+---
+
 ### F5-8 Direct bank connection `[Future]`
 **Status:** Future
 
