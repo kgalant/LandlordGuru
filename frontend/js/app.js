@@ -102,6 +102,7 @@ function renderCurrentPage() {
   if (currentPage === 'properties')   renderPropertyList();
   if (currentPage === 'rules')        { if (!rulesTable) initRulesTable(); else rulesTable.refresh(); }
   if (currentPage === 'settings')     renderSettings();
+  if (currentPage === 'import')       loadImportHistory();
 }
 
 // ── Populate dropdowns ────────────────────────────────────
@@ -1117,11 +1118,70 @@ async function doImport(saveMappings) {
     toast(t('import.toast.done', { count: result.inserted, batchId }), 'success');
     State.importRows = [];
     clearImport();
-    await refreshAll();
+    await Promise.all([refreshAll(), loadImportHistory(true)]);
   } catch(e) {
     toast(t('import.toast.failed', { error: e.message }), 'error');
   }
   setLoading(false);
+}
+
+// ── Import history ────────────────────────────────────────
+
+let _importHistoryCollapsed = true;
+
+async function loadImportHistory(expand = false) {
+  if (expand) {
+    _importHistoryCollapsed = false;
+    document.getElementById('import-history-body').style.display = '';
+    document.getElementById('import-history-chevron').textContent = '▲';
+  }
+  try {
+    const batches = await Api.getImportHistory();
+    renderImportHistory(batches);
+  } catch (_) {
+    // non-critical; silently ignore
+  }
+}
+
+function renderImportHistory(batches) {
+  const tbody = document.getElementById('import-history-body-rows');
+  if (!batches.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted);padding:0.75rem">${t('import.history.empty')}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = batches.map(b => {
+    const date = new Date(b.imported_at).toLocaleString();
+    const canUndo = b.created_by === State.user?.id || State.user?.role === 'owner';
+    const undoBtn = canUndo
+      ? `<button class="btn btn-sm btn-danger" onclick="undoImportBatch('${b.import_batch}',${b.row_count})">${t('import.history.undoBtn')}</button>`
+      : `<button class="btn btn-sm btn-secondary" disabled>${t('import.history.undoBtn')}</button>`;
+    return `<tr>
+      <td>${date}</td>
+      <td>${b.source || '—'}</td>
+      <td>${b.row_count}</td>
+      <td>${undoBtn}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleImportHistory() {
+  _importHistoryCollapsed = !_importHistoryCollapsed;
+  const body = document.getElementById('import-history-body');
+  const chevron = document.getElementById('import-history-chevron');
+  body.style.display = _importHistoryCollapsed ? 'none' : '';
+  chevron.textContent = _importHistoryCollapsed ? '▼' : '▲';
+  if (!_importHistoryCollapsed) loadImportHistory();
+}
+
+async function undoImportBatch(batchId, rowCount) {
+  if (!confirm(t('import.history.confirmUndo', { count: rowCount }))) return;
+  try {
+    const result = await Api.deleteImportBatch(batchId);
+    toast(t('import.history.undone', { count: result.deleted }), 'success');
+    await Promise.all([refreshAll(), loadImportHistory()]);
+  } catch (e) {
+    toast(t('import.history.undoFailed', { error: e.message }), 'error');
+  }
 }
 
 // ── Reports ───────────────────────────────────────────────
@@ -1852,6 +1912,7 @@ Object.assign(window, {
   refreshSavedMappingsDropdown, loadSavedMapping, saveCurrentMapping, deleteSavedMapping,
   goToStaticPreview, backToEditPreview, goToMappingConfirmOrImport, backToStaticPreview,
   toggleTree, doImport,
+  toggleImportHistory, undoImportBatch,
   setReportYear, setReportPeriod, renderReports,
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,

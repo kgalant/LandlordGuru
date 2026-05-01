@@ -353,6 +353,57 @@ router.post('/import', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/transactions/import/history
+// Returns the 10 most recent import batches for this workspace.
+router.get('/import/history', requireAuth, async (req, res) => {
+  try {
+    const batches = await db('transactions')
+      .where({ workspace_id: req.workspace_id })
+      .whereNotNull('import_batch')
+      .groupBy('import_batch', 'source', 'created_by')
+      .select(
+        'import_batch',
+        'source',
+        'created_by',
+        db.raw('COUNT(*) as row_count'),
+        db.raw('MIN(created_at) as imported_at'),
+      )
+      .orderBy('imported_at', 'desc')
+      .limit(10);
+
+    await req.logger.info('transaction.import.history', { batch_count: batches.length });
+    res.json(batches.map(b => ({ ...b, row_count: parseInt(b.row_count, 10) })));
+  } catch (err) {
+    await req.logger.error('transaction.import.history.failed', { error: err.message });
+    console.error('GET /api/transactions/import/history error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch import history' });
+  }
+});
+
+// DELETE /api/transactions/import/:batch_id
+// Deletes all transactions belonging to the given import batch in this workspace.
+router.delete('/import/:batch_id', requireAuth, async (req, res) => {
+  const { batch_id } = req.params;
+
+  try {
+    const deleted = await db('transactions')
+      .where({ workspace_id: req.workspace_id, import_batch: batch_id })
+      .del();
+
+    if (deleted === 0) {
+      await req.logger.debug('transaction.import.rollback.notfound', { batch_id });
+      return res.status(404).json({ error: 'Import batch not found' });
+    }
+
+    await req.logger.info('transaction.import.rollback.success', { batch_id, deleted });
+    res.json({ deleted });
+  } catch (err) {
+    await req.logger.error('transaction.import.rollback.failed', { batch_id, error: err.message });
+    console.error('DELETE /api/transactions/import/:batch_id error:', err.message);
+    res.status(500).json({ error: 'Failed to roll back import batch' });
+  }
+});
+
 // PATCH /api/transactions/:id
 router.patch('/:id', requireAuth, async (req, res) => {
   const { id } = req.params;

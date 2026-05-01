@@ -162,6 +162,14 @@ export const Api = (() => {
     return request('POST', '/transactions/import', txList);
   }
 
+  async function getImportHistory() {
+    return request('GET', '/transactions/import/history');
+  }
+
+  async function deleteImportBatch(batchId) {
+    return request('DELETE', `/transactions/import/${encodeURIComponent(batchId)}`);
+  }
+
   return {
     getProperties, createProperty, updateProperty, deleteProperty,
     getTransactions, createTransaction, updateTransaction, deleteTransaction,
@@ -171,6 +179,6 @@ export const Api = (() => {
     createTransactionCategory, updateTransactionCategory, deleteTransactionCategory,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     getDescMappings, saveDescMapping, deleteDescMapping,
-    importTransactions,
+    importTransactions, getImportHistory, deleteImportBatch,
   };
 })();

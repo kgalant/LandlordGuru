@@ -213,6 +213,18 @@ export const I18n = (() => {
           notesRequired: '{count} row(s) have "other expense" category but no notes — please fill them in (highlighted in red).',
         },
         confirmMissing: '{count} rows have no property assigned. Import anyway?',
+        history: {
+          title:        'Recent imports',
+          colDate:      'Date',
+          colSource:    'Profile',
+          colRows:      'Rows',
+          colAction:    '',
+          undoBtn:      'Undo',
+          empty:        'No recent imports.',
+          confirmUndo:  'Undo this import? This will delete {count} transaction(s).',
+          undone:       'Import rolled back — {count} transaction(s) deleted.',
+          undoFailed:   'Rollback failed: {error}',
+        },
       },
       reports: {
         ytd:           'YTD',

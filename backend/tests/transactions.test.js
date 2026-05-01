@@ -606,6 +606,133 @@ describe('POST /api/transactions/import', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// GET /api/transactions/import/history + DELETE /api/transactions/import/:batch_id (F3-5)
+// ---------------------------------------------------------------------------
+describe('GET /api/transactions/import/history', () => {
+  const BATCH_ROW = {
+    date: '2026-03-01', type: 'income', category: 'rent',
+    amount: 1500, currency: 'USD', description: 'March rent', source: 'jyske_bank',
+  };
+
+  it('returns empty array when no batches exist', async () => {
+    const res = await request(app)
+      .get('/api/transactions/import/history')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  it('returns batch metadata after an import', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW, { ...BATCH_ROW, date: '2026-03-02' }]);
+
+    const res = await request(app)
+      .get('/api/transactions/import/history')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].row_count).toBe(2);
+    expect(res.body[0].source).toBe('jyske_bank');
+    expect(typeof res.body[0].import_batch).toBe('string');
+    expect(typeof res.body[0].imported_at).toBe('string');
+  });
+
+  it('returns most recent batch first', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW]);
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ ...BATCH_ROW, source: 'nordea_dk', date: '2026-04-01' }]);
+
+    const res = await request(app)
+      .get('/api/transactions/import/history')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body[0].source).toBe('nordea_dk');
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app).get('/api/transactions/import/history');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('DELETE /api/transactions/import/:batch_id', () => {
+  const BATCH_ROW = {
+    date: '2026-03-01', type: 'income', category: 'rent',
+    amount: 1500, currency: 'USD', description: 'March rent', source: 'jyske_bank',
+  };
+
+  it('deletes all rows in the batch and returns count', async () => {
+    const imp = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW, { ...BATCH_ROW, date: '2026-03-02' }]);
+
+    const res = await request(app)
+      .delete(`/api/transactions/import/${imp.body.import_batch}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.deleted).toBe(2);
+  });
+
+  it('removes rolled-back rows from history', async () => {
+    const imp = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW]);
+
+    await request(app)
+      .delete(`/api/transactions/import/${imp.body.import_batch}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const history = await request(app)
+      .get('/api/transactions/import/history')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(history.body).toEqual([]);
+  });
+
+  it('returns 404 for an unknown batch_id', async () => {
+    const res = await request(app)
+      .delete('/api/transactions/import/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('cannot delete a batch from another workspace', async () => {
+    const imp = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BATCH_ROW]);
+
+    const { makeToken } = require('./helpers');
+    const otherToken = makeToken({ workspace_id: '00000000-0000-0000-0000-000000000099' });
+    const res = await request(app)
+      .delete(`/api/transactions/import/${imp.body.import_batch}`)
+      .set('Authorization', `Bearer ${otherToken}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app)
+      .delete('/api/transactions/import/some-batch-id');
+    expect(res.status).toBe(401);
+  });
+});
+
 describe('PATCH /api/transactions/:id — currency rate validation', () => {
   const { WORKSPACE_ID: WS } = require('./helpers');
   const db2 = require('../src/db/knex');
