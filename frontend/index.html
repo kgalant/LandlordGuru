@@ -622,6 +622,34 @@
   </div>
 </div>
 
+<!-- Undo import modal -->
+<div id="modal-undo-import" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto">
+    <div class="card-header">
+      <span class="card-title" data-i18n="import.history.modal.title"></span>
+      <button class="btn btn-sm btn-secondary" onclick="closeUndoModal()">✕</button>
+    </div>
+    <p id="undo-modal-subtitle" style="margin:0.75rem 0;color:var(--text-muted)"></p>
+    <div style="max-height:360px;overflow-y:auto;margin-bottom:1rem">
+      <table class="data-table" style="width:100%">
+        <thead>
+          <tr>
+            <th data-i18n="tx.col.date"></th>
+            <th data-i18n="tx.col.description"></th>
+            <th data-i18n="tx.col.category"></th>
+            <th data-i18n="tx.col.amount"></th>
+          </tr>
+        </thead>
+        <tbody id="undo-modal-rows"></tbody>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-danger" id="undo-modal-confirm-btn" onclick="confirmUndoImport()"></button>
+      <button class="btn btn-secondary" onclick="closeUndoModal()" data-i18n="common.cancel"></button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div id="toast-container"></div>
 

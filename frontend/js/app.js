@@ -1170,10 +1170,52 @@ function toggleImportHistory() {
   if (!_importHistoryCollapsed) loadImportHistory();
 }
 
+let _undoBatchId = null;
+let _undoRowCount = 0;
+
 async function undoImportBatch(batchId, rowCount) {
-  if (!confirm(t('import.history.confirmUndo', { count: rowCount }))) return;
+  _undoBatchId = batchId;
+  _undoRowCount = rowCount;
+
+  const modal = document.getElementById('modal-undo-import');
+  const subtitle = document.getElementById('undo-modal-subtitle');
+  const tbody = document.getElementById('undo-modal-rows');
+  const confirmBtn = document.getElementById('undo-modal-confirm-btn');
+
+  subtitle.textContent = t('import.history.modal.subtitle', { count: rowCount });
+  confirmBtn.textContent = t('import.history.modal.confirmBtn', { count: rowCount });
+  tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted)">${t('import.history.modal.loading')}</td></tr>`;
+  modal.style.display = 'flex';
+
   try {
-    const result = await Api.deleteImportBatch(batchId);
+    const data = await Api.getTransactions({ import_batch: batchId, limit: 500 });
+    const rows = data.data || [];
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted)">No transactions found.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(tx => `<tr>
+      <td>${tx.date}</td>
+      <td>${tx.description || '—'}</td>
+      <td>${catLabel(tx.category)}</td>
+      <td style="text-align:right">${parseFloat(tx.amount).toFixed(2)} ${tx.currency}</td>
+    </tr>`).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger)">Failed to load: ${e.message}</td></tr>`;
+  }
+}
+
+function closeUndoModal() {
+  document.getElementById('modal-undo-import').style.display = 'none';
+  _undoBatchId = null;
+  _undoRowCount = 0;
+}
+
+async function confirmUndoImport() {
+  if (!_undoBatchId) return;
+  try {
+    const result = await Api.deleteImportBatch(_undoBatchId);
+    closeUndoModal();
     toast(t('import.history.undone', { count: result.deleted }), 'success');
     await Promise.all([refreshAll(), loadImportHistory()]);
   } catch (e) {
@@ -1909,7 +1951,7 @@ Object.assign(window, {
   refreshSavedMappingsDropdown, loadSavedMapping, saveCurrentMapping, deleteSavedMapping,
   goToStaticPreview, backToEditPreview, goToMappingConfirmOrImport, backToStaticPreview,
   toggleTree, doImport,
-  toggleImportHistory, undoImportBatch,
+  toggleImportHistory, undoImportBatch, closeUndoModal, confirmUndoImport,
   setReportYear, setReportPeriod, renderReports,
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,
