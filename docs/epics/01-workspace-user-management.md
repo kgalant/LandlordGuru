@@ -420,6 +420,18 @@ Allow users to choose how dates are displayed throughout the app. The setting is
 - The setting is workspace-scoped; different workspaces are independent
 - Only workspace owners can change the setting (same permission as other workspace settings)
 
+**Surfaces that must respect this setting (exhaustive list to keep in sync):**
+- Transaction list date column
+- Transaction edit modal date field
+- Import preview date column
+- Import history panel "Date" column (shows `imported_at` timestamp — date portion uses this setting; time portion is always HH:MM 24h)
+- Undo import modal transaction list date column
+- Reports date range inputs and period labels
+- Currency rates table effective date column
+- Dashboard recent transactions mini-table
+
+**Until F1-12 ships:** all date-only values are displayed as `YYYY-MM-DD` (ISO, directly from the backend). Timestamps (e.g. `imported_at`) are displayed as `YYYY-MM-DD HH:MM` using a shared `fmtDateTime` helper in `app.js`. No `toLocaleString()` / `toLocaleDateString()` calls for data dates.
+
 **Dependencies:** F1-6 (workspace settings — done)
 
 ---

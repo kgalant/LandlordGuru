@@ -24,6 +24,16 @@ let State = {
   importRows:           [],
 };
 
+// Formats an ISO timestamp to YYYY-MM-DD HH:MM (24h, non-locale-dependent).
+// Used for all timestamp displays until F1-12 (date format preference) ships.
+function fmtDateTime(isoStr) {
+  if (!isoStr) return '—';
+  const s = String(isoStr);
+  const date = s.slice(0, 10);
+  const time = s.slice(11, 16);
+  return time ? `${date} ${time}` : date;
+}
+
 // Returns flat array of all category objects from the grouped State
 function flatCats() {
   return Object.values(State.transactionCategories).flat();
@@ -1150,7 +1160,7 @@ function renderImportHistory(batches) {
     return;
   }
   tbody.innerHTML = batches.map(b => {
-    const date = new Date(b.imported_at).toLocaleString();
+    const date = fmtDateTime(b.imported_at);
     const undoBtn = `<button class="btn btn-sm btn-danger" onclick="undoImportBatch('${b.import_batch}',${b.row_count})">${t('import.history.undoBtn')}</button>`;
     return `<tr>
       <td>${date}</td>
