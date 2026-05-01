@@ -1151,10 +1151,7 @@ function renderImportHistory(batches) {
   }
   tbody.innerHTML = batches.map(b => {
     const date = new Date(b.imported_at).toLocaleString();
-    const canUndo = b.created_by === State.user?.id || State.user?.role === 'owner';
-    const undoBtn = canUndo
-      ? `<button class="btn btn-sm btn-danger" onclick="undoImportBatch('${b.import_batch}',${b.row_count})">${t('import.history.undoBtn')}</button>`
-      : `<button class="btn btn-sm btn-secondary" disabled>${t('import.history.undoBtn')}</button>`;
+    const undoBtn = `<button class="btn btn-sm btn-danger" onclick="undoImportBatch('${b.import_batch}',${b.row_count})">${t('import.history.undoBtn')}</button>`;
     return `<tr>
       <td>${date}</td>
       <td>${b.source || '—'}</td>
