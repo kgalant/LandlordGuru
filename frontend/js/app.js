@@ -34,10 +34,6 @@ function fmtDateTime(isoStr) {
   return time ? `${date} ${time}` : date;
 }
 
-function escHtml(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 function _buildMatchTag(row) {
   if (row._isDuplicate && row._duplicateMatch) {
     const m = row._duplicateMatch;
