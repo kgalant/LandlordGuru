@@ -163,6 +163,10 @@ export const Api = (() => {
     return request('POST', '/transactions/import', txList);
   }
 
+  async function checkImportDuplicates(rows) {
+    return request('POST', '/transactions/import/check', rows);
+  }
+
   async function getImportHistory() {
     return request('GET', '/transactions/import/history');
   }
@@ -180,6 +184,6 @@ export const Api = (() => {
     createTransactionCategory, updateTransactionCategory, deleteTransactionCategory,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     getDescMappings, saveDescMapping, deleteDescMapping,
-    importTransactions, getImportHistory, deleteImportBatch,
+    importTransactions, getImportHistory, deleteImportBatch, checkImportDuplicates,
   };
 })();

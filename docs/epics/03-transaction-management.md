@@ -102,7 +102,7 @@ Accept a parsed list of transactions from the frontend and insert them as a batc
 ---
 
 ### F3-5 Import batch rollback `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Allow users to undo an entire import batch.
 

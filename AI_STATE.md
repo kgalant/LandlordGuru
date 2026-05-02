@@ -9,10 +9,10 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: feature
-- Epic: E3 Transaction Management
-- ID: F3-5
-- Title: Import batch rollback
-- Short summary: Backend DELETE + GET history endpoints for import batches; "Recent imports" collapsible panel at bottom of Import tab with per-batch Undo button.
+- Epic: E5 Integrations and Data Import
+- ID: F5-12
+- Title: Duplicate detection and auto-ignore in import preview
+- Short summary: Backend `POST /api/transactions/import/check`; frontend batch check at preview load, single-row re-check on property change; amber badge + popover + auto-ignore for duplicate rows.
 
 ---
 
@@ -24,10 +24,10 @@ None.
 
 ## Task breakdown (current focus)
 
-- [x] F3-5-1: Backend — `GET /api/transactions/import/history`; last 10 batches; add tests
-- [x] F3-5-2: Backend — `DELETE /api/transactions/import/:batch_id`; workspace-scoped; add tests
-- [x] F3-5-3: Frontend — "Recent imports" collapsible panel; Undo button; wire to endpoints
-- [x] F3-5-4: Properties column in history panel + undo modal; chevron fix; migration 018; commit
+- [x] F5-12-1: Backend — `POST /api/transactions/import/check` endpoint; workspace-scoped; returns null or match object; add tests
+- [x] F5-12-2: Frontend — API method; batch check at preview load; re-check on property change; `_isDuplicate`/`_duplicateMatch`/`_userPickedIgnore` flags
+- [x] F5-12-3: Frontend — Visual treatment: amber background, "Duplicate" badge, popover tooltip; default ignore=true; re-check clears badge/reverts ignore
+- [-] F5-12-4: Docs update, version bump to 2.14.0, commit
 
 ---
 
@@ -38,7 +38,7 @@ None.
 - Known bugs: F7-B1 (property column sorts by ID not name — needs properties join in transactions API)
 - Backlog chores: F6-7 (consolidate version numbering — three files, two are authoritative, root version.json appears unused)
 - Backlog features: F1-11, F1-12, F3-8, F3-10, F3-11, F3-12, F5-9, F5-10, F5-11, F5-13 (polish/UX, low priority)
-- Next MVP candidates: F5-12 (duplicate detection), F2-6, F2-7
+- Next MVP candidates: F2-6, F2-7
 - Frontend architecture: F7-1 through F7-5 (DataTable component + migrations) — Done
 
 Relevant epic docs:
@@ -55,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Update E3 epic doc to mark F3-5 Done. Then confirm next focus from roadmap (candidates: F5-12 duplicate detection, F2-6, F2-7).
+Prepare commit for F5-12: confirm message with user, then commit.
 
 ---
 
@@ -65,8 +65,8 @@ Update E3 epic doc to mark F3-5 Done. Then confirm next focus from roadmap (cand
   - `cd /home/kim/dev/landlordguru-dev/backend && node_modules/.bin/jest --forceExit`
 
 - Last result:
-  - Date/time: 2026-05-02 12:15:00
-  - Outcome: 214/214 tests passing. Committed 087ecc3.
+  - Date/time: 2026-05-02 (this session)
+  - Outcome: 227/227 tests passing.
 
 ---
 
@@ -74,42 +74,37 @@ Update E3 epic doc to mark F3-5 Done. Then confirm next focus from roadmap (cand
 
 - `AI_STATE.md`
 - `docs/ai_state_archive.json`
+- `docs/epics/03-transaction-management.md`
+- `docs/epics/05-integrations-data-import.md`
 - `backend/src/routes/transactions.js`
 - `backend/tests/transactions.test.js`
-- `backend/src/db/migrations/018_transaction_property_id.js`
-- `frontend/index.html`
+- `frontend/js/api.js`
 - `frontend/js/app.js`
-- `frontend/js/strings.js`
-- `AI_STATE-GUIDE.md`
-- `CLAUDE.md`
-- `docs/parallel-branch-working-model.md`
-- `.claude/settings.json`
+- `frontend/css/style.css`
+- `version.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-02 12:15:00 F3-5 committed (087ecc3) — all subtasks done
+- 2026-05-02 [F5-12 implementation complete]
   - branch: main
-  - last_commit: 087ecc3
-  - changed_files: (see commit)
-  - git_status: M AI_STATE.md, M docs/ai_state_archive.json
+  - last_commit: 6aa8831
+  - changed_files: backend/src/routes/transactions.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/js/app.js, frontend/css/style.css, version.json, docs/epics/03-transaction-management.md, docs/epics/05-integrations-data-import.md
+  - git_status: M AI_STATE.md + above files
 
-- 2026-05-02 12:28:15 [Stop]
+- 2026-05-02 12:42:39 [Stop]
   - branch: main
-  - last_commit: 087ecc3 feat: F3-5 complete — import history with properties, undo modal property column, chevron fix
-  - changed_files: AI_STATE.md,docs/ai_state_archive.json
+  - last_commit: 6aa8831 fix: keep import history chevron and title together (wrap in single flex child)
+  - changed_files: AI_STATE.md,backend/src/routes/transactions.js backend/tests/transactions.test.js,docs/epics/03-transaction-management.md docs/epics/05-integrations-data-import.md,frontend/css/style.css frontend/js/api.js,frontend/js/app.js version.json
   - git_status:
      M AI_STATE.md
-     M docs/ai_state_archive.json
-    ?? .claude/hooks/checkpoint.sh
-
-- 2026-05-02 12:29:39 [Stop]
-  - branch: main
-  - last_commit: 087ecc3 feat: F3-5 complete — import history with properties, undo modal property column, chevron fix
-  - changed_files: AI_STATE.md,docs/ai_state_archive.json frontend/index.html
-  - git_status:
-     M AI_STATE.md
-     M docs/ai_state_archive.json
-     M frontend/index.html
+     M backend/src/routes/transactions.js
+     M backend/tests/transactions.test.js
+     M docs/epics/03-transaction-management.md
+     M docs/epics/05-integrations-data-import.md
+     M frontend/css/style.css
+     M frontend/js/api.js
+     M frontend/js/app.js
+     M version.json
     ?? .claude/hooks/checkpoint.sh

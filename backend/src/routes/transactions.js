@@ -387,6 +387,46 @@ router.get('/import/history', requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/transactions/import/check
+// Checks an array of {property_id, date, description, amount} rows against
+// existing workspace transactions. Returns array of same length — null (no
+// match) or the most-recently-created matching transaction. Read-only and
+// idempotent; workspace-scoped.
+router.post('/import/check', requireAuth, async (req, res) => {
+  const rows = req.body;
+  if (!Array.isArray(rows)) {
+    return res.status(400).json({ error: 'Body must be an array' });
+  }
+
+  try {
+    const results = await Promise.all(rows.map(async (row) => {
+      const { property_id, date, description, amount } = row;
+      if (!property_id || !date || description == null || amount == null) return null;
+
+      const match = await db('transactions as t')
+        .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+        .where('t.workspace_id', req.workspace_id)
+        .whereRaw('COALESCE(t.property_id, ap.property_id) = ?', [property_id])
+        .where('t.date', date)
+        .whereRaw('LOWER(t.raw_description) = LOWER(?)', [description])
+        .where('t.amount', parseFloat(amount))
+        .select('t.id', 't.date', 't.description', 't.amount', 't.created_at', 't.import_batch')
+        .orderBy('t.created_at', 'desc')
+        .first();
+
+      if (!match) return null;
+      return formatDate(match);
+    }));
+
+    await req.logger.info('transaction.import.check', { row_count: rows.length });
+    res.json(results);
+  } catch (err) {
+    await req.logger.error('transaction.import.check.failed', { error: err.message });
+    console.error('POST /api/transactions/import/check error:', err.message);
+    res.status(500).json({ error: 'Failed to check for duplicate transactions' });
+  }
+});
+
 // DELETE /api/transactions/import/:batch_id
 // Deletes all transactions belonging to the given import batch in this workspace.
 router.delete('/import/:batch_id', requireAuth, async (req, res) => {

@@ -734,6 +734,209 @@ describe('DELETE /api/transactions/import/:batch_id', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// POST /api/transactions/import/check (F5-12)
+// ---------------------------------------------------------------------------
+describe('POST /api/transactions/import/check', () => {
+  const PROP_ID = '00000000-0000-0000-0000-000000000077';
+
+  beforeEach(async () => {
+    await db('properties').insert({
+      id: PROP_ID,
+      workspace_id: WORKSPACE_ID,
+      name: 'Dup Test Property',
+      created_by: USER_ID,
+    }).onConflict('id').ignore();
+  });
+
+  afterEach(async () => {
+    await db('properties').where('id', PROP_ID).del();
+  });
+
+  const BASE_ROW = {
+    date: '2026-03-01', type: 'income', category: 'rent',
+    amount: 1500, currency: 'USD', description: 'March rent',
+    raw_description: 'March rent', property_id: PROP_ID,
+  };
+
+  it('returns 400 for a non-array body', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ property_id: PROP_ID, date: '2026-03-01', description: 'x', amount: 100 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app).post('/api/transactions/import/check').send([]);
+    expect(res.status).toBe(401);
+  });
+
+  it('returns empty array for empty input', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([]);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  it('returns null when no matching transaction exists', async () => {
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ property_id: PROP_ID, date: '2026-03-01', description: 'March rent', amount: 1500 }]);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([null]);
+  });
+
+  it('returns match object when all four key fields match', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ property_id: PROP_ID, date: '2026-03-01', description: 'March rent', amount: 1500 }]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0]).not.toBeNull();
+    expect(res.body[0].date).toBe('2026-03-01');
+    expect(parseFloat(res.body[0].amount)).toBe(1500);
+    expect(res.body[0]).toHaveProperty('id');
+    expect(res.body[0]).toHaveProperty('created_at');
+    expect(res.body[0]).toHaveProperty('import_batch');
+  });
+
+  it('description match is case-insensitive', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ property_id: PROP_ID, date: '2026-03-01', description: 'MARCH RENT', amount: 1500 }]);
+
+    expect(res.body[0]).not.toBeNull();
+  });
+
+  it('returns null when amount differs', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ property_id: PROP_ID, date: '2026-03-01', description: 'March rent', amount: 9999 }]);
+
+    expect(res.body[0]).toBeNull();
+  });
+
+  it('returns null when date differs', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ property_id: PROP_ID, date: '2026-04-01', description: 'March rent', amount: 1500 }]);
+
+    expect(res.body[0]).toBeNull();
+  });
+
+  it('returns null when property_id differs', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ property_id: '00000000-0000-0000-0000-000000000098', date: '2026-03-01', description: 'March rent', amount: 1500 }]);
+
+    expect(res.body[0]).toBeNull();
+  });
+
+  it('does not match transactions from another workspace', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const otherToken = makeToken({ workspace_id: '00000000-0000-0000-0000-000000000099' });
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${otherToken}`)
+      .send([{ property_id: PROP_ID, date: '2026-03-01', description: 'March rent', amount: 1500 }]);
+
+    expect(res.body[0]).toBeNull();
+  });
+
+  it('returns most recently created match when multiple exist', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ ...BASE_ROW, notes: 'second import' }]);
+
+    const txs = await db('transactions').where({ workspace_id: WORKSPACE_ID }).orderBy('created_at', 'desc');
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ property_id: PROP_ID, date: '2026-03-01', description: 'March rent', amount: 1500 }]);
+
+    expect(res.body[0]).not.toBeNull();
+    expect(res.body[0].id).toBe(txs[0].id);
+  });
+
+  it('returns null for row missing property_id', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ date: '2026-03-01', description: 'March rent', amount: 1500 }]);
+
+    expect(res.body[0]).toBeNull();
+  });
+
+  it('handles mixed matches and nulls across multiple rows', async () => {
+    await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([BASE_ROW]);
+
+    const res = await request(app)
+      .post('/api/transactions/import/check')
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { property_id: PROP_ID, date: '2026-03-01', description: 'March rent', amount: 1500 },
+        { property_id: PROP_ID, date: '2026-03-01', description: 'No match here', amount: 500 },
+      ]);
+
+    expect(res.body[0]).not.toBeNull();
+    expect(res.body[1]).toBeNull();
+  });
+});
+
 describe('PATCH /api/transactions/:id — currency rate validation', () => {
   const { WORKSPACE_ID: WS } = require('./helpers');
   const db2 = require('../src/db/knex');

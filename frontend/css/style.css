@@ -392,6 +392,17 @@ textarea { resize: vertical; min-height: 70px; }
 .preview-row-ignored { opacity: 0.35; }
 .preview-row-ignored td { text-decoration: line-through; }
 .tag-mapping { background: var(--accent-bg); color: var(--accent); font-size: 10px; }
+.preview-row-dup td { background: var(--amber-bg); }
+.tag-dup { background: var(--amber); color: #fff; font-size: 10px; cursor: default; }
+.dup-badge { position: relative; display: inline-flex; align-items: center; }
+.dup-badge-tip {
+  display: none; position: absolute; left: 0; top: calc(100% + 4px);
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 6px 8px; font-size: 11px; white-space: nowrap; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15); min-width: 200px; line-height: 1.5;
+  color: var(--text1);
+}
+.dup-badge:hover .dup-badge-tip { display: block; }
 
 /* ── Foldable tree (static preview) ──────────────────────── */
 

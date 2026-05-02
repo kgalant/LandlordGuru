@@ -228,7 +228,7 @@ Visually flag notes fields that are required but empty, so the user can fill the
 ---
 
 ### F5-12 Duplicate detection and auto-ignore in import preview `[MVP]`
-**Status:** Planned
+**Status:** In progress
 
 During the import preview (F5-5), each parsed row is checked against existing workspace transactions. Matched rows are visually flagged, defaulted to ignored, and show the matching existing transaction on hover/click so the user can make an informed decision before importing.
 

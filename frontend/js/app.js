@@ -34,6 +34,23 @@ function fmtDateTime(isoStr) {
   return time ? `${date} ${time}` : date;
 }
 
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _buildMatchTag(row) {
+  if (row._isDuplicate && row._duplicateMatch) {
+    const m = row._duplicateMatch;
+    const importedOn = m.created_at
+      ? fmtDateTime(m.created_at).slice(0, 10)
+      : '?';
+    return `<span class="dup-badge"><span class="tag tag-dup">Duplicate</span><div class="dup-badge-tip">${escHtml(m.date)} &bull; ${escHtml(m.description || '—')} &bull; ${parseFloat(m.amount).toLocaleString()}<br>Imported on ${escHtml(importedOn)}</div></span> `;
+  }
+  if (row._descMappingMatched) return '<span class="tag tag-mapping">mapped</span> ';
+  if (row._autoMatched)        return '<span class="tag tag-auto">auto</span> ';
+  return '';
+}
+
 // Returns flat array of all category objects from the grouped State
 function flatCats() {
   return Object.values(State.transactionCategories).flat();
@@ -609,6 +626,8 @@ function onRowFieldChange(i, field, value) {
     State.importRows[i]._userPickedCategory = true;
   }
   if (field === '_storeMapping' && value) State.importRows[i]._userPickedCategory = true;
+  if (field === '_ignored') State.importRows[i]._userPickedIgnore = true;
+  if (field === 'property_id' || field === 'description') _checkSingleRowDuplicate(i);
   _applyRowStyle(i);
 
   const bulkOn = document.getElementById('bulk-update-toggle')?.checked;
@@ -644,7 +663,10 @@ function _applyRowStyle(i) {
   if (row._ignored) tr.classList.add('preview-row-ignored');
   else              tr.classList.remove('preview-row-ignored');
 
-  const warnResolved = row._ignored || row._autoMatched || row._descMappingMatched || row._userPickedCategory || row._storeMapping;
+  if (row._isDuplicate) tr.classList.add('preview-row-dup');
+  else                  tr.classList.remove('preview-row-dup');
+
+  const warnResolved = row._isDuplicate || row._ignored || row._autoMatched || row._descMappingMatched || row._userPickedCategory || row._storeMapping;
   if (warnResolved) tr.classList.remove('preview-row-warn');
   else              tr.classList.add('preview-row-warn');
 
@@ -652,6 +674,71 @@ function _applyRowStyle(i) {
   if (notesEl) {
     const needsNote = !row._ignored && row.category === 'other_expense' && !(row.notes || '').trim();
     notesEl.style.background = needsNote ? 'var(--error-bg, #ffeaea)' : '';
+  }
+}
+
+function _applyDupResult(i, match) {
+  const row = State.importRows[i];
+  const wasDup = row._isDuplicate;
+
+  row._isDuplicate   = !!match;
+  row._duplicateMatch = match || null;
+
+  if (match && !row._userPickedIgnore) {
+    row._ignored = true;
+    const cb = document.getElementById('row-ign-' + i);
+    if (cb) cb.checked = true;
+  } else if (!match && wasDup && !row._userPickedIgnore) {
+    row._ignored = false;
+    const cb = document.getElementById('row-ign-' + i);
+    if (cb) cb.checked = false;
+  }
+
+  const tagsEl = document.getElementById('row-tags-' + i);
+  if (tagsEl) tagsEl.innerHTML = _buildMatchTag(row);
+
+  _applyRowStyle(i);
+}
+
+async function _batchCheckDuplicates() {
+  const indexed = State.importRows
+    .map((row, i) => ({ i, row }))
+    .filter(({ row }) => row.property_id);
+
+  if (!indexed.length) return;
+
+  const payload = indexed.map(({ row }) => ({
+    property_id: row.property_id,
+    date:        row.date,
+    description: row.description,
+    amount:      row.amount,
+  }));
+
+  try {
+    const results = await Api.checkImportDuplicates(payload);
+    indexed.forEach(({ i }, j) => _applyDupResult(i, results[j]));
+  } catch (_) {
+    // Non-critical — silent failure
+  }
+}
+
+async function _checkSingleRowDuplicate(i) {
+  const row = State.importRows[i];
+  if (!row.property_id) {
+    _applyDupResult(i, null);
+    return;
+  }
+
+  try {
+    const results = await Api.checkImportDuplicates([{
+      property_id: row.property_id,
+      date:        row.date,
+      description: row.description,
+      amount:      row.amount,
+    }]);
+    _applyDupResult(i, results[0]);
+  } catch (_) {
+    // Non-critical
   }
 }
 
@@ -854,7 +941,7 @@ function deleteSavedMapping() {
   toast(t('import.mapping.toast.deleted', { name }), 'success');
 }
 
-function runImportPreview() {
+async function runImportPreview() {
   const pasteText  = document.getElementById('import-csv').value.trim();
   const csv        = _importCSVText || pasteText;
   const profileKey = document.getElementById('import-profile').value;
@@ -881,7 +968,7 @@ function runImportPreview() {
   applyDescMappings(result.rows, profileKey);
 
   // Initialise per-row UI flags
-  State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _storeMapping: false, _userPickedCategory: false }));
+  State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _storeMapping: false, _userPickedCategory: false, _isDuplicate: false, _duplicateMatch: null, _userPickedIgnore: false }));
 
   document.getElementById('import-preview-title').textContent =
     `Preview — ${result.rows.length} rows from ${result.profileLabel}`;
@@ -891,9 +978,6 @@ function runImportPreview() {
       `<option value="${p.id}"${p.id === row.property_id ? ' selected' : ''}>${p.name}</option>`
     ).join('');
     const catOpts = Importer.buildCategoryOptions(row.category, State.transactionCategories);
-    let matchTag = '';
-    if      (row._descMappingMatched) matchTag = '<span class="tag tag-mapping">mapped</span> ';
-    else if (row._autoMatched)        matchTag = '<span class="tag tag-auto">auto</span> ';
     const warnClass = (!row._autoMatched && !row._descMappingMatched) ? 'preview-row-warn' : '';
     const amtSign   = row.type === 'expense' ? '-' : '';
     const amtCls    = row.type === 'expense' ? 'negative' : 'positive';
@@ -902,7 +986,7 @@ function runImportPreview() {
       <td>${row.date}</td>
       <td style="max-width:160px;font-size:12px">${row.description}</td>
       <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"><option value="">—</option>${propOpts}</select></td>
-      <td>${matchTag}<select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)">${catOpts}</select></td>
+      <td><span id="row-tags-${i}">${_buildMatchTag(row)}</span><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)">${catOpts}</select></td>
       <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : ''}" placeholder="notes…" value="${row.notes || ''}" oninput="onRowFieldChange(${i},'notes',this.value)"></td>
       <td class="amount-cell ${amtCls}">${amtSign}${row.amount.toLocaleString()} ${result.currency || ''}</td>
       <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"></td>
@@ -924,6 +1008,9 @@ function runImportPreview() {
   const preview = document.getElementById('import-preview-section');
   preview.style.display = 'block';
   preview.scrollIntoView({ behavior: 'smooth' });
+
+  // Batch-check for duplicates (async, non-blocking render)
+  _batchCheckDuplicates();
 
 }
 
