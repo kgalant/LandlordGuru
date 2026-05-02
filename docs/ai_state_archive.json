@@ -474,8 +474,8 @@
     "git_status": "clean after commit 5561152"
   },
   {
-    "timestamp": "2026-05-01 14:53:52 to 18:22:27",
-    "label": "F3-5 implementation — backend history/rollback endpoints, frontend Recent Imports panel + Undo modal, three follow-up fixes (date formatting, Undo always enabled, confirm() → modal)",
+    "timestamp": "2026-05-01 to 2026-05-02",
+    "label": "F3-5 complete — history/rollback endpoints, Recent Imports panel + Undo modal, properties column, chevron fix, migration 018, archive moved to docs/",
     "branch": "main",
     "last_commit": "178bed3",
     "changed_files": "backend/src/routes/transactions.js, backend/tests/transactions.test.js, frontend/index.html, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, AI_STATE.md",
