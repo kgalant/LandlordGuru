@@ -145,6 +145,7 @@ export const I18n = (() => {
         csvLabel:       'CSV data — paste your bank export here',
         csvPlaceholder: 'Paste CSV content here. The first row should be headers.\n\nExample (Jyske Bank):\nDato;Tekst;Betalingstype;Beloeb\n15.04.2025;RICHARD SABUMBA HUSLEJE;Kredit;16700,00',
         previewBtn:     'Preview import',
+        previewHint:    'Select a file to enable preview',
         clearBtn:       'Clear',
         reviewNote:     'Review and adjust categories, properties, and notes. Enable bulk-update to apply changes to all selected rows at once.',
         bulkUpdate:     'Update all selected with same value',

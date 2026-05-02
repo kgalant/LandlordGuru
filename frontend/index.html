@@ -116,7 +116,7 @@
         <div id="import-paste-area" style="display:none;margin-bottom:1rem">
           <div class="form-group">
             <label data-i18n="import.csvLabel"></label>
-            <textarea id="import-csv" rows="8" data-i18n-placeholder="import.csvPlaceholder"></textarea>
+            <textarea id="import-csv" rows="8" data-i18n-placeholder="import.csvPlaceholder" oninput="_updatePreviewBtnState()"></textarea>
           </div>
         </div>
 
@@ -186,9 +186,10 @@
           </div>
         </div>
 
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="runImportPreview()" data-i18n="import.previewBtn"></button>
+        <div class="btn-row" style="align-items:center">
+          <button id="import-preview-btn" class="btn btn-primary" onclick="runImportPreview()" data-i18n="import.previewBtn" disabled></button>
           <button class="btn btn-secondary btn-sm" onclick="clearImport()" data-i18n="import.clearBtn"></button>
+          <span id="import-preview-hint" style="font-size:12px;color:var(--text3)" data-i18n="import.previewHint"></span>
         </div>
       </div>
 

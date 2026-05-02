@@ -125,7 +125,7 @@ function renderCurrentPage() {
   if (currentPage === 'properties')   renderPropertyList();
   if (currentPage === 'rules')        { if (!rulesTable) initRulesTable(); else rulesTable.refresh(); }
   if (currentPage === 'settings')     renderSettings();
-  if (currentPage === 'import')       loadImportHistory();
+  if (currentPage === 'import')       { loadImportHistory(); _updatePreviewBtnState(); }
 }
 
 // ── Populate dropdowns ────────────────────────────────────
@@ -742,12 +742,22 @@ async function _checkSingleRowDuplicate(i) {
 
 let _importCSVText = '';   // holds text loaded from a file
 
+function _updatePreviewBtnState() {
+  const hasData = !!_importCSVText || !!(document.getElementById('import-csv')?.value.trim());
+  const btn  = document.getElementById('import-preview-btn');
+  const hint = document.getElementById('import-preview-hint');
+  if (!btn) return;
+  btn.disabled = !hasData;
+  if (hint) hint.style.display = hasData ? 'none' : 'inline';
+}
+
 function _setFileLoaded(text, name) {
   _importCSVText = text;
   document.getElementById('import-file-name').textContent = name;
   document.getElementById('import-file-name').style.display = 'inline-block';
   document.getElementById('import-zone').querySelector('strong').textContent = '✓ ' + name;
   showMappingPanel(text, document.getElementById('import-profile').value);
+  _updatePreviewBtnState();
 }
 
 function onImportFileChange(event) {
@@ -797,6 +807,7 @@ function clearImport() {
   document.getElementById('import-preview-section').style.display = 'none';
   document.getElementById('import-static-section').style.display = 'none';
   document.getElementById('import-mapping-confirm-section').style.display = 'none';
+  _updatePreviewBtnState();
 }
 
 // ── Column mapping ────────────────────────────────────────
@@ -2043,7 +2054,7 @@ Object.assign(window, {
   openTxModal, closeTxModal, saveTxModal, deleteTxModal, onCategoryChange,
   deleteTxWithConfirm,
   onProfileChange, onImportFileChange, onImportDragOver, onImportDragLeave, onImportDrop,
-  toggleImportPaste, clearImport, runImportPreview,
+  toggleImportPaste, clearImport, runImportPreview, _updatePreviewBtnState,
   toggleSelectAll, onRowSelect, onRowFieldChange,
   refreshSavedMappingsDropdown, loadSavedMapping, saveCurrentMapping, deleteSavedMapping,
   goToStaticPreview, backToEditPreview, goToMappingConfirmOrImport, backToStaticPreview,
