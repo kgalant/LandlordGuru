@@ -64,7 +64,7 @@ function catLabel(key) {
 // ── Boot ──────────────────────────────────────────────────
 
 async function boot() {
-  if (!window.AUTH_TOKEN) return;
+  if (!window.AUTH_TOKEN) { setLoading(false); return; }
   setLoading(true, t('status.connecting'));
   try {
     // v2 mode: authenticated via JWT — use backend API
