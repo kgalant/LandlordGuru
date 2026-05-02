@@ -262,7 +262,7 @@ current `AI_STATE.md` has 16+ stale entries as evidence. Fix:
 
 - When writing a new entry, read the existing file, strip everything after `## Automation log`,
   append the new single entry.
-- Before stripping, extract the previous entry and append it to `.claude/ai_state_archive.json`.
+- Before stripping, extract the previous entry and append it to `docs/ai_state_archive.json`.
 - This makes the archive step automatic and removes the manual cleanup burden from Claude.
 
 This is the highest-priority hook change — it eliminates a recurring source of `AI_STATE.md`
@@ -309,7 +309,7 @@ Similar guard: block edits to `version.json` if current branch starts with `feat
 
 **d) Archive file permission in worktrees**
 
-The existing `Edit(.claude/ai_state_archive.json)` allow entry resolves to the worktree's own
+The existing `Edit(docs/ai_state_archive.json)` allow entry resolves to the worktree's own
 `.claude/` folder, which is correct. No change needed — but verify after first worktree
 creation that the permission fires as expected.
 

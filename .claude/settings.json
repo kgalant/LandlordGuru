@@ -1,10 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd c:/dev/repos/LandlordGuru/backend && npm test *)",
       "Bash(npm test --prefix backend *)",
-      "Edit(.claude/ai_state_archive.json)",
-      "Write(.claude/ai_state_archive.json)"
+      "Bash(node_modules/.bin/jest *)",
+      "Bash(cd /home/kim/dev/landlordguru-dev/backend && node_modules/.bin/jest *)",
+      "Edit(docs/ai_state_archive.json)",
+      "Write(docs/ai_state_archive.json)"
     ]
   },
   "hooks": {
@@ -13,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/checkpoint.sh\"",
             "timeout": 10,
             "statusMessage": "Restoring session state"
           }
@@ -25,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/checkpoint.sh\"",
             "timeout": 15,
             "statusMessage": "Saving checkpoint"
           }
@@ -37,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/checkpoint.sh\"",
             "timeout": 15,
             "statusMessage": "Final checkpoint"
           }
@@ -49,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.claude/hooks/checkpoint.ps1')\"",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/checkpoint.sh\"",
             "timeout": 15,
             "statusMessage": "Post-compaction checkpoint"
           }

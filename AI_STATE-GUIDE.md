@@ -205,7 +205,7 @@ Example:
 ## 9. Automation log (latest only)
 
 Exactly one Automation log entry lives in `AI_STATE.md`.
-Older entries go into an archive file (for example: `.claude/ai_state_archive.json`).
+Older entries go into an archive file (for example: `docs/ai_state_archive.json`).
 
 Format:
 

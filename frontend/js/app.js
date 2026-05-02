@@ -1114,13 +1114,12 @@ async function doImport(saveMappings) {
 
   setLoading(true, t('status.importing'));
   try {
-    // v2 mode: resolve property_id → account_id and create via backend API
     const toSave = activeRows.map(row => {
       const prop = State.properties.find(p => p.id === row.property_id);
       return {
         ...row,
-        property_id: undefined, // remove field — backend uses account_id
         account_id: prop?.account_id ?? null,
+        // property_id kept from row — backend stores it directly
       };
     });
     const result = await Api.importTransactions(toSave);
@@ -1143,7 +1142,7 @@ async function loadImportHistory(expand = false) {
   if (expand) {
     _importHistoryCollapsed = false;
     document.getElementById('import-history-body').style.display = '';
-    document.getElementById('import-history-chevron').textContent = '▲';
+    document.getElementById('import-history-chevron').textContent = '▼';
   }
   try {
     const batches = await Api.getImportHistory();
@@ -1156,7 +1155,7 @@ async function loadImportHistory(expand = false) {
 function renderImportHistory(batches) {
   const tbody = document.getElementById('import-history-body-rows');
   if (!batches.length) {
-    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted);padding:0.75rem">${t('import.history.empty')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--text-muted);padding:0.75rem">${t('import.history.empty')}</td></tr>`;
     return;
   }
   tbody.innerHTML = batches.map(b => {
@@ -1166,6 +1165,7 @@ function renderImportHistory(batches) {
       <td>${date}</td>
       <td>${b.source || '—'}</td>
       <td>${b.row_count}</td>
+      <td>${b.properties || '—'}</td>
       <td>${undoBtn}</td>
     </tr>`;
   }).join('');
@@ -1176,7 +1176,7 @@ function toggleImportHistory() {
   const body = document.getElementById('import-history-body');
   const chevron = document.getElementById('import-history-chevron');
   body.style.display = _importHistoryCollapsed ? 'none' : '';
-  chevron.textContent = _importHistoryCollapsed ? '▼' : '▲';
+  chevron.textContent = _importHistoryCollapsed ? '▶' : '▼';
   if (!_importHistoryCollapsed) loadImportHistory();
 }
 
@@ -1194,24 +1194,28 @@ async function undoImportBatch(batchId, rowCount) {
 
   subtitle.textContent = t('import.history.modal.subtitle', { count: rowCount });
   confirmBtn.textContent = t('import.history.modal.confirmBtn', { count: rowCount });
-  tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted)">${t('import.history.modal.loading')}</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" style="color:var(--text-muted)">${t('import.history.modal.loading')}</td></tr>`;
   modal.style.display = 'flex';
 
   try {
     const data = await Api.getTransactions({ import_batch: batchId, limit: 500 });
     const rows = data.data || [];
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted)">No transactions found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--text-muted)">No transactions found.</td></tr>`;
       return;
     }
-    tbody.innerHTML = rows.map(tx => `<tr>
-      <td>${tx.date}</td>
-      <td>${tx.description || '—'}</td>
-      <td>${catLabel(tx.category)}</td>
-      <td style="text-align:right">${parseFloat(tx.amount).toFixed(2)} ${tx.currency}</td>
-    </tr>`).join('');
+    tbody.innerHTML = rows.map(tx => {
+      const prop = State.properties.find(p => p.id === tx.property_id);
+      return `<tr>
+        <td>${prop ? prop.name : '—'}</td>
+        <td>${tx.date}</td>
+        <td>${tx.description || '—'}</td>
+        <td>${catLabel(tx.category)}</td>
+        <td style="text-align:right">${parseFloat(tx.amount).toFixed(2)} ${tx.currency}</td>
+      </tr>`;
+    }).join('');
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger)">Failed to load: ${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger)">Failed to load: ${e.message}</td></tr>`;
   }
 }
 

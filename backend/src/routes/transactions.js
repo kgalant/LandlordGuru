@@ -126,7 +126,7 @@ router.get('/', requireAuth, async (req, res) => {
 
     function applyFilters(q) {
       if (account_id)    q = q.where('t.account_id', account_id);
-      if (property_id)   q = q.where('ap.property_id', property_id);
+      if (property_id)   q = q.where(function () { this.where('t.property_id', property_id).orWhere('ap.property_id', property_id); });
       if (type)          q = q.where('t.type', type);
       if (category)      q = q.where('t.category', category);
       if (from)          q = q.where('t.date', '>=', from);
@@ -147,7 +147,7 @@ router.get('/', requireAuth, async (req, res) => {
     const sortDirection = sort_dir === 'asc' ? 'asc' : 'desc';
 
     const dataQuery = applyFilters(baseQuery.clone())
-      .select('t.*', 'ap.property_id')
+      .select('t.*', db.raw('COALESCE(t.property_id, ap.property_id) as property_id'))
       .orderBy(sortColumn, sortDirection)
       .orderBy('t.created_at', 'desc')
       .limit(limit)
@@ -328,7 +328,8 @@ router.post('/import', requireAuth, async (req, res) => {
       const inserts = rows.map(row => ({
         workspace_id,
         date:             row.date,
-        account_id:       row.account_id || null,
+        account_id:       row.account_id  || null,
+        property_id:      row.property_id || null,
         type:             row.type,
         category:         row.category,
         amount:           parseFloat(row.amount),
@@ -358,16 +359,21 @@ router.post('/import', requireAuth, async (req, res) => {
 // Returns the 10 most recent import batches for this workspace.
 router.get('/import/history', requireAuth, async (req, res) => {
   try {
-    const batches = await db('transactions')
-      .where({ workspace_id: req.workspace_id })
-      .whereNotNull('import_batch')
-      .groupBy('import_batch', 'source', 'created_by')
+    const batches = await db('transactions as t')
+      .where({ 't.workspace_id': req.workspace_id })
+      .whereNotNull('t.import_batch')
+      .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+      .leftJoin('properties as p', db.raw(
+        'p.id = COALESCE(t.property_id, ap.property_id) AND p.workspace_id = t.workspace_id',
+      ))
+      .groupBy('t.import_batch', 't.source', 't.created_by')
       .select(
-        'import_batch',
-        'source',
-        'created_by',
-        db.raw('COUNT(*) as row_count'),
-        db.raw('MIN(created_at) as imported_at'),
+        't.import_batch',
+        't.source',
+        't.created_by',
+        db.raw('COUNT(DISTINCT t.id) as row_count'),
+        db.raw('MIN(t.created_at) as imported_at'),
+        db.raw("STRING_AGG(DISTINCT p.name, ', ' ORDER BY p.name) as properties"),
       )
       .orderBy('imported_at', 'desc')
       .limit(10);

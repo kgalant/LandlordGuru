@@ -640,6 +640,7 @@ describe('GET /api/transactions/import/history', () => {
     expect(res.body[0].source).toBe('jyske_bank');
     expect(typeof res.body[0].import_batch).toBe('string');
     expect(typeof res.body[0].imported_at).toBe('string');
+    expect(res.body[0]).toHaveProperty('properties'); // null when no account_id/property linked
   });
 
   it('returns most recent batch first', async () => {

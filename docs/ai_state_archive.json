@@ -472,5 +472,13 @@
     "last_commit": "5561152",
     "changed_files": "docs/epics/03-transaction-management.md, AI_STATE.md, .claude/ai_state_archive.json",
     "git_status": "clean after commit 5561152"
+  },
+  {
+    "timestamp": "2026-05-01 14:53:52 to 18:22:27",
+    "label": "F3-5 implementation — backend history/rollback endpoints, frontend Recent Imports panel + Undo modal, three follow-up fixes (date formatting, Undo always enabled, confirm() → modal)",
+    "branch": "main",
+    "last_commit": "178bed3",
+    "changed_files": "backend/src/routes/transactions.js, backend/tests/transactions.test.js, frontend/index.html, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, AI_STATE.md",
+    "git_status": "M .claude/settings.json, M AI_STATE.md, ?? .claude/hooks/checkpoint.sh"
   }
 ]

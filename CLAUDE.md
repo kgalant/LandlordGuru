@@ -78,7 +78,7 @@ Do **not** batch these changes. Update `AI_STATE.md` as soon as any of the above
 When you add a new Automation log entry in `AI_STATE.md`:
 
 1. Move the previous entry into the archive file:
-   - `.claude/ai_state_archive.json` (or the path already used in this repo).
+   - `docs/ai_state_archive.json` (or the path already used in this repo).
 2. Replace the entry in `AI_STATE.md` with the new one only.
 
 Never keep more than one Automation log entry in `AI_STATE.md`.

@@ -27,7 +27,7 @@ None.
 - [x] F3-5-1: Backend — `GET /api/transactions/import/history`; last 10 batches grouped by import_batch (source, row_count, imported_at, created_by); add tests
 - [x] F3-5-2: Backend — `DELETE /api/transactions/import/:batch_id`; workspace-scoped; return count deleted; add tests
 - [x] F3-5-3: Frontend — "Recent imports" collapsible panel at bottom of Import tab; auto-expands after successful import; Undo button disabled for other-user batches (unless workspace owner); wire to both endpoints
-- [-] F3-5-4: Smoke-test full flow; update epic doc status to Done; commit
+- [-] F3-5-4: Add properties column to history panel + undo modal; smoke-test full flow; update epic doc; commit
 
 ---
 
@@ -55,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Smoke-test the full F3-5 flow on the test server: import a batch, verify the Recent Imports panel shows it, click Undo, verify the rows are gone. Then update epic doc and commit.
+Deploy to test server and smoke-test: import a batch with transactions linked to properties, verify the Recent Imports panel shows property names, open the Undo modal and verify the Property column appears. Then update epic doc and commit.
 
 ---
 
@@ -65,36 +65,36 @@ Smoke-test the full F3-5 flow on the test server: import a batch, verify the Rec
   - `cd /home/kim/dev/landlordguru-dev/backend && node_modules/.bin/jest --forceExit`
 
 - Last result:
-  - Date/time: 2026-05-01 14:10:00
-  - Outcome: 205/205 tests passing. F3-4 complete and smoke-tested.
+  - Date/time: 2026-05-01 18:30:00
+  - Outcome: 214/214 tests passing.
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `.claude/ai_state_archive.json`
+- `docs/ai_state_archive.json`
 - `backend/src/routes/transactions.js`
 - `backend/tests/transactions.test.js`
-- `frontend/js/api.js`
+- `backend/src/db/migrations/018_transaction_property_id.js`
+- `frontend/index.html`
 - `frontend/js/app.js`
 - `frontend/js/strings.js`
-- `frontend/index.html`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-01 14:50:00 F3-5 set as current focus
+- 2026-05-01 18:30:00 F3-5-4 properties column — code complete, tests passing
   - branch: main
-  - last_commit: 5561152
-  - changed_files: AI_STATE.md, .claude/ai_state_archive.json
-  - git_status: M .claude/settings.json, M AI_STATE.md, ?? .claude/hooks/checkpoint.sh
+  - last_commit: 178bed3
+  - changed_files: backend/src/routes/transactions.js, backend/tests/transactions.test.js, frontend/index.html, frontend/js/app.js, frontend/js/strings.js, AI_STATE.md, .claude/ai_state_archive.json
+  - git_status: M .claude/settings.json, M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, M frontend/index.html, M frontend/js/app.js, M frontend/js/strings.js, ?? .claude/hooks/checkpoint.sh
 
-- 2026-05-01 14:53:52 [Stop]
+- 2026-05-02 08:37:51 [Stop]
   - branch: main
-  - last_commit: 5561152 chore: close out F3-4 — mark Done, add F5-13 spec (group-by-status + float-selected)
-  - changed_files: AI_STATE.md,backend/src/routes/transactions.js backend/tests/transactions.test.js,.claude/ai_state_archive.json .claude/settings.json,frontend/index.html frontend/js/api.js,frontend/js/app.js frontend/js/strings.js
+  - last_commit: 178bed3 fix: consistent date formatting — fmtDateTime helper, no toLocaleString for data dates
+  - changed_files: AI_STATE.md,backend/src/routes/transactions.js backend/tests/transactions.test.js,.claude/ai_state_archive.json .claude/settings.json,frontend/index.html frontend/js/app.js,frontend/js/strings.js
   - git_status:
      M .claude/ai_state_archive.json
      M .claude/settings.json
@@ -102,7 +102,95 @@ Smoke-test the full F3-5 flow on the test server: import a batch, verify the Rec
      M backend/src/routes/transactions.js
      M backend/tests/transactions.test.js
      M frontend/index.html
-     M frontend/js/api.js
      M frontend/js/app.js
      M frontend/js/strings.js
     ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-02 08:39:02 [Stop]
+  - branch: main
+  - last_commit: 178bed3 fix: consistent date formatting — fmtDateTime helper, no toLocaleString for data dates
+  - changed_files: AI_STATE.md,backend/src/routes/transactions.js backend/tests/transactions.test.js,.claude/ai_state_archive.json .claude/settings.json,frontend/index.html frontend/js/app.js,frontend/js/strings.js
+  - git_status:
+     M .claude/ai_state_archive.json
+     M .claude/settings.json
+     M AI_STATE.md
+     M backend/src/routes/transactions.js
+     M backend/tests/transactions.test.js
+     M frontend/index.html
+     M frontend/js/app.js
+     M frontend/js/strings.js
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-02 09:07:59 [Stop]
+  - branch: main
+  - last_commit: 178bed3 fix: consistent date formatting — fmtDateTime helper, no toLocaleString for data dates
+  - changed_files: AI_STATE.md,backend/src/routes/transactions.js backend/tests/transactions.test.js,.claude/ai_state_archive.json .claude/settings.json,frontend/index.html frontend/js/app.js,frontend/js/strings.js
+  - git_status:
+     M .claude/ai_state_archive.json
+     M .claude/settings.json
+     M AI_STATE.md
+     M backend/src/routes/transactions.js
+     M backend/tests/transactions.test.js
+     M frontend/index.html
+     M frontend/js/app.js
+     M frontend/js/strings.js
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-02 11:03:32 [Stop]
+  - branch: main
+  - last_commit: 178bed3 fix: consistent date formatting — fmtDateTime helper, no toLocaleString for data dates
+  - changed_files: AI_STATE-GUIDE.md,AI_STATE.md backend/src/routes/transactions.js,backend/tests/transactions.test.js .claude/ai_state_archive.json,CLAUDE.md .claude/settings.json,docs/parallel-branch-working-model.md frontend/index.html,frontend/js/app.js frontend/js/strings.js
+  - git_status:
+     D .claude/ai_state_archive.json
+     M .claude/settings.json
+     M AI_STATE-GUIDE.md
+     M AI_STATE.md
+     M CLAUDE.md
+     M backend/src/routes/transactions.js
+     M backend/tests/transactions.test.js
+     M docs/parallel-branch-working-model.md
+     M frontend/index.html
+     M frontend/js/app.js
+     M frontend/js/strings.js
+    ?? .claude/hooks/checkpoint.sh
+    ?? docs/ai_state_archive.json
+
+- 2026-05-02 12:08:18 [Stop]
+  - branch: main
+  - last_commit: 178bed3 fix: consistent date formatting — fmtDateTime helper, no toLocaleString for data dates
+  - changed_files: AI_STATE-GUIDE.md,AI_STATE.md backend/src/routes/transactions.js,backend/tests/transactions.test.js .claude/ai_state_archive.json,CLAUDE.md .claude/settings.json,docs/parallel-branch-working-model.md frontend/index.html,frontend/js/app.js frontend/js/strings.js
+  - git_status:
+     D .claude/ai_state_archive.json
+     M .claude/settings.json
+     M AI_STATE-GUIDE.md
+     M AI_STATE.md
+     M CLAUDE.md
+     M backend/src/routes/transactions.js
+     M backend/tests/transactions.test.js
+     M docs/parallel-branch-working-model.md
+     M frontend/index.html
+     M frontend/js/app.js
+     M frontend/js/strings.js
+    ?? .claude/hooks/checkpoint.sh
+    ?? backend/src/db/migrations/018_transaction_property_id.js
+    ?? docs/ai_state_archive.json
+
+- 2026-05-02 12:26:54 [Stop]
+  - branch: main
+  - last_commit: 178bed3 fix: consistent date formatting — fmtDateTime helper, no toLocaleString for data dates
+  - changed_files: AI_STATE-GUIDE.md,AI_STATE.md backend/src/routes/transactions.js,backend/tests/transactions.test.js .claude/ai_state_archive.json,CLAUDE.md .claude/settings.json,docs/parallel-branch-working-model.md frontend/index.html,frontend/js/app.js frontend/js/strings.js
+  - git_status:
+     D .claude/ai_state_archive.json
+     M .claude/settings.json
+     M AI_STATE-GUIDE.md
+     M AI_STATE.md
+     M CLAUDE.md
+     M backend/src/routes/transactions.js
+     M backend/tests/transactions.test.js
+     M docs/parallel-branch-working-model.md
+     M frontend/index.html
+     M frontend/js/app.js
+     M frontend/js/strings.js
+    ?? .claude/hooks/checkpoint.sh
+    ?? backend/src/db/migrations/018_transaction_property_id.js
+    ?? docs/ai_state_archive.json
