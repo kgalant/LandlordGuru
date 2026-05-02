@@ -660,6 +660,39 @@
   </div>
 </div>
 
+<!-- New category modal (from import preview) -->
+<div id="modal-new-cat" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:600;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:480px;max-width:95vw">
+    <div class="card-header">
+      <span class="card-title">New Category</span>
+      <button class="btn btn-sm btn-secondary" onclick="closeNewCategoryModal()">✕</button>
+    </div>
+    <div class="form-grid" style="margin-top:1rem">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="new-cat-bucket">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+          <option value="deposit">Deposit</option>
+          <option value="transfer">Transfer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Label <span style="color:var(--text-muted);font-size:12px">(display name)</span></label>
+        <input type="text" id="new-cat-label" placeholder="e.g. Parking Fee" onblur="_newCatCodeAutoFill()">
+      </div>
+      <div class="form-group">
+        <label>Code <span style="color:var(--text-muted);font-size:12px">(auto-derived)</span></label>
+        <input type="text" id="new-cat-value" placeholder="e.g. parking_fee" style="font-family:monospace">
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:0.75rem">
+      <button class="btn btn-primary btn-sm" onclick="submitNewCategoryFromImport()">Save category</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeNewCategoryModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div id="toast-container"></div>
 

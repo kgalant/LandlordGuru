@@ -10,9 +10,9 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Type: feature
 - Epic: E5 Integrations and Data Import
-- ID: F5-13
-- Title: Group-by-status and float-selected in import preview
-- Short summary: Two toolbar toggle buttons — "Group" splits rows into five collapsible sections by status; "Float selected" pulls selected rows to the top. Frontend-only.
+- ID: F5-14
+- Title: Create category inline from import preview
+- Short summary: "＋ New category…" sentinel option in import row category selects opens a modal to create a category on the fly and apply it immediately.
 
 ---
 
@@ -24,8 +24,7 @@ None.
 
 ## Task breakdown (current focus)
 
-- [-] F5-13-1: Add `_userPickedProperty` flag; extract `_buildRowHtml`; add `_rowSection`, `renderImportTable`, `toggleImportSection`, `_rerenderIfGrouped`; wire toggles in HTML; CSS for section headers
-- [ ] F5-13-2: Wire re-render triggers into `onRowFieldChange`, `onRowSelect`, `toggleSelectAll`, `_applyDupResult`; add strings; commit
+- [x] F5-14-1: Add `modal-new-cat` to index.html; add `__new__` option to `buildCategoryOptions`; implement `openNewCategoryModal`, `closeNewCategoryModal`, `_newCatCodeAutoFill`, `submitNewCategoryFromImport`; intercept in `onRowFieldChange`; wire to `window.assign`; update epic doc + version; commit
 
 ---
 
@@ -46,7 +45,7 @@ Relevant epic docs:
 
 ## Next step
 
-Implement F5-13-1: extract `_buildRowHtml`, add grouping/float logic, wire HTML toggles and CSS.
+Confirm with user then commit F5-14 (changes: app.js, importer.js, index.html, epic doc, version.json, AI_STATE.md).
 
 ---
 
@@ -64,18 +63,33 @@ Implement F5-13-1: extract `_buildRowHtml`, add grouping/float logic, wire HTML 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `docs/epics/05-integrations-data-import.md`
-- `frontend/index.html`
 - `frontend/js/app.js`
-- `frontend/js/strings.js`
-- `frontend/css/style.css`
+- `frontend/js/importer.js`
+- `frontend/index.html`
+- `version.json`
+- `docs/epics/05-integrations-data-import.md`
+- `docs/ai_state_archive.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-02 [F5-13 focus set]
+- 2026-05-02 [F5-14 in progress]
   - branch: main
-  - last_commit: 2f03e78
-  - changed_files: AI_STATE.md
-  - git_status: M AI_STATE.md
+  - last_commit: 0ec3d3e
+  - changed_files: frontend/js/app.js, frontend/js/importer.js, frontend/index.html, version.json, docs/epics/05-integrations-data-import.md, AI_STATE.md
+  - git_status: M AI_STATE.md, ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-02 21:24:52 [Stop]
+  - branch: main
+  - last_commit: 0ec3d3e fix: visually disable buttons with :disabled (opacity + no-pointer)
+  - changed_files: AI_STATE.md,docs/ai_state_archive.json docs/epics/05-integrations-data-import.md,frontend/index.html frontend/js/app.js,frontend/js/importer.js version.json
+  - git_status:
+     M AI_STATE.md
+     M docs/ai_state_archive.json
+     M docs/epics/05-integrations-data-import.md
+     M frontend/index.html
+     M frontend/js/app.js
+     M frontend/js/importer.js
+     M version.json
+    ?? .claude/hooks/checkpoint.sh

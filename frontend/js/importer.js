@@ -269,8 +269,8 @@ export const Importer = (() => {
   const BUCKET_ORDER = ['income', 'expense', 'deposit', 'transfer'];
 
   function buildCategoryOptions(selectedCategory, apiCategories) {
+    let html = '';
     if (apiCategories && Object.keys(apiCategories).length > 0) {
-      let html = '';
       for (const bucket of BUCKET_ORDER) {
         const items = apiCategories[bucket];
         if (!items || items.length === 0) continue;
@@ -282,17 +282,17 @@ export const Importer = (() => {
         }
         html += `</optgroup>`;
       }
-      return html;
-    }
-    let html = '';
-    for (const [typeKey, typeGroup] of Object.entries(CATEGORIES)) {
-      html += `<optgroup label="${t('categories.' + typeKey)}">`;
-      for (const [catKey] of Object.entries(typeGroup.items)) {
-        const sel = catKey === selectedCategory ? ' selected' : '';
-        html += `<option value="${catKey}"${sel}>${t('categories.items.' + catKey)}</option>`;
+    } else {
+      for (const [typeKey, typeGroup] of Object.entries(CATEGORIES)) {
+        html += `<optgroup label="${t('categories.' + typeKey)}">`;
+        for (const [catKey] of Object.entries(typeGroup.items)) {
+          const sel = catKey === selectedCategory ? ' selected' : '';
+          html += `<option value="${catKey}"${sel}>${t('categories.items.' + catKey)}</option>`;
+        }
+        html += `</optgroup>`;
       }
-      html += `</optgroup>`;
     }
+    html += `<option value="__new__">＋ New category…</option>`;
     return html;
   }
 

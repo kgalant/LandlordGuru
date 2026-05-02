@@ -619,6 +619,12 @@ function onRowSelect(i) {
 // ── Bulk field change ─────────────────────────────────────
 
 function onRowFieldChange(i, field, value) {
+  if (field === 'category' && value === '__new__') {
+    const el = document.getElementById('row-cat-' + i);
+    if (el) el.value = State.importRows[i].category || '';
+    openNewCategoryModal(i);
+    return;
+  }
   State.importRows[i][field] = value;
   if (field === 'category') {
     State.importRows[i].type = Importer.categoryToType(value, State.transactionCategories);
@@ -629,7 +635,6 @@ function onRowFieldChange(i, field, value) {
   if (field === 'property_id') State.importRows[i]._userPickedProperty = true;
   if (field === 'property_id' || field === 'description') _checkSingleRowDuplicate(i);
   _applyRowStyle(i);
-  _rerenderIfGrouped();
 
   const bulkOn = document.getElementById('bulk-update-toggle')?.checked;
   if (bulkOn && State.importRows[i]._selected) {
@@ -645,6 +650,7 @@ function onRowFieldChange(i, field, value) {
       _applyRowStyle(j);
     });
   }
+  _rerenderIfGrouped();
 }
 
 function _syncRowDOM(j, field, value) {
@@ -2051,6 +2057,52 @@ async function submitAddCategory() {
   }
 }
 
+function openNewCategoryModal(rowIdx) {
+  const modal = document.getElementById('modal-new-cat');
+  modal.dataset.rowIndex = rowIdx;
+  document.getElementById('new-cat-bucket').value = 'expense';
+  document.getElementById('new-cat-label').value  = '';
+  document.getElementById('new-cat-value').value  = '';
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('new-cat-label').focus(), 50);
+}
+
+function closeNewCategoryModal() {
+  document.getElementById('modal-new-cat').style.display = 'none';
+}
+
+function _newCatCodeAutoFill() {
+  const label  = document.getElementById('new-cat-label').value.trim();
+  const codeEl = document.getElementById('new-cat-value');
+  if (!label || codeEl.value.trim()) return;
+  const slug   = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const suffix = Math.random().toString(36).slice(2, 5);
+  codeEl.value = `${slug}_${suffix}`;
+}
+
+async function submitNewCategoryFromImport() {
+  const type_bucket = document.getElementById('new-cat-bucket').value;
+  const label       = document.getElementById('new-cat-label').value.trim();
+  const value       = document.getElementById('new-cat-value').value.trim().toLowerCase();
+
+  if (!label) { toast('Label is required', 'error'); return; }
+  if (!value) { toast('Code is required', 'error'); return; }
+
+  const modal  = document.getElementById('modal-new-cat');
+  const rowIdx = parseInt(modal.dataset.rowIndex, 10);
+
+  try {
+    await Api.createTransactionCategory({ type_bucket, value, label });
+    modal.style.display = 'none';
+    State.transactionCategories = await Api.getTransactionCategories();
+    onRowFieldChange(rowIdx, 'category', value);
+    renderImportTable();
+    toast('Category added', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
 function openEditCategoryForm(id, currentLabel, code) {
   document.getElementById('edit-cat-id').value      = id;
   document.getElementById('edit-cat-label').value   = currentLabel;
@@ -2147,4 +2199,5 @@ Object.assign(window, {
   toggleAddCategoryForm, submitAddCategory, deleteCategoryItem,
   onCatLabelBlur, toggleCategoryActive,
   openEditCategoryForm, submitEditCategory, closeEditCategoryForm,
+  openNewCategoryModal, closeNewCategoryModal, _newCatCodeAutoFill, submitNewCategoryFromImport,
 });

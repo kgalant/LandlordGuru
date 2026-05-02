@@ -372,6 +372,17 @@ A separate "Float selected" toggle button in the same toolbar. When active, all 
 
 ---
 
+### F5-14 Create category inline from import preview `[MVP]`
+**Status:** Done
+
+A "＋ New category…" option at the bottom of every category dropdown in the import preview table. Selecting it opens a small modal (label, type, auto-derived code). On save the category is created via `POST /api/workspace/enums/transaction-categories`, `State.transactionCategories` is refreshed, and the new category is applied to the triggering row (and to all bulk-selected rows if bulk-update mode is on). All category dropdowns in the table are rebuilt so the new option is immediately available everywhere.
+
+**Scope:** `frontend/index.html` (new `modal-new-cat`), `frontend/js/app.js` (`openNewCategoryModal`, `closeNewCategoryModal`, `_newCatCodeAutoFill`, `submitNewCategoryFromImport`; intercept in `onRowFieldChange`), `frontend/js/importer.js` (`buildCategoryOptions` gains `__new__` sentinel option). No backend changes.
+
+**Dependencies:** F5-5 (import preview host).
+
+---
+
 ### F5-8 Direct bank connection `[Future]`
 **Status:** Future
 
