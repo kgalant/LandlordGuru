@@ -207,6 +207,14 @@
                 <input type="checkbox" id="select-same-desc-toggle">
                 <span data-i18n="import.selectSameDesc"></span>
               </label>
+              <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+                <input type="checkbox" id="import-group-toggle" onchange="renderImportTable()">
+                <span data-i18n="import.groupToggle"></span>
+              </label>
+              <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+                <input type="checkbox" id="import-float-toggle" onchange="renderImportTable()">
+                <span data-i18n="import.floatToggle"></span>
+              </label>
               <button class="btn btn-primary" onclick="goToStaticPreview()" data-i18n="import.nextReview"></button>
               <button class="btn btn-secondary btn-sm" onclick="clearImport()" data-i18n="common.cancel"></button>
             </div>

@@ -150,6 +150,16 @@ export const I18n = (() => {
         reviewNote:     'Review and adjust categories, properties, and notes. Enable bulk-update to apply changes to all selected rows at once.',
         bulkUpdate:     'Update all selected with same value',
         selectSameDesc: 'Select all with same description',
+        groupToggle:    'Group by status',
+        floatToggle:    'Float selected',
+        sections: {
+          unreviewed:  'Unreviewed',
+          autoMatched: 'Auto-matched',
+          reviewed:    'Reviewed',
+          duplicate:   'Duplicate',
+          ignored:     'Ignored',
+          selected:    'Selected',
+        },
         nextReview:     'Next: Review →',
         mapping: {
           title:           'Column mapping',

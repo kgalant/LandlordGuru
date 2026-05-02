@@ -587,10 +587,12 @@ function toggleSelectAll(headerCb) {
     const cb = document.getElementById('row-sel-' + i);
     if (cb) cb.checked = checked;
   });
+  _rerenderIfGrouped();
 }
 
 function onRowSelect(i) {
-  const checked = document.getElementById('row-sel-' + i).checked;
+  const checked = document.getElementById('row-sel-' + i)?.checked;
+  if (checked === undefined) return;
   State.importRows[i]._selected = checked;
 
   // If "select same description" is on and the row is being checked, auto-select all rows
@@ -611,6 +613,7 @@ function onRowSelect(i) {
   const all = State.importRows.length > 0 && State.importRows.every(r => r._selected);
   const hdr = document.getElementById('select-all-cb');
   if (hdr) hdr.checked = all;
+  _rerenderIfGrouped();
 }
 
 // ── Bulk field change ─────────────────────────────────────
@@ -622,9 +625,11 @@ function onRowFieldChange(i, field, value) {
     State.importRows[i]._userPickedCategory = true;
   }
   if (field === '_storeMapping' && value) State.importRows[i]._userPickedCategory = true;
-  if (field === '_ignored') State.importRows[i]._userPickedIgnore = true;
+  if (field === '_ignored')     State.importRows[i]._userPickedIgnore = true;
+  if (field === 'property_id') State.importRows[i]._userPickedProperty = true;
   if (field === 'property_id' || field === 'description') _checkSingleRowDuplicate(i);
   _applyRowStyle(i);
+  _rerenderIfGrouped();
 
   const bulkOn = document.getElementById('bulk-update-toggle')?.checked;
   if (bulkOn && State.importRows[i]._selected) {
@@ -673,6 +678,90 @@ function _applyRowStyle(i) {
   }
 }
 
+function _buildRowHtml(row, i) {
+  const propOpts  = State.properties.map(p =>
+    `<option value="${p.id}"${p.id === row.property_id ? ' selected' : ''}>${p.name}</option>`
+  ).join('');
+  const catOpts   = Importer.buildCategoryOptions(row.category, State.transactionCategories);
+  const warnClass = (!row._autoMatched && !row._descMappingMatched) ? 'preview-row-warn' : '';
+  const dupClass  = row._isDuplicate ? ' preview-row-dup' : '';
+  const ignClass  = row._ignored     ? ' preview-row-ignored' : '';
+  const amtSign   = row.type === 'expense' ? '-' : '';
+  const amtCls    = row.type === 'expense' ? 'negative' : 'positive';
+  return `<tr data-row="${i}" class="${warnClass}${dupClass}${ignClass}">
+    <td style="text-align:center"><input type="checkbox" id="row-sel-${i}" onchange="onRowSelect(${i})"${row._selected ? ' checked' : ''}></td>
+    <td>${row.date}</td>
+    <td style="max-width:160px;font-size:12px">${row.description}</td>
+    <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"><option value="">—</option>${propOpts}</select></td>
+    <td><span id="row-tags-${i}">${_buildMatchTag(row)}</span><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)">${catOpts}</select></td>
+    <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : ''}" placeholder="notes…" value="${escHtml(row.notes || '')}" oninput="onRowFieldChange(${i},'notes',this.value)"></td>
+    <td class="amount-cell ${amtCls}">${amtSign}${row.amount.toLocaleString()} ${_importCurrency}</td>
+    <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"${row._ignored ? ' checked' : ''}></td>
+    <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"${row._storeMapping ? ' checked' : ''}></td>
+  </tr>`;
+}
+
+function _rowSection(row) {
+  if (row._isDuplicate)                                  return 4;
+  if (row._ignored)                                      return 5;
+  if (row._userPickedCategory || row._userPickedProperty) return 3;
+  if (row._autoMatched || row._descMappingMatched)        return 2;
+  return 1;
+}
+
+function renderImportTable() {
+  const tbody   = document.getElementById('import-preview-body');
+  if (!tbody || !State.importRows.length) return;
+  const groupOn = document.getElementById('import-group-toggle')?.checked;
+  const floatOn = document.getElementById('import-float-toggle')?.checked;
+
+  const indexed = State.importRows.map((row, i) => ({ row, i }));
+  let html = '';
+
+  if (floatOn) {
+    const sel = indexed.filter(({ row }) => row._selected);
+    if (sel.length) {
+      html += `<tr class="import-section-hdr"><td colspan="9"><span class="chevron">▼</span> ${t('import.sections.selected')} (${sel.length})</td></tr>`;
+      sel.forEach(({ row, i }) => { html += _buildRowHtml(row, i); });
+    }
+  }
+
+  const rest = floatOn ? indexed.filter(({ row }) => !row._selected) : indexed;
+
+  if (groupOn) {
+    const SECTIONS = [
+      { id: 1, key: 'unreviewed'  },
+      { id: 2, key: 'autoMatched' },
+      { id: 3, key: 'reviewed'    },
+      { id: 4, key: 'duplicate'   },
+      { id: 5, key: 'ignored'     },
+    ];
+    for (const sec of SECTIONS) {
+      const rows = rest.filter(({ row }) => _rowSection(row) === sec.id);
+      if (!rows.length) continue;
+      const collapsed = _groupCollapsed[sec.id];
+      const chevron   = collapsed ? '▶' : '▼';
+      html += `<tr class="import-section-hdr" onclick="toggleImportSection(${sec.id})"><td colspan="9"><span class="chevron">${chevron}</span> ${t('import.sections.' + sec.key)} (${rows.length})</td></tr>`;
+      if (!collapsed) rows.forEach(({ row, i }) => { html += _buildRowHtml(row, i); });
+    }
+  } else {
+    rest.forEach(({ row, i }) => { html += _buildRowHtml(row, i); });
+  }
+
+  tbody.innerHTML = html;
+}
+
+function toggleImportSection(id) {
+  _groupCollapsed[id] = !_groupCollapsed[id];
+  renderImportTable();
+}
+
+function _rerenderIfGrouped() {
+  const groupOn = document.getElementById('import-group-toggle')?.checked;
+  const floatOn = document.getElementById('import-float-toggle')?.checked;
+  if (groupOn || floatOn) renderImportTable();
+}
+
 function _applyDupResult(i, match) {
   const row = State.importRows[i];
   const wasDup = row._isDuplicate;
@@ -694,6 +783,7 @@ function _applyDupResult(i, match) {
   if (tagsEl) tagsEl.innerHTML = _buildMatchTag(row);
 
   _applyRowStyle(i);
+  _rerenderIfGrouped();
 }
 
 async function _batchCheckDuplicates() {
@@ -740,7 +830,9 @@ async function _checkSingleRowDuplicate(i) {
 
 // ── Import file / paste toggle ────────────────────────────
 
-let _importCSVText = '';   // holds text loaded from a file
+let _importCSVText  = '';   // holds text loaded from a file
+let _importCurrency = '';   // currency label shown in amount column
+let _groupCollapsed = { 1: false, 2: false, 3: false, 4: false, 5: false };
 
 function _updatePreviewBtnState() {
   const hasData = !!_importCSVText || !!(document.getElementById('import-csv')?.value.trim());
@@ -975,31 +1067,19 @@ async function runImportPreview() {
   applyDescMappings(result.rows, profileKey);
 
   // Initialise per-row UI flags
-  State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _storeMapping: false, _userPickedCategory: false, _isDuplicate: false, _duplicateMatch: null, _userPickedIgnore: false }));
+  State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _storeMapping: false, _userPickedCategory: false, _userPickedProperty: false, _isDuplicate: false, _duplicateMatch: null, _userPickedIgnore: false }));
+
+  _importCurrency = result.currency || '';
+  _groupCollapsed = { 1: false, 2: false, 3: false, 4: false, 5: false };
+  const groupToggle = document.getElementById('import-group-toggle');
+  const floatToggle = document.getElementById('import-float-toggle');
+  if (groupToggle) groupToggle.checked = false;
+  if (floatToggle) floatToggle.checked = false;
 
   document.getElementById('import-preview-title').textContent =
     `Preview — ${result.rows.length} rows from ${result.profileLabel}`;
 
-  document.getElementById('import-preview-body').innerHTML = State.importRows.map((row, i) => {
-    const propOpts = State.properties.map(p =>
-      `<option value="${p.id}"${p.id === row.property_id ? ' selected' : ''}>${p.name}</option>`
-    ).join('');
-    const catOpts = Importer.buildCategoryOptions(row.category, State.transactionCategories);
-    const warnClass = (!row._autoMatched && !row._descMappingMatched) ? 'preview-row-warn' : '';
-    const amtSign   = row.type === 'expense' ? '-' : '';
-    const amtCls    = row.type === 'expense' ? 'negative' : 'positive';
-    return `<tr data-row="${i}" class="${warnClass}">
-      <td style="text-align:center"><input type="checkbox" id="row-sel-${i}" onchange="onRowSelect(${i})"></td>
-      <td>${row.date}</td>
-      <td style="max-width:160px;font-size:12px">${row.description}</td>
-      <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"><option value="">—</option>${propOpts}</select></td>
-      <td><span id="row-tags-${i}">${_buildMatchTag(row)}</span><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)">${catOpts}</select></td>
-      <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : ''}" placeholder="notes…" value="${row.notes || ''}" oninput="onRowFieldChange(${i},'notes',this.value)"></td>
-      <td class="amount-cell ${amtCls}">${amtSign}${row.amount.toLocaleString()} ${result.currency || ''}</td>
-      <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"></td>
-      <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"></td>
-    </tr>`;
-  }).join('');
+  renderImportTable();
 
   const errDiv = document.getElementById('import-errors');
   if (result.errors.length) {
@@ -2054,7 +2134,7 @@ Object.assign(window, {
   openTxModal, closeTxModal, saveTxModal, deleteTxModal, onCategoryChange,
   deleteTxWithConfirm,
   onProfileChange, onImportFileChange, onImportDragOver, onImportDragLeave, onImportDrop,
-  toggleImportPaste, clearImport, runImportPreview, _updatePreviewBtnState,
+  toggleImportPaste, clearImport, runImportPreview, renderImportTable, toggleImportSection, _updatePreviewBtnState,
   toggleSelectAll, onRowSelect, onRowFieldChange,
   refreshSavedMappingsDropdown, loadSavedMapping, saveCurrentMapping, deleteSavedMapping,
   goToStaticPreview, backToEditPreview, goToMappingConfirmOrImport, backToStaticPreview,
