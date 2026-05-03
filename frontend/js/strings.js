@@ -87,6 +87,7 @@ export const I18n = (() => {
         footerPaged:  'Transactions {from} to {to} out of {total} · Income: {income} · Expenses: {expenses}',
         filter: {
           allProperties:  'All properties',
+          allYears:       'All years',
           allTypes:       'All types',
           allCats:        'All categories',
           unreconciled:   'Unreconciled only',

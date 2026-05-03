@@ -305,6 +305,17 @@ function initTxTable() {
         filter: { type: 'date-range', placeholder: State.workspaceSettings?.date_format || 'YYYY-MM-DD' },
       },
       {
+        key: 'year', filterOnly: true,
+        filter: {
+          type: 'select',
+          placeholder: t('tx.filter.allYears'),
+          options: () => {
+            const years = [...new Set(State.transactions.map(tx => tx.date.slice(0, 4)))].sort().reverse();
+            return years.map(y => ({ value: y, label: y }));
+          },
+        },
+      },
+      {
         key: 'type', label: t('tx.col.type'), sortable: true,defaultVisible: true,
         filter: {
           type: 'select',
@@ -352,8 +363,12 @@ function initTxTable() {
       if (params.property)    filters.property_id = params.property;
       if (params.type)        filters.type        = params.type;
       if (params.category)    filters.category    = params.category;
-      const dateFrom = parseDateToISO(params['date-from'] || '');
-      const dateTo   = parseDateToISO(params['date-to']   || '');
+      const explicitFrom = parseDateToISO(params['date-from'] || '');
+      const explicitTo   = parseDateToISO(params['date-to']   || '');
+      const yearFrom     = params.year ? `${params.year}-01-01` : '';
+      const yearTo       = params.year ? `${params.year}-12-31` : '';
+      const dateFrom     = explicitFrom || yearFrom;
+      const dateTo       = explicitTo   || yearTo;
       if (dateFrom) filters.from = dateFrom;
       if (dateTo)   filters.to   = dateTo;
       if (params.description)  filters.search      = params.description;

@@ -242,7 +242,7 @@ Edit any field on a transaction via a modal, and preserve the original import va
 ---
 
 ### F3-11 Year quick-select in transaction list filter `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Add a year dropdown to the transaction filter bar, mirroring the equivalent control in the reports view (F4-9).
 

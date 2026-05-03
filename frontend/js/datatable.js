@@ -52,10 +52,14 @@ const DataTable = (() => {
       if (cv.enabled && cv.storageKey) {
         const stored = _loadStorage(cv.storageKey);
         cols.forEach(c => {
+          if (c.filterOnly) return;
           vis[c.key] = stored ? (stored[c.key] !== false) : (c.defaultVisible !== false);
         });
       } else {
-        cols.forEach(c => { vis[c.key] = c.defaultVisible !== false; });
+        cols.forEach(c => {
+          if (c.filterOnly) return;
+          vis[c.key] = c.defaultVisible !== false;
+        });
       }
       return vis;
     }
@@ -101,7 +105,10 @@ const DataTable = (() => {
 
     function _buildColGroup(cols, hasBulk) {
       let html = hasBulk ? '<col style="width:2rem">' : '';
-      cols.forEach(c => { html += c.width ? `<col style="width:${c.width}">` : '<col>'; });
+      cols.forEach(c => {
+        if (c.filterOnly) return;
+        html += c.width ? `<col style="width:${c.width}">` : '<col>';
+      });
       return `<colgroup>${html}</colgroup>`;
     }
 
@@ -190,6 +197,7 @@ const DataTable = (() => {
         : '';
 
       columns.forEach(c => {
+        if (c.filterOnly) return;
         const hidden  = visibleCols[c.key] === false ? ' class="dt-col-hidden"' : '';
         const sortable = c.sortable !== false;
         const sortCls = sortable ? ' dt-sortable' : '';
