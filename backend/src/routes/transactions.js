@@ -372,7 +372,6 @@ router.get('/import/history', requireAuth, async (req, res) => {
       .select(
         't.import_batch',
         db.raw("MIN(t.source) as source"),
-        db.raw("MIN(t.created_by) as created_by"),
         db.raw('COUNT(DISTINCT t.id) as row_count'),
         db.raw('MIN(t.created_at) as imported_at'),
         db.raw("STRING_AGG(DISTINCT p.name, ', ' ORDER BY p.name) as properties"),

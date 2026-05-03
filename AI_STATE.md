@@ -139,3 +139,17 @@ Commit the undo import history GROUP BY fix.
   - git_status:
      M AI_STATE.md
     ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 15:13:10 [Stop]
+  - branch: main
+  - last_commit: 22ecb1b fix: import history — group only by import_batch so mixed-source batches aren't split into multiple rows
+  - git_status:
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 15:14:36 [Stop]
+  - branch: main
+  - last_commit: 22ecb1b fix: import history — group only by import_batch so mixed-source batches aren't split into multiple rows
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? .claude/hooks/checkpoint.sh
