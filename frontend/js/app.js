@@ -1526,7 +1526,18 @@ async function doImport(saveMappings) {
     clearImport();
     await Promise.all([refreshAll(), loadImportHistory(true)]);
   } catch(e) {
-    toast(t('import.toast.failed', { error: e.message }), 'error');
+    let errMsg = e.message;
+    if (e.rowErrors) {
+      errMsg = e.rowErrors.map(re => {
+        const row = toSave[re.row];
+        const id = row
+          ? `${fmtDate(row.date)}, ${parseFloat(row.amount).toLocaleString()} ${row.currency || ''}${row.description ? ` "${row.description.slice(0, 30)}"` : ''}`
+          : `row ${re.row + 1}`;
+        const errs = Array.isArray(re.errors) ? re.errors.join(', ') : re.errors;
+        return `${id}: ${errs}`;
+      }).join('\n');
+    }
+    toast(t('import.toast.failed', { error: errMsg }), 'error');
   }
   setLoading(false);
 }
@@ -2407,7 +2418,8 @@ function toast(msg, type = 'info') {
   el.className = `toast toast-${type}`;
   el.textContent = msg;
   document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 4000);
+  const ms = msg.includes('\n') ? 8000 : 4000;
+  setTimeout(() => el.remove(), ms);
 }
 
 // ── Loading ───────────────────────────────────────────────
