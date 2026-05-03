@@ -132,15 +132,6 @@ describe('POST /api/description-mappings', () => {
     expect(res.body.error).toMatch(/category/);
   });
 
-  it('returns 400 for invalid category', async () => {
-    const res = await request(app)
-      .post('/api/description-mappings')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ ...VALID_MAPPING, category: 'not_a_category' });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/category/);
-  });
 
   it('returns 400 for property_id not in workspace', async () => {
     const res = await request(app)

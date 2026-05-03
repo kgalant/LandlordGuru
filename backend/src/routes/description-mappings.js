@@ -4,14 +4,6 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const VALID_CATEGORIES = [
-  'rent', 'heating_aconto', 'heating_settlement',
-  'maintenance_repair', 'property_tax', 'insurance', 'utilities',
-  'management_fee', 'advertising', 'professional_fees', 'bank_charges', 'other_expense',
-  'deposit_received', 'deposit_returned',
-  'inter_account',
-];
-
 function validateBody(body, requireAll) {
   const errors = [];
 
@@ -22,8 +14,8 @@ function validateBody(body, requireAll) {
   }
 
   if (requireAll || body.category !== undefined) {
-    if (!body.category || !VALID_CATEGORIES.includes(body.category)) {
-      errors.push(`category must be one of: ${VALID_CATEGORIES.join(', ')}`);
+    if (!body.category || typeof body.category !== 'string' || !body.category.trim()) {
+      errors.push('category is required and must be a non-empty string');
     }
   }
 
