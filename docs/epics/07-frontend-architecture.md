@@ -69,12 +69,15 @@ DataTable.create({
   defaultVisible: true,
   width:          '6rem', // optional: passed to <colgroup> <col> for fixed-width columns
   filter: {
-    type:        'select',           // 'select' | 'text' | 'date-range' | 'toggle'
+    type:        'select',           // 'select' | 'text' | 'date-range' | 'toggle' | 'multi-select' (F3-15)
     placeholder: 'All categories',
     options:     () => State.categories,  // array or function → array
   },
 }
 ```
+
+**Planned extension — `multi-select` filter type (F3-15):**
+When `filter.type` is `'multi-select'`, the filter renders as a dropdown with one checkbox per option. The selected values are passed as an array in `fetchData` params. Hiding the column clears the multi-select value, same as `'select'`. Not yet implemented — tracked in F3-15.
 
 **Column alignment:** The component generates a matching `<colgroup>` for both the header table and body table. Columns with an explicit `width` get a fixed `<col style="width:...">` ; columns without one share the remaining space equally. This ensures `table-layout: fixed` distributes columns identically in both tables regardless of cell content.
 

@@ -259,6 +259,222 @@ Add a year dropdown to the transaction filter bar, mirroring the equivalent cont
 
 ---
 
+### F3-13 Group-by in transaction list `[MVP]`
+**Status:** Backlog
+
+Add a "Group by" dropdown to the transaction list toolbar, allowing the user to group rows by up to two column dimensions (e.g. Property → Category). Groups are collapsible and show summed currency values.
+
+**Acceptance criteria:**
+
+**Dropdown UI:**
+- A "Group by" button/dropdown sits in the toolbar alongside the Columns ⚙ control
+- The dropdown lists groupable columns: Property, Type, Category, Account
+- The user selects up to 2 columns; selected columns appear as ordered chips (e.g. "Property → Category")
+- Selecting the same column twice is disallowed
+- Clearing all selections returns to the flat list
+
+**Grouped table layout:**
+- When one level is active: rows are grouped under a group header row showing the group value and row count (e.g. "Elm Street (12 transactions)")
+- When two levels are active: first-level group headers contain second-level group headers, which in turn contain data rows
+- Group header rows span the full table width; they are visually distinct from data rows
+
+**Collapsing:**
+- Clicking a group header row toggles that group collapsed/expanded
+- Collapsed state is local to the session (not persisted)
+- All groups start expanded
+
+**Empty groups:**
+- Groups with no transactions (after active filters applied) are not rendered at all
+
+**Currency sums:**
+- The Amount column in each group header row shows the sum of all transaction amounts within that group
+- At two levels deep, the inner group shows its own sum; the outer group shows the total across all inner groups
+
+**Interaction with filters:**
+- Group-by respects all active filter controls; only filtered-in transactions contribute to groups
+- When a grouping column is hidden (F3-12 column management), it is removed from the Group by selection and the grouping re-renders
+
+**Dependencies:** F3-2 (list host), F7-1 (DataTable — may need internal extension for group-row rendering)
+
+---
+
+### F3-14 Year filter multi-select with contiguous validation `[Post-MVP]`
+**Status:** Backlog  
+**Supersedes:** F3-11 (year quick-select, single-select — now extended to multi-select)
+
+Upgrade the year dropdown from single-select to multi-select. Multiple years pre-fill the date range spanning the selected years. Non-contiguous selections are rejected with a toast.
+
+**Acceptance criteria:**
+- Year dropdown renders as a multi-select (checkboxes per year option)
+- Selecting multiple contiguous years (e.g. 2024 + 2025) sets `from=2024-01-01, to=2025-12-31`
+- On each toggle, the resulting selection is checked for contiguity: if any year in the gap between min and max is not selected, the toggle is reverted and a toast is shown: "Years selected must be contiguous"
+- "All years" (blank / clear all) remains available
+- When a date-range filter is also active, date-range takes precedence over the year selection (consistent with F3-11)
+- Pagination resets to page 1 on any change (consistent with F3-9)
+
+**Dependencies:** F3-2 (filter bar host), F3-11 (prior implementation to replace)
+
+---
+
+### F3-15 Multi-select filters for Property, Category, and Type `[Post-MVP]`
+**Status:** Backlog
+
+Upgrade the Property, Category, and Type filter controls from single-select to multi-select dropdowns. Requires a new `multi-select` filter type in the DataTable component (F7-1 extension) and backend API changes to accept multiple values.
+
+**Acceptance criteria:**
+
+**UI:**
+- Property, Category, and Type filter controls become multi-select dropdowns (checkbox list per control)
+- When one or more values are selected, the control shows a compact label, e.g. "Type (2)" or "Maintenance, Utilities"
+- Empty selection = no filter applied (same as current "All" behaviour)
+- "Select all" / "Clear all" shortcuts in each dropdown
+
+**Backend changes:**
+- `GET /api/transactions` accepts multi-value params for `type`, `category`, and `property_id`
+  - Accepted as repeated params (`?type=income&type=expense`) or comma-separated (`?type=income,expense`)
+  - When multiple values given, `WHERE type = ANY(...)` (or equivalent)
+- Existing single-value usage remains backward-compatible
+
+**DataTable extension (F7-1):**
+- New filter type `'multi-select'` in the column definition `filter.type` field
+- Renders as a dropdown with one checkbox per option
+- Passes selected values as an array through `fetchData` params
+- When column is hidden, multi-select value clears (same as existing single-select behaviour)
+
+**Interaction with group-by (F3-13):**
+- Group-by respects multi-select filters; groups only contain filtered-in transactions
+
+**Dependencies:** F3-1 (API), F3-2 (filter bar host), F7-1 (DataTable multi-select extension)
+
+---
+
+### F3-16 Filter description tooltip `[Post-MVP]`
+**Status:** Backlog
+
+Display a concise verbal summary of the active filter state as a tooltip/popover, so users can quickly understand what is being shown without reading each individual control.
+
+**Acceptance criteria:**
+- A small info badge (ⓘ) appears in the filter bar when at least one filter has a non-default value
+- The badge is hidden when no filters are active
+- Hovering the badge shows a tooltip/popover with a natural-language summary of all active filters, e.g.:
+  > Showing transactions for Properties: Elm St, Oak Ave · Date: 1 Jan – 31 Dec 2025 · Type: Expense · Categories: Maintenance, Utilities
+- Only filters with active (non-empty) values are included in the summary
+- The tooltip reads from live DataTable filter state — no API call; updates as filters change
+- The tooltip dismisses on mouse-out
+
+**Dependencies:** F3-2 (filter bar host), F7-1 (DataTable filter state access)
+
+---
+
+### F3-17 Transaction splitting `[MVP]`
+**Status:** Backlog
+
+Allow a single bank transaction (e.g. a combined rent + utilities payment) to be split into two or more child transactions with individual types, categories, and amounts. The children replace the parent in all reporting and aggregation; the parent is retained as a permanent reference to the original bank entry. No double-counting is possible by design.
+
+**Data model:**
+
+- New nullable column on `transactions`: `parent_transaction_id` (FK → `transactions.id`, `ON DELETE CASCADE`)
+- Constraint: `parent_transaction_id` must be `NULL` if the transaction already has children (max depth = 1; children cannot themselves be split)
+- Constraint: the sum of all direct children's `amount` values must equal the parent's `amount`; same `currency` required
+- Children inherit `date`, `account_id`, `property` (via account), `import_batch`, `currency`, and `source` from the parent; they can have independent `type`, `category`, `description`, `notes`, and `amount`
+
+**Aggregation and reporting rule:**
+
+> A transaction is a **split parent** if any row exists with `parent_transaction_id = that transaction's id`.  
+> All aggregations (footer totals, P&L reports, group-by sums) must **exclude split parents** and **include children**.
+
+The query pattern for all aggregate reads:
+```sql
+WHERE id NOT IN (
+  SELECT DISTINCT parent_transaction_id
+  FROM transactions
+  WHERE parent_transaction_id IS NOT NULL
+    AND workspace_id = $workspace_id
+)
+```
+This naturally handles the normal case (no children → not excluded) and the split case (children exist → parent excluded).
+
+**Transaction list display:**
+- Split parents remain visible in the list with a "Split" badge in the description column
+- Their amounts are visually muted (grey) to signal they are not counted
+- Each child appears as its own row in the list with its own type/category/amount
+- Children optionally show a subtle "↳" or "part of" indicator linking back to the parent
+- The footer total and all aggregations follow the rule above (parent excluded when children exist)
+
+**Transaction edit modal — split UI:**
+- In the edit modal for any transaction that has no parent, a "Split transaction" button is available at the bottom
+- Clicking it expands an inline split editor showing:
+  - The **total** (fixed; same as parent amount — cannot be changed while splits exist)
+  - A rows table: each row has `type`, `category`, `description`, `amount`; pre-populated with one row matching the parent
+  - An "Add row" button adds a new blank split row
+  - A running **remaining** counter shows `total − sum(rows so far)`; turns red if non-zero
+  - A "Fill remaining" shortcut on the last row sets its amount to the remaining balance
+  - A "Remove splits" action deletes all children and returns the parent to leaf status (with a confirmation prompt)
+- The modal **Save** button is disabled (and shows a tooltip) until all split rows sum exactly to the parent amount
+- Saving calls a new endpoint (see below) to replace any existing children atomically
+
+**API changes:**
+- `PUT /api/transactions/:id/splits` — body: array of `{ type, category, description, amount, notes? }`
+  - Validates: all amounts positive, sum === parent amount, same currency, parent not itself a child
+  - Atomically deletes all existing children then inserts the new set
+  - Returns the parent and new children
+- `DELETE /api/transactions/:id/splits` — removes all children, reverting parent to leaf status
+- `GET /api/transactions` and `GET /api/transactions/:id` responses include `split_count: N` (0 for non-split parents and all children) and `parent_transaction_id` for children
+- All existing aggregation endpoints (`GET /api/reports/*`, transaction footer totals) apply the exclusion rule
+
+**Schema change:** New migration adding `parent_transaction_id` (nullable FK with `ON DELETE CASCADE`) to the `transactions` table.
+
+**Bulk-apply to similar transactions:**
+- After saving a split, a secondary action appears: "Apply this split to similar transactions"
+- "Similar" is defined as: same `account_id` AND same `amount` AND `parent_transaction_id IS NULL` (not already split)
+- The user is shown a preview list of all matching unsplit transactions (date, description, count)
+- Confirming applies the same split template to all of them atomically (one `PUT /api/transactions/:id/splits` call per match, or a batch endpoint)
+- Individual transactions can be deselected from the preview before confirming
+
+**Non-goals (out of scope):**
+- Multi-level splitting (children splitting further)
+- Partial splits (children summing to less than parent) — not permitted
+- Splitting an already-split child (not permitted)
+
+**Dependencies:** F3-1 (PATCH endpoint), F3-2 (list UI), F3-10 (edit modal host)
+
+---
+
+### F3-18 Split rules (auto-split at import) `[MVP]`
+**Status:** Backlog
+
+Allow users to define split rules that automatically split matching transactions during import. A split rule is a combination of match conditions (same pattern as categorisation rules in F5-3) and a reusable split template (the child allocations). When an imported transaction matches a rule, it is immediately split without manual intervention.
+
+**Data model:**
+
+- `split_rules` table: `id`, `workspace_id`, `name` (user label), `enabled` (boolean), `conditions` (JSONB), `template` (JSONB), `created_at`, `created_by`
+- `conditions`: array of `{ field, operator, value }` — same schema as F6-4 tagging rules; AND logic within a rule
+  - Available fields: `account_id` (equals), `amount` (equals / greater_than / less_than), `description` (contains / equals)
+- `template`: array of `{ type, category, description, amount_type, amount_value }`
+  - `amount_type`: `'fixed'` (absolute amount in parent currency) or `'percent'` (percentage of parent)
+  - Within a single rule all template rows must use the same `amount_type`
+  - Validation at save time: fixed rows must sum to the expected parent amount (only enforceable at runtime for variable-amount parents using percent mode); percent rows must sum to exactly 100
+- `split_rules` are workspace-scoped, ordered by `created_at` (first matching rule wins)
+
+**Split rule UI:**
+- Managed in a dedicated section (alongside or adjacent to the categorisation rules table in F5-3)
+- Create/edit form: name, condition builder (field + operator + value rows), split template rows (type + category + description + amount_type/value), enable/disable toggle
+- Fixed-amount vs. percent-amount mode is selected once per rule; all template rows follow the same mode
+
+**Import pipeline integration:**
+- Split rule evaluation runs after categorisation rules (F5-3) have been applied to each row
+- For each row, the first matching enabled split rule is applied: the row's `amount` is used to compute child amounts (for `'fixed'` rules this is a direct copy; for `'percent'` rules each child amount = `parent_amount × percent / 100`, rounded to 2 decimal places with any rounding remainder added to the last child)
+- If a split rule matches, the imported transaction is saved as a split parent with its children; the import preview shows these rows with a "Auto-split" badge
+- If no split rule matches, the transaction imports as a single leaf transaction (normal behaviour)
+
+**Retroactive application:**
+- A "Apply rules to existing transactions" action (like the equivalent in F5-3) re-evaluates split rules against all unsplit leaf transactions in the workspace
+- User can preview matches before confirming
+
+**Dependencies:** F3-17 (split data model and `PUT /api/transactions/:id/splits` endpoint), F5-3 (import rules pipeline — split rule evaluation runs in the same pass)
+
+---
+
 ### F3-7 Tenant linking on transactions `[Future]`
 **Status:** Future
 
@@ -299,6 +515,8 @@ Optionally associate a transaction with a specific tenant (when tenant tracking 
 - Auth middleware (M3)
 - Properties API (F2-1) — needed to associate transactions with properties
 - CSV import pipeline (F5-1) feeds into F3-4
+- F3-15 (multi-select filters) requires a DataTable extension — see F7-1 in `07-frontend-architecture.md`
+- F3-15 and F6-5 (tag filter) are complementary multi-select upgrades; implement together if practical
 
 ## Notes
 - The frontend's `js/importer.js` contains the existing CSV parsing logic. It will stay client-side (parsing step only), with the resulting row array sent to `POST /api/transactions/import`.
