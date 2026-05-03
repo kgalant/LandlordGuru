@@ -115,7 +115,7 @@ Allow users to undo an entire import batch.
 ---
 
 ### F3-6 Reconciliation marking `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Let users mark transactions as verified against a bank statement.
 

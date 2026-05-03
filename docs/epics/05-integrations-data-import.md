@@ -126,7 +126,7 @@ Show the user all parsed rows with their proposed category and property before c
 ---
 
 ### F5-6 Import history `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 View and roll back previous import batches.
 

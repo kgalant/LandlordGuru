@@ -159,9 +159,10 @@ const DataTable = (() => {
         </div>`;
       }
       if (f.type === 'date-range') {
+        const ph = f.placeholder || '';
         return `<div class="dt-filter-control" data-col="${col.key}">
-          <input type="date" data-filter-key="${col.key}-from">
-          <input type="date" data-filter-key="${col.key}-to">
+          <input type="text" data-filter-key="${col.key}-from" placeholder="${ph}">
+          <input type="text" data-filter-key="${col.key}-to" placeholder="${ph}">
         </div>`;
       }
       if (f.type === 'toggle') {

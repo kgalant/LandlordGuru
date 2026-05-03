@@ -408,6 +408,9 @@ textarea { resize: vertical; min-height: 70px; }
 }
 .dup-badge:hover .dup-badge-tip { display: block; }
 .preview-row-locked td { background: var(--bg2) !important; }
+.tx-reconciled { opacity: 0.6; }
+.btn-reconcile { background: none; border: none; padding: 0 4px; cursor: pointer; font-size: 14px; color: var(--text3); }
+.btn-reconcile.is-reconciled { color: var(--success, #2a7a2a); }
 .preview-row-locked td:nth-child(2) { border-left: none !important; }
 .import-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .import-sortable:hover { background: var(--bg3); }

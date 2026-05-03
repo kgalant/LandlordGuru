@@ -403,7 +403,7 @@ Infrastructure for persisting per-user, per-view column visibility and layout pr
 ---
 
 ### F1-12 Date display format preference `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Allow users to choose how dates are displayed throughout the app. The setting is stored per workspace and applies to all date fields in the UI.
 

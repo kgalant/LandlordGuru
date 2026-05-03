@@ -24,14 +24,32 @@ let State = {
   importRows:           [],
 };
 
-// Formats an ISO timestamp to YYYY-MM-DD HH:MM (24h, non-locale-dependent).
-// Used for all timestamp displays until F1-12 (date format preference) ships.
+function fmtDate(isoStr) {
+  if (!isoStr) return '—';
+  const s = String(isoStr).slice(0, 10);
+  const fmt = State.workspaceSettings?.date_format || 'YYYY-MM-DD';
+  const [y, m, d] = s.split('-');
+  if (fmt === 'MM-DD-YYYY') return `${m}-${d}-${y}`;
+  if (fmt === 'DD-MM-YYYY') return `${d}-${m}-${y}`;
+  return s;
+}
+
+function parseDateToISO(str) {
+  if (!str || str.length !== 10) return '';
+  const fmt = State.workspaceSettings?.date_format || 'YYYY-MM-DD';
+  const parts = str.split('-');
+  if (parts.length !== 3) return '';
+  if (fmt === 'MM-DD-YYYY') return `${parts[2]}-${parts[0]}-${parts[1]}`;
+  if (fmt === 'DD-MM-YYYY') return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  return str;
+}
+
 function fmtDateTime(isoStr) {
   if (!isoStr) return '—';
   const s = String(isoStr);
-  const date = s.slice(0, 10);
+  const datePart = s.slice(0, 10);
   const time = s.slice(11, 16);
-  return time ? `${date} ${time}` : date;
+  return time ? `${fmtDate(datePart)} ${time}` : fmtDate(datePart);
 }
 
 function _buildMatchTag(row) {
@@ -40,7 +58,7 @@ function _buildMatchTag(row) {
     const importedOn = m.created_at
       ? fmtDateTime(m.created_at).slice(0, 10)
       : '?';
-    return `<span class="dup-badge"><span class="tag tag-dup">Duplicate</span><div class="dup-badge-tip">${escHtml(m.date)} &bull; ${escHtml(m.description || '—')} &bull; ${parseFloat(m.amount).toLocaleString()}<br>Imported on ${escHtml(importedOn)}</div></span> `;
+    return `<span class="dup-badge"><span class="tag tag-dup">Duplicate</span><div class="dup-badge-tip">${escHtml(fmtDate(m.date))} &bull; ${escHtml(m.description || '—')} &bull; ${parseFloat(m.amount).toLocaleString()}<br>Imported on ${escHtml(importedOn)}</div></span> `;
   }
   if (row._descMappingMatched) return '<span class="tag tag-mapping">mapped</span> ';
   if (row._autoMatched)        return '<span class="tag tag-auto">auto</span> ';
@@ -284,7 +302,7 @@ function initTxTable() {
       },
       {
         key: 'date', label: t('tx.col.date'), sortable: true, defaultVisible: true,
-        filter: { type: 'date-range' },
+        filter: { type: 'date-range', placeholder: State.workspaceSettings?.date_format || 'YYYY-MM-DD' },
       },
       {
         key: 'type', label: t('tx.col.type'), sortable: true,defaultVisible: true,
@@ -321,6 +339,11 @@ function initTxTable() {
       },
       { key: 'source',   label: t('tx.col.source'), sortable: true,  defaultVisible: true },
       { key: 'amount',   label: t('tx.col.amount'), sortable: true,  defaultVisible: true, align: 'right' },
+      {
+        key: 'reconciled', label: t('tx.col.reconciled'), sortable: false, defaultVisible: true,
+        filter: { type: 'toggle', placeholder: t('tx.filter.unreconciled') },
+        width: '6rem',
+      },
       { key: '_actions', label: '',                 sortable: false, defaultVisible: true, width: '5rem' },
     ],
     fetchData: async (params) => {
@@ -329,9 +352,12 @@ function initTxTable() {
       if (params.property)    filters.property_id = params.property;
       if (params.type)        filters.type        = params.type;
       if (params.category)    filters.category    = params.category;
-      if (params['date-from']) filters.from        = params['date-from'];
-      if (params['date-to'])   filters.to          = params['date-to'];
+      const dateFrom = parseDateToISO(params['date-from'] || '');
+      const dateTo   = parseDateToISO(params['date-to']   || '');
+      if (dateFrom) filters.from = dateFrom;
+      if (dateTo)   filters.to   = dateTo;
       if (params.description)  filters.search      = params.description;
+      if (params.reconciled)   filters.reconciled  = 'false';
       const result = await Api.getTransactions(filters);
       return {
         data:  (result.data ?? []).map(tx => ({ ...tx, amount: parseFloat(tx.amount) })),
@@ -360,7 +386,7 @@ function dashTxRow(tx) {
   const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
   const currency = tx.currency || prop?.currency || '';
   return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
-    <td>${tx.date}</td>
+    <td>${fmtDate(tx.date)}</td>
     <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
     <td>${tx.description}</td>
     <td><span class="tag tag-${tx.type}">${catLbl}</span></td>
@@ -388,20 +414,32 @@ function txRow(tx) {
     }
   }
 
+  const recBtn = `<button class="btn-reconcile${tx.reconciled ? ' is-reconciled' : ''}" title="${tx.reconciled ? 'Mark unreconciled' : 'Mark reconciled'}" onclick="event.stopPropagation();toggleReconciled('${tx.id}',${!!tx.reconciled})">${tx.reconciled ? t('tx.reconcileBtn') : t('tx.unreconcileBtn')}</button>`;
   const deleteBtn = window.AUTH_TOKEN
     ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="event.stopPropagation();deleteTxWithConfirm('${tx.id}')">${t('common.delete')}</button>`
     : '';
-  return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
+  const recClass = tx.reconciled ? ' tx-reconciled' : '';
+  return `<tr class="clickable-row${recClass}" onclick="openTxModal('${tx.id}')">
     <td onclick="event.stopPropagation()"><input type="checkbox" data-row-id="${tx.id}"></td>
     <td data-col="property">${prop ? prop.name : '<span class="muted">—</span>'}</td>
-    <td data-col="date">${tx.date}</td>
+    <td data-col="date">${fmtDate(tx.date)}</td>
     <td data-col="type"><span class="tag tag-${tx.type}">${t('categories.' + tx.type)}</span></td>
     <td data-col="category"><span class="tag tag-${tx.type}">${catLbl}</span></td>
     <td data-col="description">${tx.description}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
     <td data-col="source"><span class="muted" style="font-size:11px">${srcLbl}</span></td>
     <td data-col="amount" class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, currency)}<span class="muted" style="font-size:11px;margin-left:4px">${currency}</span>${convertedHtml}</td>
+    <td data-col="reconciled" style="text-align:center">${recBtn}</td>
     <td><div style="display:flex">${deleteBtn}</div></td>
   </tr>`;
+}
+
+async function toggleReconciled(txId, current) {
+  try {
+    await Api.updateTransaction(txId, { reconciled: !current });
+    txTable?.refresh();
+  } catch(e) {
+    toast(t('tx.toast.saveFailed', { error: e.message }), 'error');
+  }
 }
 
 async function bulkDeleteSelectedTx(ids) {
@@ -486,7 +524,7 @@ async function saveTxModal() {
       description: desc,
       notes: notes || null,
       source: 'manual',
-      reconciled: false,
+      ...(State.editingTxId ? {} : { reconciled: false }),
     };
 
     // v2 mode: use backend API (account_id is optional, defaults to workspace default)
@@ -702,7 +740,7 @@ function _buildRowHtml(row, i) {
   const notesBg   = !locked && row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : '';
   return `<tr data-row="${i}" class="${warnClass}${dupClass}${ignClass}${lockClass}">
     <td style="text-align:center"><input type="checkbox" id="row-sel-${i}" onchange="onRowSelect(${i})"${row._selected ? ' checked' : ''}></td>
-    <td>${row.date}</td>
+    <td>${fmtDate(row.date)}</td>
     <td style="max-width:160px;font-size:12px">${row.description}</td>
     <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"${dis}><option value="">—</option>${propOpts}</select></td>
     <td><span id="row-tags-${i}">${_buildMatchTag(row)}</span><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)"${dis}>${catOpts}</select></td>
@@ -1288,7 +1326,7 @@ function goToStaticPreview() {
             <tbody>${rows.map(row => {
               const prop = State.properties.find(p => p.id === row.property_id);
               return `<tr>
-                <td>${row.date}</td>
+                <td>${fmtDate(row.date)}</td>
                 <td style="font-size:12px;max-width:200px">${row.description}</td>
                 <td style="font-size:12px">${prop ? prop.name : '—'}</td>
                 <td style="font-size:12px">${row.notes || '—'}</td>
@@ -1501,7 +1539,7 @@ async function undoImportBatch(batchId, rowCount) {
       const prop = State.properties.find(p => p.id === tx.property_id);
       return `<tr>
         <td>${prop ? prop.name : '—'}</td>
-        <td>${tx.date}</td>
+        <td>${fmtDate(tx.date)}</td>
         <td>${tx.description || '—'}</td>
         <td>${catLabel(tx.category)}</td>
         <td style="text-align:right">${parseFloat(tx.amount).toFixed(2)} ${tx.currency}</td>
@@ -1596,20 +1634,28 @@ function initReportTables() {
 
 function setReportYear(year) {
   if (!year) { renderReports(); return; }
-  document.getElementById('rep-from').value = `${year}-01-01`;
-  document.getElementById('rep-to').value   = `${year}-12-31`;
+  document.getElementById('rep-from').value = fmtDate(`${year}-01-01`);
+  document.getElementById('rep-to').value   = fmtDate(`${year}-12-31`);
   renderReports();
+}
+
+function _updateDateInputPlaceholders() {
+  const fmt = State.workspaceSettings?.date_format || 'YYYY-MM-DD';
+  ['rep-from', 'rep-to'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.placeholder = fmt;
+  });
 }
 
 function setReportPeriod(preset) {
   document.getElementById('rep-year').value = '';
   const yr = new Date().getFullYear();
   if (preset === 'ytd') {
-    document.getElementById('rep-from').value = `${yr}-01-01`;
-    document.getElementById('rep-to').value   = new Date().toISOString().slice(0,10);
+    document.getElementById('rep-from').value = fmtDate(`${yr}-01-01`);
+    document.getElementById('rep-to').value   = fmtDate(new Date().toISOString().slice(0, 10));
   } else if (preset === 'lastyear') {
-    document.getElementById('rep-from').value = `${yr-1}-01-01`;
-    document.getElementById('rep-to').value   = `${yr-1}-12-31`;
+    document.getElementById('rep-from').value = fmtDate(`${yr - 1}-01-01`);
+    document.getElementById('rep-to').value   = fmtDate(`${yr - 1}-12-31`);
   } else {
     document.getElementById('rep-from').value = '';
     document.getElementById('rep-to').value   = '';
@@ -1621,9 +1667,10 @@ function renderReports() {
   if (!repIncomeTable) initReportTables();
 
   const propId     = document.getElementById('rep-apt')?.value  || 'all';
-  const dateFrom   = document.getElementById('rep-from')?.value || '';
-  const dateTo     = document.getElementById('rep-to')?.value   || '';
+  const dateFrom   = parseDateToISO(document.getElementById('rep-from')?.value || '');
+  const dateTo     = parseDateToISO(document.getElementById('rep-to')?.value   || '');
 
+  _updateDateInputPlaceholders();
   const filtered     = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
   const visibleProps = propId !== 'all'
     ? State.properties.filter(p => p.id === propId)
@@ -1915,8 +1962,9 @@ async function renderSettings() {
     form.style.display = 'none';
 
     const settings = await Api.getWorkspaceSettings();
-    document.getElementById('settings-currency').value = settings.reporting_currency || 'USD';
-    document.getElementById('settings-max-depth').value = settings.max_account_depth || 5;
+    document.getElementById('settings-currency').value   = settings.reporting_currency || 'USD';
+    document.getElementById('settings-max-depth').value  = settings.max_account_depth  || 5;
+    _setSelectValue(document.getElementById('settings-date-format'), settings.date_format || 'YYYY-MM-DD');
 
     loading.style.display = 'none';
     form.style.display = 'block';
@@ -1933,8 +1981,9 @@ async function renderSettings() {
 async function saveSettings(event) {
   event.preventDefault();
 
-  const currency = document.getElementById('settings-currency').value.trim().toUpperCase();
-  const maxDepth = parseInt(document.getElementById('settings-max-depth').value, 10);
+  const currency   = document.getElementById('settings-currency').value.trim().toUpperCase();
+  const maxDepth   = parseInt(document.getElementById('settings-max-depth').value, 10);
+  const dateFormat = document.getElementById('settings-date-format').value;
 
   if (!currency || isNaN(maxDepth) || maxDepth < 1) {
     toast(t('settings.validationError'), 'error');
@@ -1944,8 +1993,11 @@ async function saveSettings(event) {
   try {
     await Api.updateWorkspaceSettings({
       reporting_currency: currency,
-      max_account_depth: maxDepth,
+      max_account_depth:  maxDepth,
+      date_format:        dateFormat,
     });
+    if (State.workspaceSettings) State.workspaceSettings.date_format = dateFormat;
+    _updateDateInputPlaceholders();
     toast(t('settings.savedSuccess'), 'success');
   } catch(e) {
     toast(t('settings.saveFailed', { error: e.message }), 'error');
@@ -1998,7 +2050,7 @@ async function renderCurrencyRates() {
         <tbody>
           ${rates.map(r => `
             <tr>
-              <td style="padding:0.4rem 0.5rem">${r.effective_date}</td>
+              <td style="padding:0.4rem 0.5rem">${fmtDate(r.effective_date)}</td>
               <td style="padding:0.4rem 0.5rem;text-align:right">${parseFloat(r.rate).toFixed(6)}</td>
               <td style="padding:0.4rem 0.5rem;text-align:center"><span class="badge">${r.source}</span></td>
               <td style="padding:0.4rem 0.5rem;text-align:right">

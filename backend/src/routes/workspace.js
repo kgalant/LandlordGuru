@@ -12,7 +12,7 @@ router.get('/settings', requireAuth, async (req, res) => {
 
     const workspace = await db('workspaces')
       .where({ id: workspace_id })
-      .select('id', 'reporting_currency', 'max_account_depth')
+      .select('id', 'reporting_currency', 'max_account_depth', 'date_format')
       .first();
 
     if (!workspace) {
@@ -52,7 +52,7 @@ router.patch('/settings', requireAuth, async (req, res) => {
     }
 
     // Validate and build update object
-    const allowed = ['reporting_currency', 'max_account_depth'];
+    const allowed = ['reporting_currency', 'max_account_depth', 'date_format'];
     const updates = {};
 
     if (req.body.reporting_currency !== undefined) {
@@ -69,6 +69,14 @@ router.patch('/settings', requireAuth, async (req, res) => {
         return res.status(400).json({ error: 'max_account_depth must be a positive integer' });
       }
       updates.max_account_depth = depth;
+    }
+
+    if (req.body.date_format !== undefined) {
+      const VALID_FORMATS = ['YYYY-MM-DD', 'MM-DD-YYYY', 'DD-MM-YYYY'];
+      if (!VALID_FORMATS.includes(req.body.date_format)) {
+        return res.status(400).json({ error: 'date_format must be one of: YYYY-MM-DD, MM-DD-YYYY, DD-MM-YYYY' });
+      }
+      updates.date_format = req.body.date_format;
     }
 
     if (!Object.keys(updates).length) {

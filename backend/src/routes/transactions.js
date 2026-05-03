@@ -112,7 +112,7 @@ async function validateFields(body, workspaceId, requireAll) {
 // Optional query params: account_id, property_id, type, category, from, to, search, import_batch, page, limit
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { account_id, property_id, type, category, from, to, search, sort_col, sort_dir, import_batch } = req.query;
+    const { account_id, property_id, type, category, from, to, search, sort_col, sort_dir, import_batch, reconciled } = req.query;
     let page = parseInt(req.query.page, 10) || 1;
     let limit = parseInt(req.query.limit, 10) || DEFAULT_PAGE_LIMIT;
     if (page < 1) page = 1;
@@ -133,6 +133,8 @@ router.get('/', requireAuth, async (req, res) => {
       if (to)            q = q.where('t.date', '<=', to);
       if (search)        q = q.whereILike('t.description', `%${search}%`);
       if (import_batch)  q = q.where('t.import_batch', import_batch);
+      if (reconciled === 'true')  q = q.where('t.reconciled', true);
+      if (reconciled === 'false') q = q.where('t.reconciled', false);
       return q;
     }
 

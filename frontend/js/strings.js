@@ -86,9 +86,10 @@ export const I18n = (() => {
         footer:       '{count} transactions · Income: {income} · Expenses: {expenses}',
         footerPaged:  'Transactions {from} to {to} out of {total} · Income: {income} · Expenses: {expenses}',
         filter: {
-          allProperties: 'All properties',
-          allTypes:      'All types',
-          allCats:       'All categories',
+          allProperties:  'All properties',
+          allTypes:       'All types',
+          allCats:        'All categories',
+          unreconciled:   'Unreconciled only',
         },
         col: {
           date:        'Date',
@@ -98,7 +99,10 @@ export const I18n = (() => {
           category:    'Category',
           source:      'Source',
           amount:      'Amount',
+          reconciled:  'Reconciled',
         },
+        reconcileBtn:   '✓',
+        unreconcileBtn: '○',
         modal: {
           addTitle:         'Add transaction',
           editTitle:        'Edit transaction',
@@ -360,6 +364,8 @@ export const I18n = (() => {
         currencyDesc:      'ISO 4217 currency code (e.g., USD, DKK, EUR) used for multi-currency reporting.',
         maxAccountDepth:   'Max Account Hierarchy Depth',
         maxDepthDesc:      'Maximum allowed depth for the account hierarchy (default: 5).',
+        dateFormat:        'Date Display Format',
+        dateFormatDesc:    'How dates are shown throughout the app.',
         loadFailed:        'Failed to load settings: {error}',
         saveFailed:        'Save failed: {error}',
         validationError:   'Please check your inputs.',

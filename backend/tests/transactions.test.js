@@ -271,6 +271,56 @@ describe('GET /api/transactions', () => {
     expect(res.body.data[0].description).toBe('Monthly rent payment');
   });
 
+  it('filters by reconciled=false (unreconciled only)', async () => {
+    const tx1 = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, description: 'Reconciled tx' });
+
+    await request(app)
+      .patch(`/api/transactions/${tx1.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ reconciled: true });
+
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, description: 'Unreconciled tx' });
+
+    const res = await request(app)
+      .get('/api/transactions?reconciled=false')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(1);
+    expect(res.body.data[0].description).toBe('Unreconciled tx');
+  });
+
+  it('filters by reconciled=true (reconciled only)', async () => {
+    const tx1 = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, description: 'Reconciled tx' });
+
+    await request(app)
+      .patch(`/api/transactions/${tx1.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ reconciled: true });
+
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, description: 'Unreconciled tx' });
+
+    const res = await request(app)
+      .get('/api/transactions?reconciled=true')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(1);
+    expect(res.body.data[0].description).toBe('Reconciled tx');
+  });
+
   it('returns 401 without a token', async () => {
     const res = await request(app).get('/api/transactions');
     expect(res.status).toBe(401);

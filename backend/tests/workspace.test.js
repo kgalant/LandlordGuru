@@ -589,5 +589,36 @@ describe('Workspace Settings API', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('reporting_currency', 'GBP');
     });
+
+    it('should allow owner to update date_format', async () => {
+      const res = await request(app)
+        .patch('/api/workspace/settings')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ date_format: 'DD-MM-YYYY' });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('date_format', 'DD-MM-YYYY');
+    });
+
+    it('should reject an invalid date_format value', async () => {
+      const res = await request(app)
+        .patch('/api/workspace/settings')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ date_format: 'DD/MM/YYYY' });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+  });
+
+  describe('GET /api/workspace/settings — date_format field', () => {
+    it('returns date_format in settings response', async () => {
+      const res = await request(app)
+        .get('/api/workspace/settings')
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('date_format');
+    });
   });
 });
