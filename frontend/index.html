@@ -508,6 +508,7 @@
       <div class="form-group">
         <label data-i18n="tx.modal.date"></label>
         <input type="date" id="tx-m-date">
+        <small id="tx-m-original-date" class="original-value-hint" style="display:none"></small>
       </div>
       <div class="form-group">
         <label data-i18n="tx.modal.property"></label>
@@ -522,10 +523,16 @@
       <div class="form-group">
         <label data-i18n="tx.modal.amount"></label>
         <input type="number" id="tx-m-amount" min="0" step="0.01" placeholder="0.00">
+        <small id="tx-m-original-amount" class="original-value-hint" style="display:none"></small>
+      </div>
+      <div class="form-group">
+        <label data-i18n="tx.modal.currency"></label>
+        <input type="text" id="tx-m-currency" maxlength="3" placeholder="USD">
       </div>
       <div class="form-group span-2">
         <label data-i18n="tx.modal.description"></label>
         <input type="text" id="tx-m-desc" data-i18n-placeholder="tx.modal.descPlaceholder">
+        <small id="tx-m-original-desc" class="original-value-hint" style="display:none"></small>
       </div>
       <div class="form-group span-2">
         <label id="tx-m-notes-label" data-i18n="tx.modal.notes"></label>

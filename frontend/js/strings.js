@@ -111,6 +111,7 @@ export const I18n = (() => {
           property:         'Property *',
           category:         'Category *',
           amount:           'Amount *',
+          currency:         'Currency',
           description:      'Description',
           notes:            'Notes',
           notesReq:         'Notes *',
@@ -119,6 +120,7 @@ export const I18n = (() => {
           deleteBtn:        'Delete',
           descPlaceholder:  'e.g. Rent June 2025',
           notesPlaceholder: 'Optional note…',
+          originalValue:    'Original: {{value}}',
         },
         toast: {
           saved:        'Transaction saved.',

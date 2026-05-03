@@ -406,6 +406,80 @@ describe('PATCH /api/transactions/:id', () => {
 
     expect(res.status).toBe(400);
   });
+
+  it('persists original_date on first date override', async () => {
+    const created = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, date: '2026-01-15' });
+
+    const res = await request(app)
+      .patch(`/api/transactions/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: '2026-02-01', original_date: '2026-01-15' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.date).toBe('2026-02-01');
+    expect(res.body.original_date).toBe('2026-01-15');
+  });
+
+  it('does not overwrite original_date once set', async () => {
+    const created = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, date: '2026-01-15' });
+
+    await request(app)
+      .patch(`/api/transactions/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: '2026-02-01', original_date: '2026-01-15' });
+
+    const res = await request(app)
+      .patch(`/api/transactions/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: '2026-03-01', original_date: '2026-02-01' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.date).toBe('2026-03-01');
+    expect(res.body.original_date).toBe('2026-01-15'); // first override preserved
+  });
+
+  it('persists original_amount on first amount override', async () => {
+    const created = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 500 });
+
+    const res = await request(app)
+      .patch(`/api/transactions/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ amount: 750, original_amount: 500 });
+
+    expect(res.status).toBe(200);
+    expect(parseFloat(res.body.amount)).toBe(750);
+    expect(parseFloat(res.body.original_amount)).toBe(500);
+  });
+
+  it('does not overwrite original_amount once set', async () => {
+    const created = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 500 });
+
+    await request(app)
+      .patch(`/api/transactions/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ amount: 750, original_amount: 500 });
+
+    const res = await request(app)
+      .patch(`/api/transactions/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ amount: 900, original_amount: 750 });
+
+    expect(res.status).toBe(200);
+    expect(parseFloat(res.body.amount)).toBe(900);
+    expect(parseFloat(res.body.original_amount)).toBe(500); // first override preserved
+  });
 });
 
 // ---------------------------------------------------------------------------

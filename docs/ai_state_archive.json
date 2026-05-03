@@ -512,5 +512,13 @@
     "last_commit": "286d191 feat: F1-12 + F3-6 — date display format preference and reconciliation marking",
     "changed_files": "AI_STATE.md, docs/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/js/app.js, frontend/js/datatable.js, frontend/js/strings.js, version.json",
     "git_status": "M AI_STATE.md, M docs/ai_state_archive.json, M docs/epics/03-transaction-management.md, M frontend/js/app.js, M frontend/js/datatable.js, M frontend/js/strings.js, M version.json, ?? .claude/hooks/checkpoint.sh"
+  },
+  {
+    "timestamp": "2026-05-03 [F3-11 committed, F3-10 in progress]",
+    "phase": "[F3-10 implementation]",
+    "branch": "main",
+    "last_commit": "4c0acdb feat: F3-11 — year quick-select in transaction list filter",
+    "changed_files": "AI_STATE.md, docs/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/css/style.css, frontend/index.html, frontend/js/app.js, frontend/js/strings.js, version.json, backend/src/routes/transactions.js, backend/src/db/migrations/020_original_fields.js, backend/tests/transactions.test.js",
+    "git_status": "M AI_STATE.md, M docs/ai_state_archive.json, M docs/epics/03-transaction-management.md, M frontend/css/style.css, M frontend/index.html, M frontend/js/app.js, M frontend/js/strings.js, M version.json, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, ?? backend/src/db/migrations/020_original_fields.js, ?? .claude/hooks/checkpoint.sh"
   }
 ]

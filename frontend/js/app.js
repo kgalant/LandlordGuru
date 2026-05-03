@@ -479,25 +479,42 @@ function openTxModal(txId) {
   const delBtn = document.getElementById('tx-m-delete-btn');
   populateAllDropdowns();
 
+  const _hint = (id, text) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent  = text || '';
+    el.style.display = text ? 'block' : 'none';
+  };
+
   if (txId) {
     const tx = State.transactions.find(tx => tx.id === txId);
     if (!tx) return;
     document.getElementById('tx-modal-title').textContent = t('tx.modal.editTitle');
-    document.getElementById('tx-m-date').value   = tx.date;
-    document.getElementById('tx-m-apt').value    = tx.property_id;
-    document.getElementById('tx-m-cat').value    = tx.category;
-    document.getElementById('tx-m-amount').value = tx.amount;
-    document.getElementById('tx-m-desc').value   = tx.description;
-    document.getElementById('tx-m-notes').value  = tx.notes;
+    document.getElementById('tx-m-date').value     = tx.date;
+    document.getElementById('tx-m-apt').value      = tx.property_id;
+    document.getElementById('tx-m-cat').value      = tx.category;
+    document.getElementById('tx-m-amount').value   = tx.amount;
+    document.getElementById('tx-m-currency').value = tx.currency || '';
+    document.getElementById('tx-m-desc').value     = tx.description;
+    document.getElementById('tx-m-notes').value    = tx.notes || '';
     delBtn.style.display = 'inline-block';
+
+    _hint('tx-m-original-date',   tx.original_date   ? t('tx.modal.originalValue', { value: fmtDate(tx.original_date) }) : '');
+    _hint('tx-m-original-amount', tx.original_amount != null ? t('tx.modal.originalValue', { value: parseFloat(tx.original_amount).toLocaleString() }) : '');
+    const rawDescDiffers = tx.raw_description && tx.raw_description !== tx.description;
+    _hint('tx-m-original-desc',   rawDescDiffers ? t('tx.modal.originalValue', { value: tx.raw_description }) : '');
   } else {
     document.getElementById('tx-modal-title').textContent = t('tx.modal.addTitle');
-    document.getElementById('tx-m-date').value   = new Date().toISOString().slice(0,10);
-    document.getElementById('tx-m-cat').value    = '';
-    document.getElementById('tx-m-amount').value = '';
-    document.getElementById('tx-m-desc').value   = '';
-    document.getElementById('tx-m-notes').value  = '';
+    document.getElementById('tx-m-date').value     = new Date().toISOString().slice(0,10);
+    document.getElementById('tx-m-cat').value      = '';
+    document.getElementById('tx-m-amount').value   = '';
+    document.getElementById('tx-m-currency').value = '';
+    document.getElementById('tx-m-desc').value     = '';
+    document.getElementById('tx-m-notes').value    = '';
     delBtn.style.display = 'none';
+    _hint('tx-m-original-date',   '');
+    _hint('tx-m-original-amount', '');
+    _hint('tx-m-original-desc',   '');
   }
   onCategoryChange();
   modal.style.display = 'flex';
@@ -515,12 +532,13 @@ function onCategoryChange() {
 }
 
 async function saveTxModal() {
-  const date   = document.getElementById('tx-m-date').value;
-  const propId = document.getElementById('tx-m-apt').value;
-  const cat    = document.getElementById('tx-m-cat').value;
-  const amount = parseFloat(document.getElementById('tx-m-amount').value);
-  const desc   = document.getElementById('tx-m-desc').value.trim();
-  const notes  = document.getElementById('tx-m-notes').value.trim();
+  const date     = document.getElementById('tx-m-date').value;
+  const propId   = document.getElementById('tx-m-apt').value;
+  const cat      = document.getElementById('tx-m-cat').value;
+  const amount   = parseFloat(document.getElementById('tx-m-amount').value);
+  const currency = document.getElementById('tx-m-currency').value.trim().toUpperCase();
+  const desc     = document.getElementById('tx-m-desc').value.trim();
+  const notes    = document.getElementById('tx-m-notes').value.trim();
 
   if (!date || !propId || !cat || !amount) { toast(t('tx.toast.fillReq'), 'error'); return; }
   if (CATEGORIES.expense?.items[cat]?.requiresNote && !notes) { toast(t('tx.toast.noteReq'), 'error'); return; }
@@ -535,15 +553,23 @@ async function saveTxModal() {
       type,
       category: cat,
       amount,
-      currency: prop?.currency || 'DKK',
+      currency: currency || prop?.currency || 'DKK',
       description: desc,
       notes: notes || null,
       source: 'manual',
       ...(State.editingTxId ? {} : { reconciled: false }),
     };
 
-    // v2 mode: use backend API (account_id is optional, defaults to workspace default)
     if (State.editingTxId) {
+      const existing = State.transactions.find(tx => tx.id === State.editingTxId);
+      if (existing) {
+        if (existing.original_date == null && date !== existing.date) {
+          data.original_date = existing.date;
+        }
+        if (existing.original_amount == null && amount !== parseFloat(existing.amount)) {
+          data.original_amount = parseFloat(existing.amount);
+        }
+      }
       await Api.updateTransaction(State.editingTxId, data);
       toast(t('tx.toast.updated'), 'success');
     } else {

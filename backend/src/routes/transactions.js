@@ -490,6 +490,14 @@ router.patch('/:id', requireAuth, async (req, res) => {
     }
   }
 
+  // original_date / original_amount: only persist on the first override (ignored if already set)
+  if (req.body.original_date !== undefined && existing.original_date === null) {
+    updates.original_date = req.body.original_date;
+  }
+  if (req.body.original_amount !== undefined && existing.original_amount === null) {
+    updates.original_amount = parseFloat(req.body.original_amount);
+  }
+
   if (!Object.keys(updates).length) {
     return res.status(400).json({ error: 'No valid fields provided' });
   }

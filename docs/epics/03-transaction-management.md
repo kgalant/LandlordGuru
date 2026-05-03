@@ -206,7 +206,7 @@ A gear-icon button in the transaction list toolbar that opens a column managemen
 ---
 
 ### F3-10 Transaction edit modal with source-field override tracking `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Edit any field on a transaction via a modal, and preserve the original import values for source-data fields (date, description, amount) so users can see what was changed from the imported data.
 
