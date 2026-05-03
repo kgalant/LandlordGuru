@@ -44,6 +44,18 @@ function parseDateToISO(str) {
   return str;
 }
 
+// Auto-inserts date separators as the user types in a reports date input
+function onDateFilterInput(input) {
+  const fmt = State.workspaceSettings?.date_format || 'YYYY-MM-DD';
+  const val = input.value;
+  for (let i = 0; i < fmt.length; i++) {
+    if (!/[A-Z0-9]/i.test(fmt[i]) && i === val.length) {
+      input.value = val + fmt[i];
+      break;
+    }
+  }
+}
+
 function fmtDateTime(isoStr) {
   if (!isoStr) return '—';
   const s = String(isoStr);
@@ -309,6 +321,7 @@ function initTxTable() {
         filter: {
           type: 'select',
           placeholder: t('tx.filter.allYears'),
+          setsDateRange: 'date',
           options: () => {
             const years = [...new Set(State.transactions.map(tx => tx.date.slice(0, 4)))].sort().reverse();
             return years.map(y => ({ value: y, label: y }));
@@ -363,12 +376,8 @@ function initTxTable() {
       if (params.property)    filters.property_id = params.property;
       if (params.type)        filters.type        = params.type;
       if (params.category)    filters.category    = params.category;
-      const explicitFrom = parseDateToISO(params['date-from'] || '');
-      const explicitTo   = parseDateToISO(params['date-to']   || '');
-      const yearFrom     = params.year ? `${params.year}-01-01` : '';
-      const yearTo       = params.year ? `${params.year}-12-31` : '';
-      const dateFrom     = explicitFrom || yearFrom;
-      const dateTo       = explicitTo   || yearTo;
+      const dateFrom = parseDateToISO(params['date-from'] || '');
+      const dateTo   = parseDateToISO(params['date-to']   || '');
       if (dateFrom) filters.from = dateFrom;
       if (dateTo)   filters.to   = dateTo;
       if (params.description)  filters.search      = params.description;
@@ -2420,6 +2429,7 @@ Object.assign(window, {
   goToStaticPreview, backToEditPreview, goToMappingConfirmOrImport, backToStaticPreview,
   toggleTree, doImport,
   toggleImportHistory, undoImportBatch, closeUndoModal, confirmUndoImport,
+  onDateFilterInput,
   setReportYear, setReportPeriod, renderReports,
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,

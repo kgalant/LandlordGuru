@@ -208,6 +208,13 @@ The property column sorts by `ap.property_id` (numeric) rather than the property
 
 ---
 
+### F7-B2 — Columns dropdown checkbox alignment `[Done]`
+**Status:** Done
+
+Checkboxes in the ⚙ Columns dropdown were not tightly left-aligned with labels adjacent. Fixed by adding `justify-content: flex-start`, `margin: 0` on the checkbox, reducing `gap` to `0.4rem`, and eliminating whitespace text-nodes from the label template.
+
+---
+
 ## Dependencies
 - F7-1 must land before any migration step (F7-2 through F7-5).
 - Migration steps are independent of each other once F7-1 is done and can be done in any order, though the recommended order (transactions → rules → reports → dashboard) goes most-complex-first.

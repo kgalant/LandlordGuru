@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
-- Epic: E3 Transaction Management
-- ID: F3-10
-- Title: Transaction edit modal with source-field override tracking
-- Short summary: Done — migration 020 (original_date, original_amount), backend PATCH guard, currency field added to modal, override hints shown under date/amount/description, saveTxModal sends originals on first change.
+- Type: bug
+- Epic: E3 Transaction Management / E7 Frontend Architecture
+- ID: F3-date-filters + F7-B2
+- Title: Date filter UX fixes + columns dropdown alignment
+- Short summary: (1) Auto-insert separators in date text inputs as user types digits. (2) Year quick-select fills date-from/to inputs directly instead of being a separate filter layer. (3) Columns dropdown left-justified with tight checkbox+label spacing.
 
 ---
 
@@ -20,16 +20,19 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Type: feature
 - Epic: E3 Transaction Management
-- ID: F3-11
-- Title: Year quick-select in transaction list filter
-- Short summary: Done and committed (4c0acdb).
+- ID: F3-10
+- Title: Transaction edit modal with source-field override tracking
+- Short summary: Done — migration 020 (original_date, original_amount), backend PATCH guard, currency field added to modal, override hints shown under date/amount/description, saveTxModal sends originals on first change.
 - State: done
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] F3-10-1: Migration 020 (original_date, original_amount); backend PATCH (accept + guard); frontend modal (currency field, override hints); saveTxModal override logic; CSS; strings; tests; epic doc; version; commit.
+- [x] S1: Auto-insert date separators in DataTable date-range inputs (data-date-fmt attr + _autoInsertDateSep helper + input event handler) and in reports rep-from/rep-to (onDateFilterInput in app.js).
+- [x] S2: Year select fills date-from/to inputs via setsDateRange: 'date' config + _fmtYearBound helper; remove year fallback from fetchData.
+- [x] S3: Columns dropdown CSS — left-justify checkboxes, tight gap, clean label template.
+- [-] S4: Update AI_STATE.md and commit.
 
 ---
 
@@ -49,12 +52,13 @@ Relevant epic docs:
 - `docs/epics/03-transaction-management.md` (E3)
 - `docs/epics/04-reporting-analytics.md` (E4)
 - `docs/epics/05-integrations-data-import.md` (E5)
+- `docs/epics/07-frontend-architecture.md` (E7)
 
 ---
 
 ## Next step
 
-Confirm commit for F3-10 with user, then select next feature.
+Commit all changes (date filter fixes + columns dropdown tweak).
 
 ---
 
@@ -73,84 +77,18 @@ Confirm commit for F3-10 with user, then select next feature.
 
 - `AI_STATE.md`
 - `docs/ai_state_archive.json`
-- `docs/epics/03-transaction-management.md`
-- `frontend/css/style.css`
+- `docs/epics/07-frontend-architecture.md`
+- `frontend/css/datatable.css`
 - `frontend/index.html`
 - `frontend/js/app.js`
-- `frontend/js/strings.js`
-- `version.json`
-- `backend/src/routes/transactions.js`
-- `backend/src/db/migrations/020_original_fields.js`
-- `backend/tests/transactions.test.js`
+- `frontend/js/datatable.js`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-03 [F3-10 complete, awaiting commit]
+- 2026-05-03 [date-filters + columns-dropdown, pre-commit]
   - branch: main
-  - last_commit: 4c0acdb feat: F3-11 — year quick-select in transaction list filter
-  - changed_files: AI_STATE.md, docs/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/css/style.css, frontend/index.html, frontend/js/app.js, frontend/js/strings.js, version.json, backend/src/routes/transactions.js, backend/src/db/migrations/020_original_fields.js, backend/tests/transactions.test.js
-  - git_status: M AI_STATE.md, M docs/ai_state_archive.json, M docs/epics/03-transaction-management.md, M frontend/css/style.css, M frontend/index.html, M frontend/js/app.js, M frontend/js/strings.js, M version.json, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, ?? backend/src/db/migrations/020_original_fields.js, ?? .claude/hooks/checkpoint.sh
-
-- 2026-05-03 09:24:44 [Stop]
-  - branch: main
-  - last_commit: 4c0acdb feat: F3-11 — year quick-select in transaction list filter
-  - changed_files: AI_STATE.md,backend/src/routes/transactions.js backend/tests/transactions.test.js,docs/ai_state_archive.json docs/epics/03-transaction-management.md,frontend/css/style.css frontend/index.html,frontend/js/app.js frontend/js/strings.js,version.json
-  - git_status:
-     M AI_STATE.md
-     M backend/src/routes/transactions.js
-     M backend/tests/transactions.test.js
-     M docs/ai_state_archive.json
-     M docs/epics/03-transaction-management.md
-     M frontend/css/style.css
-     M frontend/index.html
-     M frontend/js/app.js
-     M frontend/js/strings.js
-     M version.json
-    ?? .claude/hooks/checkpoint.sh
-    ?? backend/src/db/migrations/020_original_fields.js
-
-- 2026-05-03 09:25:11 [Stop]
-  - branch: main
-  - last_commit: 1a8123c feat: F3-10 — transaction edit modal with source-field override tracking
-  - git_status:
-    ?? .claude/hooks/checkpoint.sh
-
-- 2026-05-03 09:26:12 [Stop]
-  - branch: main
-  - last_commit: 1a8123c feat: F3-10 — transaction edit modal with source-field override tracking
-  - changed_files: AI_STATE.md
-  - git_status:
-     M AI_STATE.md
-    ?? .claude/hooks/checkpoint.sh
-
-- 2026-05-03 09:31:40 [Stop]
-  - branch: main
-  - last_commit: 1a8123c feat: F3-10 — transaction edit modal with source-field override tracking
-  - changed_files: AI_STATE.md,frontend/js/app.js frontend/js/strings.js
-  - git_status:
-     M AI_STATE.md
-     M frontend/js/app.js
-     M frontend/js/strings.js
-    ?? .claude/hooks/checkpoint.sh
-
-- 2026-05-03 09:32:59 [Stop]
-  - branch: main
-  - last_commit: aa25562 fix: settings save toast shows a diff of what changed
-  - git_status:
-    ?? .claude/hooks/checkpoint.sh
-
-- 2026-05-03 09:38:32 [Stop]
-  - branch: main
-  - last_commit: aa25562 fix: settings save toast shows a diff of what changed
-  - changed_files: AI_STATE.md,frontend/css/datatable.css frontend/css/style.css,frontend/index.html frontend/js/app.js,frontend/js/datatable.js frontend/js/strings.js
-  - git_status:
-     M AI_STATE.md
-     M frontend/css/datatable.css
-     M frontend/css/style.css
-     M frontend/index.html
-     M frontend/js/app.js
-     M frontend/js/datatable.js
-     M frontend/js/strings.js
-    ?? .claude/hooks/checkpoint.sh
+  - last_commit: acf6427 fix: reconciliation UI fixes — modal checkbox, filter row layout, click target
+  - changed_files: AI_STATE.md, docs/epics/07-frontend-architecture.md, frontend/css/datatable.css, frontend/index.html, frontend/js/app.js, frontend/js/datatable.js
+  - git_status: M AI_STATE.md, M frontend/css/datatable.css, M frontend/index.html, M frontend/js/app.js, M frontend/js/datatable.js, M docs/epics/07-frontend-architecture.md, ?? .claude/hooks/checkpoint.sh

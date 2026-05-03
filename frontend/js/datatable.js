@@ -172,8 +172,8 @@ const DataTable = (() => {
       if (f.type === 'date-range') {
         const ph = f.placeholder || '';
         return `<div class="dt-filter-control" data-col="${col.key}">
-          <input type="text" data-filter-key="${col.key}-from" placeholder="${ph}">
-          <input type="text" data-filter-key="${col.key}-to" placeholder="${ph}">
+          <input type="text" data-filter-key="${col.key}-from" data-date-fmt="${ph}" placeholder="${ph}">
+          <input type="text" data-filter-key="${col.key}-to"   data-date-fmt="${ph}" placeholder="${ph}">
         </div>`;
       }
       if (f.type === 'toggle') {
@@ -227,10 +227,7 @@ const DataTable = (() => {
       dd.innerHTML = columns.map(c => {
         const checked   = visibleCols[c.key] !== false;
         const isLast    = checked && visCount === 1;
-        return `<label>
-          <input type="checkbox" data-vis-key="${c.key}" ${checked ? 'checked' : ''} ${isLast ? 'disabled' : ''}>
-          ${_esc(c.label)}
-        </label>`;
+        return `<label><input type="checkbox" data-vis-key="${c.key}" ${checked ? 'checked' : ''} ${isLast ? 'disabled' : ''}> ${_esc(c.label)}</label>`;
       }).join('');
     }
 
@@ -344,6 +341,28 @@ const DataTable = (() => {
       pagerEl.innerHTML = html;
     }
 
+    // Returns a date string in the given workspace format (e.g. YYYY-MM-DD → "2025-01-01")
+    function _fmtYearBound(year, month, day, fmt) {
+      const sep = /[^A-Z0-9]/i.exec(fmt)?.[0] || '-';
+      if (fmt.startsWith('YYYY')) return `${year}${sep}${month}${sep}${day}`;
+      if (fmt.startsWith('MM'))   return `${month}${sep}${day}${sep}${year}`;
+      return `${day}${sep}${month}${sep}${year}`;
+    }
+
+    // Auto-inserts the separator character as the user types digits into a date text input
+    function _autoInsertDateSep(input, e) {
+      if (!e.inputType?.startsWith('insert')) return;
+      const fmt = input.dataset.dateFmt;
+      if (!fmt) return;
+      const val = input.value;
+      for (let i = 0; i < fmt.length; i++) {
+        if (!/[A-Z0-9]/i.test(fmt[i]) && i === val.length) {
+          input.value = val + fmt[i];
+          break;
+        }
+      }
+    }
+
     function _attachEvents() {
       container.addEventListener('click', e => {
         // Sort header click
@@ -393,6 +412,24 @@ const DataTable = (() => {
       container.addEventListener('change', e => {
         const fk = e.target.dataset.filterKey;
         if (fk) {
+          const col = columns.find(c => c.filter && c.key === fk);
+          if (col?.filter?.setsDateRange && e.target.value) {
+            const targetKey = col.filter.setsDateRange;
+            const targetCol = columns.find(c => c.key === targetKey);
+            const fmt = targetCol?.filter?.placeholder || 'YYYY-MM-DD';
+            const year = e.target.value;
+            const fromStr = _fmtYearBound(year, '01', '01', fmt);
+            const toStr   = _fmtYearBound(year, '12', '31', fmt);
+            const fromEl  = container.querySelector(`[data-filter-key="${targetKey}-from"]`);
+            const toEl    = container.querySelector(`[data-filter-key="${targetKey}-to"]`);
+            if (fromEl) { fromEl.value = fromStr; filterState[`${targetKey}-from`] = fromStr; }
+            if (toEl)   { toEl.value   = toStr;   filterState[`${targetKey}-to`]   = toStr;   }
+            e.target.value  = '';
+            filterState[fk] = '';
+            page = 1;
+            _load();
+            return;
+          }
           filterState[fk] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
           page = 1;
           _load();
@@ -442,6 +479,7 @@ const DataTable = (() => {
       container.addEventListener('input', e => {
         const fk = e.target.dataset.filterKey;
         if (fk && e.target.type === 'text') {
+          _autoInsertDateSep(e.target, e);
           clearTimeout(debounceTimer);
           debounceTimer = setTimeout(() => {
             filterState[fk] = e.target.value;

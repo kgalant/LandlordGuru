@@ -303,8 +303,8 @@
           <option value="all" data-i18n="tx.filter.allProperties"></option>
         </select>
         <select id="rep-year" onchange="setReportYear(this.value)"><option value="">— Year —</option></select>
-        <input type="text" id="rep-from" placeholder="YYYY-MM-DD" onchange="document.getElementById('rep-year').value=''; renderReports()">
-        <input type="text" id="rep-to"   placeholder="YYYY-MM-DD" onchange="document.getElementById('rep-year').value=''; renderReports()">
+        <input type="text" id="rep-from" placeholder="YYYY-MM-DD" oninput="onDateFilterInput(this)" onchange="document.getElementById('rep-year').value=''; renderReports()">
+        <input type="text" id="rep-to"   placeholder="YYYY-MM-DD" oninput="onDateFilterInput(this)" onchange="document.getElementById('rep-year').value=''; renderReports()">
         <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('ytd')"      data-i18n="reports.ytd"></button>
         <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('lastyear')" data-i18n="reports.lastYear"></button>
         <button class="btn btn-sm btn-secondary" onclick="setReportPeriod('all')"      data-i18n="reports.allTime"></button>
