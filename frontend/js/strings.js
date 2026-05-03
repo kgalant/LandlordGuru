@@ -372,7 +372,11 @@ export const I18n = (() => {
         loadFailed:        'Failed to load settings: {error}',
         saveFailed:        'Save failed: {error}',
         validationError:   'Please check your inputs.',
-        savedSuccess:      'Settings saved successfully.',
+        savedSuccess:      'Settings saved.',
+        savedChanged:      'Settings saved. Changed: {changes}',
+        fieldCurrency:     'Reporting currency',
+        fieldMaxDepth:     'Max account depth',
+        fieldDateFormat:   'Date format',
       },
       country: {
         DK:    'Denmark',

@@ -2032,14 +2032,31 @@ async function saveSettings(event) {
   }
 
   try {
+    const prev = State.workspaceSettings || {};
     await Api.updateWorkspaceSettings({
       reporting_currency: currency,
       max_account_depth:  maxDepth,
       date_format:        dateFormat,
     });
-    if (State.workspaceSettings) State.workspaceSettings.date_format = dateFormat;
+    if (State.workspaceSettings) {
+      State.workspaceSettings.date_format        = dateFormat;
+      State.workspaceSettings.reporting_currency = currency;
+      State.workspaceSettings.max_account_depth  = maxDepth;
+    }
     _updateDateInputPlaceholders();
-    toast(t('settings.savedSuccess'), 'success');
+
+    const diffs = [];
+    if (prev.reporting_currency && prev.reporting_currency !== currency)
+      diffs.push(`${t('settings.fieldCurrency')}: ${prev.reporting_currency} → ${currency}`);
+    if (prev.max_account_depth != null && prev.max_account_depth !== maxDepth)
+      diffs.push(`${t('settings.fieldMaxDepth')}: ${prev.max_account_depth} → ${maxDepth}`);
+    if (prev.date_format && prev.date_format !== dateFormat)
+      diffs.push(`${t('settings.fieldDateFormat')}: ${prev.date_format} → ${dateFormat}`);
+
+    toast(diffs.length
+      ? t('settings.savedChanged', { changes: diffs.join('; ') })
+      : t('settings.savedSuccess'),
+    'success');
   } catch(e) {
     toast(t('settings.saveFailed', { error: e.message }), 'error');
   }
