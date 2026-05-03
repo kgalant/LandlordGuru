@@ -438,7 +438,7 @@ function txRow(tx) {
     }
   }
 
-  const recBtn = `<button class="btn-reconcile${tx.reconciled ? ' is-reconciled' : ''}" title="${tx.reconciled ? 'Mark unreconciled' : 'Mark reconciled'}" onclick="event.stopPropagation();toggleReconciled('${tx.id}',${!!tx.reconciled})">${tx.reconciled ? t('tx.reconcileBtn') : t('tx.unreconcileBtn')}</button>`;
+  const recBtn = `<button class="btn-reconcile${tx.reconciled ? ' is-reconciled' : ''}" title="${tx.reconciled ? t('tx.unreconcileBtnTitle') : t('tx.reconcileBtnTitle')}" onclick="event.stopPropagation();toggleReconciled('${tx.id}',${!!tx.reconciled})">${tx.reconciled ? t('tx.reconcileBtn') : t('tx.unreconcileBtn')}</button>`;
   const deleteBtn = window.AUTH_TOKEN
     ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="event.stopPropagation();deleteTxWithConfirm('${tx.id}')">${t('common.delete')}</button>`
     : '';
@@ -459,8 +459,26 @@ function txRow(tx) {
 
 async function toggleReconciled(txId, current) {
   try {
-    await Api.updateTransaction(txId, { reconciled: !current });
-    txTable?.refresh();
+    const newVal = !current;
+    await Api.updateTransaction(txId, { reconciled: newVal });
+
+    // Update State so dashboard metrics stay correct
+    const tx = State.transactions.find(t => t.id === txId);
+    if (tx) tx.reconciled = newVal;
+
+    // Patch the DOM row in-place — avoids triggering a re-sort
+    const cb  = document.querySelector(`[data-row-id="${txId}"]`);
+    const row = cb?.closest('tr');
+    if (row) {
+      row.classList.toggle('tx-reconciled', newVal);
+      const btn = row.querySelector('.btn-reconcile');
+      if (btn) {
+        btn.classList.toggle('is-reconciled', newVal);
+        btn.title       = newVal ? t('tx.unreconcileBtnTitle') : t('tx.reconcileBtnTitle');
+        btn.textContent = newVal ? t('tx.reconcileBtn') : t('tx.unreconcileBtn');
+        btn.setAttribute('onclick', `event.stopPropagation();toggleReconciled('${txId}',${newVal})`);
+      }
+    }
   } catch(e) {
     toast(t('tx.toast.saveFailed', { error: e.message }), 'error');
   }

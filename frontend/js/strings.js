@@ -102,8 +102,10 @@ export const I18n = (() => {
           amount:      'Amount',
           reconciled:  'Reconciled',
         },
-        reconcileBtn:   '✓',
-        unreconcileBtn: '○',
+        reconcileBtn:      '✓',
+        unreconcileBtn:    '○',
+        reconcileBtnTitle:   'Mark reconciled',
+        unreconcileBtnTitle: 'Mark unreconciled',
         modal: {
           addTitle:         'Add transaction',
           editTitle:        'Edit transaction',
