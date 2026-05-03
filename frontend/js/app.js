@@ -2432,7 +2432,7 @@ window.addEventListener('DOMContentLoaded', boot);
 Object.assign(window, {
   showPage, refreshAll,
   openTxModal, closeTxModal, saveTxModal, deleteTxModal, onCategoryChange,
-  deleteTxWithConfirm,
+  toggleReconciled, deleteTxWithConfirm,
   onProfileChange, onImportFileChange, onImportDragOver, onImportDragLeave, onImportDrop,
   toggleImportPaste, clearImport, runImportPreview, renderImportTable, toggleImportSection, _updatePreviewBtnState,
   toggleSelectAll, onRowSelect, onRowFieldChange, onImportLockBtnClick, sortImportCol,
