@@ -802,11 +802,12 @@ function _buildRowHtml(row, i) {
   const skipNotes = document.getElementById('import-skip-notes-toggle')?.checked;
   const notesBg   = !skipNotes && !locked && row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : '';
   return `<tr data-row="${i}" class="${warnClass}${dupClass}${ignClass}${lockClass}">
+    <td style="text-align:right;padding-right:4px;white-space:nowrap"><span id="row-tags-${i}">${_buildMatchTag(row)}</span></td>
     <td style="text-align:center"><input type="checkbox" id="row-sel-${i}" onchange="onRowSelect(${i})"${row._selected ? ' checked' : ''}></td>
     <td>${fmtDate(row.date)}</td>
     <td style="max-width:160px;font-size:12px">${row.description}</td>
     <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"${dis}><option value="">—</option>${propOpts}</select></td>
-    <td><span id="row-tags-${i}">${_buildMatchTag(row)}</span><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)"${dis}>${catOpts}</select></td>
+    <td><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)"${dis}>${catOpts}</select></td>
     <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${notesBg}" placeholder="notes…" value="${escHtml(row.notes || '')}" oninput="onRowFieldChange(${i},'notes',this.value)"${dis}></td>
     <td class="amount-cell ${amtCls}">${amtSign}${row.amount.toLocaleString()} ${_importCurrency}</td>
     <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"${row._ignored ? ' checked' : ''}${dis}></td>
@@ -860,7 +861,7 @@ function renderImportTable() {
   if (floatOn) {
     const sel = indexed.filter(({ row }) => row._selected);
     if (sel.length) {
-      html += `<tr class="import-section-hdr"><td colspan="9"><span class="chevron">▼</span> ${t('import.sections.selected')} (${sel.length})</td></tr>`;
+      html += `<tr class="import-section-hdr"><td colspan="10"><span class="chevron">▼</span> ${t('import.sections.selected')} (${sel.length})</td></tr>`;
       sel.forEach(({ row, i }) => { html += _buildRowHtml(row, i); });
     }
   }
@@ -880,7 +881,7 @@ function renderImportTable() {
       if (!rows.length) continue;
       const collapsed = _groupCollapsed[sec.id];
       const chevron   = collapsed ? '▶' : '▼';
-      html += `<tr class="import-section-hdr" onclick="toggleImportSection(${sec.id})"><td colspan="9"><span class="chevron">${chevron}</span> ${t('import.sections.' + sec.key)} (${rows.length})</td></tr>`;
+      html += `<tr class="import-section-hdr" onclick="toggleImportSection(${sec.id})"><td colspan="10"><span class="chevron">${chevron}</span> ${t('import.sections.' + sec.key)} (${rows.length})</td></tr>`;
       if (!collapsed) rows.forEach(({ row, i }) => { html += _buildRowHtml(row, i); });
     }
   } else {
@@ -891,7 +892,7 @@ function renderImportTable() {
   if (lockedItems.length) {
     const collapsed = _groupCollapsed[6];
     const chevron   = collapsed ? '▶' : '▼';
-    html += `<tr class="import-section-hdr" onclick="toggleImportSection(6)"><td colspan="9"><span class="chevron">${chevron}</span> ${t('import.sections.locked')} (${lockedItems.length})</td></tr>`;
+    html += `<tr class="import-section-hdr" onclick="toggleImportSection(6)"><td colspan="10"><span class="chevron">${chevron}</span> ${t('import.sections.locked')} (${lockedItems.length})</td></tr>`;
     if (!collapsed) lockedItems.forEach(({ row, i }) => { html += _buildRowHtml(row, i); });
   }
 
@@ -1286,14 +1287,14 @@ async function runImportPreview() {
   State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _locked: false, _storeMapping: false, _userPickedCategory: false, _userPickedProperty: false, _isDuplicate: false, _duplicateMatch: null, _userPickedIgnore: false }));
 
   _importCurrency = result.currency || '';
-  _groupCollapsed = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+  _groupCollapsed = { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true };
   _importSortCol  = null;
   _importSortDir  = 'asc';
   _updateImportSortIndicators();
   _updateLockBtn();
   const groupToggle = document.getElementById('import-group-toggle');
   const floatToggle = document.getElementById('import-float-toggle');
-  if (groupToggle) groupToggle.checked = false;
+  if (groupToggle) groupToggle.checked = true;
   if (floatToggle) floatToggle.checked = false;
 
   document.getElementById('import-preview-title').textContent =
