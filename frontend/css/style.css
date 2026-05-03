@@ -409,7 +409,8 @@ textarea { resize: vertical; min-height: 70px; }
 .dup-badge:hover .dup-badge-tip { display: block; }
 .preview-row-locked td { background: var(--bg2) !important; }
 .tx-reconciled { opacity: 0.6; }
-.btn-reconcile { background: none; border: none; padding: 0 4px; cursor: pointer; font-size: 14px; color: var(--text3); }
+.btn-reconcile { background: none; border: none; padding: 0.3rem 0.6rem; cursor: pointer; font-size: 16px; color: var(--text3); border-radius: 3px; line-height: 1; }
+.btn-reconcile:hover { background: var(--bg2, #f0f0f0); }
 .btn-reconcile.is-reconciled { color: var(--success, #2a7a2a); }
 .original-value-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .preview-row-locked td:nth-child(2) { border-left: none !important; }

@@ -145,8 +145,12 @@ const DataTable = (() => {
 
     function _buildFilterBar(cols, hasFilters) {
       if (!hasFilters) return `<div class="dt-filter-bar dt-hidden" id="${containerId}-filter-bar"></div>`;
-      const controls = cols.filter(c => c.filter).map(c => _buildFilterControl(c)).join('');
-      return `<div class="dt-filter-bar" id="${containerId}-filter-bar">${controls}</div>`;
+      const mainControls   = cols.filter(c => c.filter && c.filter.type !== 'toggle').map(c => _buildFilterControl(c)).join('');
+      const toggleControls = cols.filter(c => c.filter && c.filter.type === 'toggle').map(c => _buildFilterControl(c)).join('');
+      return `<div class="dt-filter-bar" id="${containerId}-filter-bar">
+        ${mainControls   ? `<div class="dt-filter-main">${mainControls}</div>` : ''}
+        ${toggleControls ? `<div class="dt-filter-toggles">${toggleControls}</div>` : ''}
+      </div>`;
     }
 
     function _buildFilterControl(col) {
@@ -174,7 +178,7 @@ const DataTable = (() => {
       }
       if (f.type === 'toggle') {
         return `<div class="dt-filter-control" data-col="${col.key}">
-          <label><input type="checkbox" data-filter-key="${col.key}"> ${col.label}</label>
+          <label><input type="checkbox" data-filter-key="${col.key}"> ${f.placeholder || col.label}</label>
         </div>`;
       }
       return '';

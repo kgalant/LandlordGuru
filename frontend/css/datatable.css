@@ -54,15 +54,38 @@
 /* ── Filter bar ────────────────────────────── */
 .dt-filter-bar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.4rem 0.75rem;
+  flex-direction: column;
   border-bottom: 1px solid #dee2e6;
   background: #fff;
 }
 
 .dt-filter-bar.dt-hidden {
   display: none;
+}
+
+.dt-filter-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.dt-filter-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.3rem 0.75rem 0.4rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.dt-filter-toggles .dt-filter-control label {
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .dt-filter-bar .dt-filter-control {

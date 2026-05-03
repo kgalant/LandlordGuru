@@ -121,6 +121,7 @@ export const I18n = (() => {
           descPlaceholder:  'e.g. Rent June 2025',
           notesPlaceholder: 'Optional note…',
           originalValue:    'Original: {{value}}',
+          reconciled:       'Mark as reconciled',
         },
         toast: {
           saved:        'Transaction saved.',

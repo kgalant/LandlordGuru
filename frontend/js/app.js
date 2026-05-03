@@ -494,9 +494,11 @@ function openTxModal(txId) {
     document.getElementById('tx-m-apt').value      = tx.property_id;
     document.getElementById('tx-m-cat').value      = tx.category;
     document.getElementById('tx-m-amount').value   = tx.amount;
-    document.getElementById('tx-m-currency').value = tx.currency || '';
-    document.getElementById('tx-m-desc').value     = tx.description;
-    document.getElementById('tx-m-notes').value    = tx.notes || '';
+    document.getElementById('tx-m-currency').value   = tx.currency || '';
+    document.getElementById('tx-m-desc').value       = tx.description;
+    document.getElementById('tx-m-notes').value      = tx.notes || '';
+    document.getElementById('tx-m-reconciled').checked = !!tx.reconciled;
+    document.getElementById('tx-m-reconciled-group').style.display = 'block';
     delBtn.style.display = 'inline-block';
 
     _hint('tx-m-original-date',   tx.original_date   ? t('tx.modal.originalValue', { value: fmtDate(tx.original_date) }) : '');
@@ -508,9 +510,11 @@ function openTxModal(txId) {
     document.getElementById('tx-m-date').value     = new Date().toISOString().slice(0,10);
     document.getElementById('tx-m-cat').value      = '';
     document.getElementById('tx-m-amount').value   = '';
-    document.getElementById('tx-m-currency').value = '';
-    document.getElementById('tx-m-desc').value     = '';
-    document.getElementById('tx-m-notes').value    = '';
+    document.getElementById('tx-m-currency').value     = '';
+    document.getElementById('tx-m-desc').value         = '';
+    document.getElementById('tx-m-notes').value        = '';
+    document.getElementById('tx-m-reconciled').checked = false;
+    document.getElementById('tx-m-reconciled-group').style.display = 'none';
     delBtn.style.display = 'none';
     _hint('tx-m-original-date',   '');
     _hint('tx-m-original-amount', '');
@@ -561,6 +565,7 @@ async function saveTxModal() {
     };
 
     if (State.editingTxId) {
+      data.reconciled = document.getElementById('tx-m-reconciled').checked;
       const existing = State.transactions.find(tx => tx.id === State.editingTxId);
       if (existing) {
         if (existing.original_date == null && date !== existing.date) {
