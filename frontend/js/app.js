@@ -1510,10 +1510,9 @@ async function doImport(saveMappings) {
     if (!confirm(t('import.confirmMissing', { count: missing.length }))) return;
   }
 
-  if (saveMappings) await saveDescMappingsForRows(activeRows, profileKey);
-
   setLoading(true, t('status.importing'));
   try {
+    if (saveMappings) await saveDescMappingsForRows(activeRows, profileKey);
     const toSave = activeRows.map(row => {
       const prop = State.properties.find(p => p.id === row.property_id);
       return {
