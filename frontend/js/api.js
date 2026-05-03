@@ -19,7 +19,15 @@ export const Api = (() => {
     const res = await fetch('/api' + path, opts);
     if (res.status === 204) return null;
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || res.statusText);
+    if (!res.ok) {
+      let msg = data.error;
+      if (!msg && Array.isArray(data.errors)) {
+        msg = data.errors
+          .map(e => `Row ${e.row + 1}: ${Array.isArray(e.errors) ? e.errors.join(', ') : e.errors}`)
+          .join('; ');
+      }
+      throw new Error(msg || res.statusText);
+    }
     return data;
   }
 
