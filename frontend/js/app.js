@@ -916,6 +916,14 @@ function _updateLockBtn() {
   const btn = document.getElementById('import-lock-btn');
   if (!btn) return;
   const selected = State.importRows.filter(r => r._selected);
+
+  const floatLabel = document.getElementById('import-float-label');
+  if (floatLabel) {
+    const hasSelection = selected.length > 0;
+    floatLabel.classList.toggle('toggle-no-selection', !hasSelection);
+    floatLabel.title = hasSelection ? '' : t('import.floatToggleHint');
+  }
+
   if (!selected.length) { btn.style.display = 'none'; return; }
   const allLocked  = selected.every(r => r._locked);
   const noneLocked = selected.every(r => !r._locked);

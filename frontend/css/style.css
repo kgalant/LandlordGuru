@@ -383,6 +383,14 @@ textarea { resize: vertical; min-height: 70px; }
   border-top: 1px solid var(--border);
 }
 
+.toggle-no-selection {
+  opacity: 0.45;
+  cursor: default;
+}
+.toggle-no-selection input[type="checkbox"] {
+  pointer-events: none;
+}
+
 #import-table-scroll {
   overflow: auto;
   max-height: calc(100vh - 220px);

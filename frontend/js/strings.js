@@ -160,6 +160,7 @@ export const I18n = (() => {
         selectSameDesc: 'Select all with same description',
         groupToggle:    'Group by status',
         floatToggle:    'Float selected',
+        floatToggleHint: 'Select one or more rows first, then click here to bring them to the top of the view.',
         skipNotesToggle: 'Skip notes requirement',
         sections: {
           unreviewed:  'Unreviewed',
