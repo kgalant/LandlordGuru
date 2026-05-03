@@ -153,3 +153,33 @@ Commit the undo import history GROUP BY fix.
   - git_status:
      M AI_STATE.md
     ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 15:16:45 [Stop]
+  - branch: main
+  - last_commit: 40c9843 fix: import history — drop MIN(created_by) which fails on UUID type in postgres
+  - git_status:
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 15:24:00 [Stop]
+  - branch: main
+  - last_commit: 40c9843 fix: import history — drop MIN(created_by) which fails on UUID type in postgres
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 15:26:42 [Stop]
+  - branch: main
+  - last_commit: 40c9843 fix: import history — drop MIN(created_by) which fails on UUID type in postgres
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 15:27:09 [Stop]
+  - branch: main
+  - last_commit: 40c9843 fix: import history — drop MIN(created_by) which fails on UUID type in postgres
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? .claude/hooks/checkpoint.sh

@@ -385,7 +385,10 @@ textarea { resize: vertical; min-height: 70px; }
 
 .toggle-no-selection {
   opacity: 0.45;
-  cursor: default;
+}
+.toggle-no-selection,
+.toggle-no-selection * {
+  cursor: default !important;
   pointer-events: none;
 }
 
