@@ -674,11 +674,15 @@ async function saveDescMappingsForRows(rows, profileKey) {
 // ── Row selection ─────────────────────────────────────────
 
 function toggleSelectAll(headerCb) {
-  const checked = headerCb.checked;
+  // Three-state: none-selected → select-all; partial or all → deselect-all
+  const anySelected = State.importRows.some(r => r._selected);
+  const shouldSelect = !anySelected;
+  headerCb.checked       = shouldSelect;
+  headerCb.indeterminate = false;
   State.importRows.forEach((row, i) => {
-    row._selected = checked;
+    row._selected = shouldSelect;
     const cb = document.getElementById('row-sel-' + i);
-    if (cb) cb.checked = checked;
+    if (cb) cb.checked = shouldSelect;
   });
   _updateLockBtn();
   _rerenderIfGrouped();
@@ -704,9 +708,13 @@ function onRowSelect(i) {
     sameDescToggle.checked = false;
   }
 
-  const all = State.importRows.length > 0 && State.importRows.every(r => r._selected);
+  const anySelected = State.importRows.some(r => r._selected);
+  const allSelected = State.importRows.length > 0 && State.importRows.every(r => r._selected);
   const hdr = document.getElementById('select-all-cb');
-  if (hdr) hdr.checked = all;
+  if (hdr) {
+    hdr.checked       = allSelected;
+    hdr.indeterminate = anySelected && !allSelected;
+  }
   _updateLockBtn();
   _rerenderIfGrouped();
 }
@@ -774,7 +782,8 @@ function _applyRowStyle(i) {
 
   const notesEl = document.getElementById('row-notes-' + i);
   if (notesEl) {
-    const needsNote = !row._ignored && !row._locked && row.category === 'other_expense' && !(row.notes || '').trim();
+    const skipNotes = document.getElementById('import-skip-notes-toggle')?.checked;
+    const needsNote = !skipNotes && !row._ignored && !row._locked && row.category === 'other_expense' && !(row.notes || '').trim();
     notesEl.style.background = needsNote ? 'var(--error-bg, #ffeaea)' : '';
   }
 }
@@ -792,7 +801,8 @@ function _buildRowHtml(row, i) {
   const lockClass = locked           ? ' preview-row-locked' : '';
   const amtSign   = row.type === 'expense' ? '-' : '';
   const amtCls    = row.type === 'expense' ? 'negative' : 'positive';
-  const notesBg   = !locked && row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : '';
+  const skipNotes = document.getElementById('import-skip-notes-toggle')?.checked;
+  const notesBg   = !skipNotes && !locked && row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : '';
   return `<tr data-row="${i}" class="${warnClass}${dupClass}${ignClass}${lockClass}">
     <td style="text-align:center"><input type="checkbox" id="row-sel-${i}" onchange="onRowSelect(${i})"${row._selected ? ' checked' : ''}></td>
     <td>${fmtDate(row.date)}</td>
@@ -937,7 +947,7 @@ function lockSelectedRows() {
     }
   });
   const hdr = document.getElementById('select-all-cb');
-  if (hdr) hdr.checked = false;
+  if (hdr) { hdr.checked = false; hdr.indeterminate = false; }
   _updateLockBtn();
   renderImportTable();
 }
@@ -1301,7 +1311,8 @@ async function runImportPreview() {
     errDiv.innerHTML = '';
   }
 
-  document.getElementById('select-all-cb').checked = false;
+  const selAllCb = document.getElementById('select-all-cb');
+  if (selAllCb) { selAllCb.checked = false; selAllCb.indeterminate = false; }
   document.getElementById('import-static-section').style.display = 'none';
   document.getElementById('import-mapping-confirm-section').style.display = 'none';
   const preview = document.getElementById('import-preview-section');
@@ -1319,8 +1330,11 @@ function goToStaticPreview() {
   const activeRows = State.importRows.filter(r => !r._ignored && !r._locked);
   if (!activeRows.length) { toast(t('import.toast.noActiveRows'), 'error'); return; }
 
-  const missingNotes = activeRows.filter(r => r.category === 'other_expense' && !(r.notes || '').trim());
-  if (missingNotes.length) { toast(t('import.toast.notesRequired', { count: missingNotes.length }), 'error'); return; }
+  const skipNotes = document.getElementById('import-skip-notes-toggle')?.checked;
+  if (!skipNotes) {
+    const missingNotes = activeRows.filter(r => r.category === 'other_expense' && !(r.notes || '').trim());
+    if (missingNotes.length) { toast(t('import.toast.notesRequired', { count: missingNotes.length }), 'error'); return; }
+  }
 
   const profileKey  = document.getElementById('import-profile').value;
   const hasToStore  = activeRows.some(r => r._storeMapping);

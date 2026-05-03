@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: bug
-- Epic: E5 Integrations / E7 Frontend Architecture
-- ID: F5-import-sticky
-- Title: Import preview sticky header fix
-- Short summary: Toggles row (bulk-update, group, float, lock-btn) was not sticky — only the card header was. Wrapping both in #import-preview-sticky so both stick together when scrolling.
+- Type: feature
+- Epic: E5 Integrations
+- ID: F5-import-ux
+- Title: Import preview UX — skip-notes toggle + select-all indeterminate
+- Short summary: (1) New "Skip notes requirement" toggle bypasses other_expense notes validation and red highlight. (2) Select-all checkbox gains indeterminate state (partial selection); clicking it in that state deselects all.
 
 ---
 
@@ -29,7 +29,10 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Task breakdown (current focus)
 
-- [-] S1: Wrap card-header + toggles row in #import-preview-sticky; move sticky CSS to wrapper; style #import-preview-toggles. Commit.
+- [x] S1: Sticky header fix (038acab).
+- [x] S2: Skip-notes toggle — HTML checkbox, string, goToStaticPreview guard, row highlight guard in _updateRowUi and _buildRowHtml.
+- [x] S3: Select-all indeterminate — toggleSelectAll three-state logic, onRowSelect sets indeterminate, lockSelectedRows + runImportPreview clear it.
+- [-] S4: Commit.
 
 ---
 
@@ -96,4 +99,10 @@ Commit the import preview sticky header fix.
   - changed_files: AI_STATE.md
   - git_status:
      M AI_STATE.md
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 09:56:53 [Stop]
+  - branch: main
+  - last_commit: 038acab fix: import preview — keep toggles row sticky alongside card header
+  - git_status:
     ?? .claude/hooks/checkpoint.sh

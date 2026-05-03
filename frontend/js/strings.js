@@ -160,6 +160,7 @@ export const I18n = (() => {
         selectSameDesc: 'Select all with same description',
         groupToggle:    'Group by status',
         floatToggle:    'Float selected',
+        skipNotesToggle: 'Skip notes requirement',
         sections: {
           unreviewed:  'Unreviewed',
           autoMatched: 'Auto-matched',
