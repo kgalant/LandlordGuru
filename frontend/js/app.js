@@ -915,6 +915,12 @@ function renderImportTable() {
   }
 
   tbody.innerHTML = html;
+
+  // keep sticky section-header rows below the sticky thead
+  const thead = tbody.closest('table')?.tHead;
+  if (thead) {
+    document.documentElement.style.setProperty('--import-thead-h', thead.offsetHeight + 'px');
+  }
 }
 
 function toggleImportSection(id) {
@@ -1313,7 +1319,7 @@ async function runImportPreview() {
   State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _locked: false, _storeMapping: false, _userPickedCategory: false, _userPickedProperty: false, _isDuplicate: false, _duplicateMatch: null, _userPickedIgnore: false }));
 
   _importCurrency = result.currency || '';
-  _groupCollapsed = { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true };
+  _groupCollapsed = { 1: false, 2: true, 3: true, 4: true, 5: true, 6: true };
   _importSortCol  = null;
   _importSortDir  = 'asc';
   _updateImportSortIndicators();

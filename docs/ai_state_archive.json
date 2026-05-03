@@ -459,7 +459,7 @@
   },
   {
     "timestamp": "2026-05-01 14:06:00 to 14:43:35",
-    "label": "F3-4 implementation + F5-13 spec — multiple lifecycle events",
+    "label": "F3-4 implementation + F5-13 spec \u2014 multiple lifecycle events",
     "branch": "main",
     "last_commit": "42adc6b",
     "changed_files": "backend/src/routes/transactions.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/js/app.js, version.json, AI_STATE.md, docs/epics/05-integrations-data-import.md",
@@ -475,7 +475,7 @@
   },
   {
     "timestamp": "2026-05-01 to 2026-05-02",
-    "label": "F3-5 complete — history/rollback endpoints, Recent Imports panel + Undo modal, properties column, chevron fix, migration 018, archive moved to docs/",
+    "label": "F3-5 complete \u2014 history/rollback endpoints, Recent Imports panel + Undo modal, properties column, chevron fix, migration 018, archive moved to docs/",
     "branch": "main",
     "last_commit": "178bed3",
     "changed_files": "backend/src/routes/transactions.js, backend/tests/transactions.test.js, frontend/index.html, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, AI_STATE.md",
@@ -491,17 +491,17 @@
   },
   {
     "timestamp": "2026-05-02 to 2026-05-03",
-    "label": "F5-14 complete — create category inline from import preview; toggle row layout fix",
+    "label": "F5-14 complete \u2014 create category inline from import preview; toggle row layout fix",
     "branch": "main",
     "last_commit": "3a72c0b",
     "changed_files": "frontend/js/app.js, frontend/js/importer.js, frontend/index.html, version.json, docs/epics/05-integrations-data-import.md, AI_STATE.md",
     "git_status": "M AI_STATE.md, ?? .claude/hooks/checkpoint.sh"
   },
   {
-    "timestamp": "2026-05-03 [PostCompact — multiple stop entries]",
+    "timestamp": "2026-05-03 [PostCompact \u2014 multiple stop entries]",
     "phase": "[F1-12/F3-6 in progress]",
     "branch": "main",
-    "last_commit": "6b18a3e feat: F5-9/10/11 — row locking, sortable columns, notes highlight in import preview",
+    "last_commit": "6b18a3e feat: F5-9/10/11 \u2014 row locking, sortable columns, notes highlight in import preview",
     "changed_files": "AI_STATE.md, backend/src/routes/transactions.js, backend/src/routes/workspace.js, docs/epics/05-integrations-data-import.md, frontend/css/style.css, frontend/index.html, frontend/js/app.js, frontend/js/strings.js, backend/src/db/migrations/019_date_format.js",
     "git_status": "M AI_STATE.md, M backend/src/routes/transactions.js, M backend/src/routes/workspace.js, M docs/epics/05-integrations-data-import.md, M frontend/css/style.css, M frontend/index.html, M frontend/js/app.js, M frontend/js/strings.js, ?? backend/src/db/migrations/019_date_format.js, ?? .claude/hooks/checkpoint.sh"
   },
@@ -509,7 +509,7 @@
     "timestamp": "2026-05-03 [F1-12+F3-6 committed, F3-11 in progress]",
     "phase": "[F3-11 implementation]",
     "branch": "main",
-    "last_commit": "286d191 feat: F1-12 + F3-6 — date display format preference and reconciliation marking",
+    "last_commit": "286d191 feat: F1-12 + F3-6 \u2014 date display format preference and reconciliation marking",
     "changed_files": "AI_STATE.md, docs/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/js/app.js, frontend/js/datatable.js, frontend/js/strings.js, version.json",
     "git_status": "M AI_STATE.md, M docs/ai_state_archive.json, M docs/epics/03-transaction-management.md, M frontend/js/app.js, M frontend/js/datatable.js, M frontend/js/strings.js, M version.json, ?? .claude/hooks/checkpoint.sh"
   },
@@ -517,7 +517,7 @@
     "timestamp": "2026-05-03 [F3-11 committed, F3-10 in progress]",
     "phase": "[F3-10 implementation]",
     "branch": "main",
-    "last_commit": "4c0acdb feat: F3-11 — year quick-select in transaction list filter",
+    "last_commit": "4c0acdb feat: F3-11 \u2014 year quick-select in transaction list filter",
     "changed_files": "AI_STATE.md, docs/ai_state_archive.json, docs/epics/03-transaction-management.md, frontend/css/style.css, frontend/index.html, frontend/js/app.js, frontend/js/strings.js, version.json, backend/src/routes/transactions.js, backend/src/db/migrations/020_original_fields.js, backend/tests/transactions.test.js",
     "git_status": "M AI_STATE.md, M docs/ai_state_archive.json, M docs/epics/03-transaction-management.md, M frontend/css/style.css, M frontend/index.html, M frontend/js/app.js, M frontend/js/strings.js, M version.json, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, ?? backend/src/db/migrations/020_original_fields.js, ?? .claude/hooks/checkpoint.sh"
   },
@@ -525,8 +525,15 @@
     "timestamp": "2026-05-03 [PostCompact-sessions]",
     "phase": "[multiple stop entries from prior sessions]",
     "branch": "main",
-    "last_commit": "acf6427 fix: reconciliation UI fixes — modal checkbox, filter row layout, click target",
+    "last_commit": "acf6427 fix: reconciliation UI fixes \u2014 modal checkbox, filter row layout, click target",
     "changed_files": "AI_STATE.md",
+    "git_status": "M AI_STATE.md, ?? .claude/hooks/checkpoint.sh"
+  },
+  {
+    "timestamp": "2026-05-03 11:00:39",
+    "phase": "[PostCompact]",
+    "branch": "main",
+    "last_commit": "a0c52e1",
     "git_status": "M AI_STATE.md, ?? .claude/hooks/checkpoint.sh"
   }
 ]

@@ -274,7 +274,9 @@
 }
 
 .dt-col-vis-dropdown label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.3rem 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -283,12 +285,14 @@
 }
 
 .dt-col-vis-dropdown label input[type="checkbox"] {
-  vertical-align: middle;
-  margin: 0 0.35rem 0 0;
-}
-
-.dt-col-vis-dropdown label span {
-  vertical-align: middle;
+  /* reset global input rule that sets width:100% and padding on all inputs */
+  width: auto;
+  padding: 0;
+  border: revert;
+  background: revert;
+  box-shadow: none;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .dt-col-vis-dropdown label:hover {

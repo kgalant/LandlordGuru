@@ -8,11 +8,11 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
+- Type: bug
 - Epic: E5 Integrations
-- ID: F5-import-ux
-- Title: Import preview UX — skip-notes toggle + select-all indeterminate
-- Short summary: (1) New "Skip notes requirement" toggle bypasses other_expense notes validation and red highlight. (2) Select-all checkbox gains indeterminate state (partial selection); clicking it in that state deselects all.
+- ID: F5-import-ux-fixes
+- Title: Import preview post-UX bug fixes
+- Short summary: Four bugs: (1) col-vis dropdown checkbox misaligned (global input width:100% override needed), (2) Unreviewed group not open by default, (3) sticky section headers not offsetting below thead, (4) float-selected label still clickable when disabled.
 
 ---
 
@@ -29,10 +29,10 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Task breakdown (current focus)
 
-- [x] S1: Sticky header fix (038acab).
-- [x] S2: Skip-notes toggle — HTML checkbox, string, goToStaticPreview guard, row highlight guard in _updateRowUi and _buildRowHtml.
-- [x] S3: Select-all indeterminate — toggleSelectAll three-state logic, onRowSelect sets indeterminate, lockSelectedRows + runImportPreview clear it.
-- [-] S4: Commit.
+- [x] S1: Fix col-vis dropdown checkbox alignment — reset global input width:100%/padding on checkbox inside dropdown (datatable.css).
+- [x] S2: Fix Unreviewed group default open — change _groupCollapsed id:1 from true to false (app.js).
+- [x] S3: Fix sticky section headers — use CSS var --import-thead-h set in JS after render; section-hdr uses top:var(--import-thead-h) (style.css + app.js).
+- [-] S4: Fix float-selected still clickable — add pointer-events:none to .toggle-no-selection itself (style.css). Confirm and commit.
 
 ---
 
@@ -58,7 +58,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit the import preview sticky header fix.
+Confirm all four fixes look correct then commit.
 
 ---
 
@@ -87,22 +87,44 @@ Commit the import preview sticky header fix.
 
 ## Automation log (latest only)
 
-- 2026-05-03 [date-filters + columns-dropdown done]
+- 2026-05-03 [four-fixes]
   - branch: main
-  - last_commit: 7ca85e1 fix: date filter UX — auto-separators, year fills date range, columns dropdown alignment
-  - changed_files: AI_STATE.md
-  - git_status: M AI_STATE.md, ?? .claude/hooks/checkpoint.sh
+  - last_commit: a0c52e1
+  - changed_files: frontend/css/datatable.css, frontend/css/style.css, frontend/js/app.js, AI_STATE.md
+  - git_status: M AI_STATE.md, M frontend/css/datatable.css, M frontend/css/style.css, M frontend/js/app.js, ?? .claude/hooks/checkpoint.sh
 
-- 2026-05-03 09:51:17 [Stop]
+- 2026-05-03 11:04:49 [Stop]
   - branch: main
-  - last_commit: 7ca85e1 fix: date filter UX — auto-separators, year fills date range, columns dropdown alignment
-  - changed_files: AI_STATE.md
+  - last_commit: a0c52e1 fix: columns dropdown — use block+inline layout instead of flex to fix checkbox/label alignment
+  - changed_files: AI_STATE.md,docs/ai_state_archive.json frontend/css/datatable.css,frontend/css/style.css frontend/js/app.js
   - git_status:
      M AI_STATE.md
+     M docs/ai_state_archive.json
+     M frontend/css/datatable.css
+     M frontend/css/style.css
+     M frontend/js/app.js
     ?? .claude/hooks/checkpoint.sh
 
-- 2026-05-03 09:56:53 [Stop]
+- 2026-05-03 12:18:27 [Stop]
   - branch: main
-  - last_commit: 038acab fix: import preview — keep toggles row sticky alongside card header
+  - last_commit: a0c52e1 fix: columns dropdown — use block+inline layout instead of flex to fix checkbox/label alignment
+  - changed_files: AI_STATE.md,docs/ai_state_archive.json frontend/css/datatable.css,frontend/css/style.css frontend/js/app.js
   - git_status:
+     M AI_STATE.md
+     M docs/ai_state_archive.json
+     M frontend/css/datatable.css
+     M frontend/css/style.css
+     M frontend/js/app.js
+    ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 12:25:01 [Stop]
+  - branch: main
+  - last_commit: a0c52e1 fix: columns dropdown — use block+inline layout instead of flex to fix checkbox/label alignment
+  - changed_files: AI_STATE.md,docs/ai_state_archive.json frontend/css/datatable.css,frontend/css/style.css frontend/js/app.js
+  - git_status:
+     M AI_STATE.md
+     M docs/ai_state_archive.json
+     M frontend/css/datatable.css
+     M frontend/css/style.css
+     M frontend/js/app.js
     ?? .claude/hooks/checkpoint.sh
