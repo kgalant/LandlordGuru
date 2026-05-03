@@ -9,10 +9,10 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: bug
-- Epic: E3 Transaction Management / E7 Frontend Architecture
-- ID: F3-date-filters + F7-B2
-- Title: Date filter UX fixes + columns dropdown alignment
-- Short summary: (1) Auto-insert separators in date text inputs as user types digits. (2) Year quick-select fills date-from/to inputs directly instead of being a separate filter layer. (3) Columns dropdown left-justified with tight checkbox+label spacing.
+- Epic: E5 Integrations / E7 Frontend Architecture
+- ID: F5-import-sticky
+- Title: Import preview sticky header fix
+- Short summary: Toggles row (bulk-update, group, float, lock-btn) was not sticky — only the card header was. Wrapping both in #import-preview-sticky so both stick together when scrolling.
 
 ---
 
@@ -29,10 +29,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Task breakdown (current focus)
 
-- [x] S1: Auto-insert date separators in DataTable date-range inputs (data-date-fmt attr + _autoInsertDateSep helper + input event handler) and in reports rep-from/rep-to (onDateFilterInput in app.js).
-- [x] S2: Year select fills date-from/to inputs via setsDateRange: 'date' config + _fmtYearBound helper; remove year fallback from fetchData.
-- [x] S3: Columns dropdown CSS — left-justify checkboxes, tight gap, clean label template.
-- [-] S4: Update AI_STATE.md and commit.
+- [-] S1: Wrap card-header + toggles row in #import-preview-sticky; move sticky CSS to wrapper; style #import-preview-toggles. Commit.
 
 ---
 
@@ -58,7 +55,7 @@ Relevant epic docs:
 
 ## Next step
 
-Commit all changes (date filter fixes + columns dropdown tweak).
+Commit the import preview sticky header fix.
 
 ---
 
@@ -87,8 +84,16 @@ Commit all changes (date filter fixes + columns dropdown tweak).
 
 ## Automation log (latest only)
 
-- 2026-05-03 [date-filters + columns-dropdown, pre-commit]
+- 2026-05-03 [date-filters + columns-dropdown done]
   - branch: main
-  - last_commit: acf6427 fix: reconciliation UI fixes — modal checkbox, filter row layout, click target
-  - changed_files: AI_STATE.md, docs/epics/07-frontend-architecture.md, frontend/css/datatable.css, frontend/index.html, frontend/js/app.js, frontend/js/datatable.js
-  - git_status: M AI_STATE.md, M frontend/css/datatable.css, M frontend/index.html, M frontend/js/app.js, M frontend/js/datatable.js, M docs/epics/07-frontend-architecture.md, ?? .claude/hooks/checkpoint.sh
+  - last_commit: 7ca85e1 fix: date filter UX — auto-separators, year fills date range, columns dropdown alignment
+  - changed_files: AI_STATE.md
+  - git_status: M AI_STATE.md, ?? .claude/hooks/checkpoint.sh
+
+- 2026-05-03 09:51:17 [Stop]
+  - branch: main
+  - last_commit: 7ca85e1 fix: date filter UX — auto-separators, year fills date range, columns dropdown alignment
+  - changed_files: AI_STATE.md
+  - git_status:
+     M AI_STATE.md
+    ?? .claude/hooks/checkpoint.sh

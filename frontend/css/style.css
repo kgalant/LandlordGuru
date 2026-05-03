@@ -363,13 +363,24 @@ textarea { resize: vertical; min-height: 70px; }
 
 /* ── Sticky import preview header + column headers ────────── */
 
-#import-preview-header,
+/* Sticky wrapper holds card-header + toggles row as one unit */
+#import-preview-sticky,
 #import-static-header {
   position: sticky;
   top: 52px;
   z-index: 20;
   background: var(--bg);
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Toggles row inside the sticky wrapper */
+#import-preview-toggles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 0.5rem 0.75rem 0.6rem;
+  border-top: 1px solid var(--border);
 }
 
 #import-table-scroll {
