@@ -1,112 +1,115 @@
 # LandlordGuru v2 — Backend Setup Guide
 
-This guide covers setting up and deploying the v2 backend (Node.js + Express + PostgreSQL).
-
-**Current status:** v2 is in active development. Auth is working (Milestone 3). API routes (properties, transactions, rules) are in progress.
+This guide covers local development setup and server deployment for the v2 backend (Node.js + Express + PostgreSQL).
 
 ---
 
-## Prerequisites
+## Architecture overview
+
+All databases live on `homedev`. Local machines connect via SSH tunnel.
+
+| Environment | Location | Database | Port |
+|-------------|----------|----------|------|
+| Local dev | Your machine | `landlordguru_dev` | 3000 |
+| Test | `homedev:~/dev/landlordguru-test` | `landlordguru_test` | 3001 |
+| Production | `homedev:~/dev/landlordguru` | `landlordguru_prod` | 3000 |
+
+---
+
+## Local development setup
+
+### Prerequisites
 
 - **Node.js** 18+ and npm
-- **PostgreSQL** 12+ (local dev or remote connection string)
-- **Git** (for cloning the repo)
+- **Git** — with SSH key configured for `kim@homedev`
+- **Mac**: built-in bash and ssh, nothing extra needed
+- **Windows**: install [Git for Windows](https://git-scm.com/) — use Git Bash for all commands
 
-### Optional tools (recommended)
-- `psql` — PostgreSQL CLI for debugging
-- `pm2` — process manager for production (install globally: `npm install -g pm2`)
-- VS Code Remote SSH extension — for developing on a remote Linux server
+No local PostgreSQL required — the database is on `homedev`, accessed via SSH tunnel.
 
 ---
 
-## Step 1 — Clone repo and install dependencies
+### Step 1 — Clone repo and install dependencies
 
 ```bash
-git clone https://github.com/your-username/LandlordGuru.git
-cd LandlordGuru
+git clone <repo-url>
+cd landlordguru
 cd backend
 npm install
 ```
 
 ---
 
-## Step 2 — Set up environment variables
-
-Copy the example file:
+### Step 2 — Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your values:
+Edit `backend/.env`. The key settings for local dev:
 
 ```
-# Server
 PORT=3000
 FRONTEND_URL=http://localhost:3000
-
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/landlordguru_dev
-
-# Secrets (generate with: openssl rand -base64 32)
-JWT_SECRET=your-random-jwt-secret-here
-SESSION_SECRET=your-random-session-secret-here
-
-# Google OAuth (from Google Cloud Console, see Step 5)
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+DATABASE_URL=postgresql://kim:PASSWORD@localhost:5433/landlordguru_dev
 ```
 
-**For local dev with PostgreSQL on the same machine:**
-- If you have a default local PostgreSQL user/password, use `DATABASE_URL=postgresql://localhost/landlordguru_dev`
-- Or set up a `.pgpass` file (see PostgreSQL docs) to avoid typing passwords every time
+Note port **5433** — that's the local end of the SSH tunnel, not your local Postgres port.
+
+Fill in `JWT_SECRET`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` with the real values.
 
 ---
 
-## Step 3 — Create PostgreSQL database
+### Step 3 — Windows Git Bash: configure SSH agent
+
+Skip this on Mac (the SSH agent runs automatically).
+
+On Windows, Git Bash doesn't load your SSH key automatically. Add these lines to `~/.bashrc`:
 
 ```bash
-createdb landlordguru_dev
+eval $(ssh-agent -s) > /dev/null
+ssh-add ~/.ssh/id_ed25519 2>/dev/null
 ```
 
-Or via `psql`:
-
-```bash
-psql -U postgres
-# then in the postgres prompt:
-CREATE DATABASE landlordguru_dev;
-\q
-```
+Restart Git Bash, or run `source ~/.bashrc`. Without this, the tunnel will fail or prompt for a password on every connection.
 
 ---
 
-## Step 4 — Run database migrations
+### Step 4 — First-run: create schema via tunnel
 
-From the `backend/` directory:
+Run this once to create all tables in `landlordguru_dev`:
 
 ```bash
-npm run migrate
+# Terminal 1 — open the tunnel
+bash scripts/tunnel.sh
+
+# Terminal 2 — run migrations
+cd backend && npm run migrate
 ```
 
-This runs all migration files in `backend/src/db/migrations/` and creates:
-- `workspaces` — workspace containers
-- `users` — user accounts from Google OAuth
-- `workspace_users` — role/permission assignments
-- `properties`, `transactions`, `rules`, `fx_log`, `strings` — data tables
+Verify by checking that the app starts and the login page loads (Step 5).
 
-**Verify the migration succeeded:**
+---
+
+### Step 5 — Start local development
 
 ```bash
-psql landlordguru_dev
-\dt                    # list all tables
-\d workspaces         # inspect the workspaces table schema
-\q
+cd backend
+npm run start:local
+```
+
+This opens the SSH tunnel and starts the server in a single command. Open `http://localhost:3000`.
+
+For subsequent sessions you only need `npm run start:local` — no separate tunnel terminal.
+
+**Standalone tunnel** (for running migrations without starting the server):
+```bash
+bash scripts/tunnel.sh
 ```
 
 ---
 
-## Step 5 — Set up Google OAuth (for login)
+### Step 6 — Set up Google OAuth (for login)
 
 ### Create a Google Cloud project
 
@@ -126,39 +129,21 @@ psql landlordguru_dev
    - Add yourself as a test user (your email)
    - Save and continue
 4. Back to credentials: select **Web application** as the type
-5. Add an authorized redirect URI:
-   - For local dev: `http://localhost:3000/auth/google/callback`
-   - For production: `https://landlordguru.galant.info/auth/google/callback`
-6. Click **Create** — you'll see your Client ID and Client Secret
-7. Copy both into your `.env` file:
+5. Add **authorized JavaScript origins**:
+   - `http://localhost:3000` (local dev)
+   - `http://homedev:3001` (test server)
+6. Add **authorized redirect URIs**:
+   - `http://localhost:3000/auth/google/callback` (local dev)
+   - `http://homedev:3001/auth/google/callback` (test server)
+   - `http://homedev:3000/auth/google/callback` (production)
+7. Click **Create** — you'll see your Client ID and Client Secret
+8. Copy both into your `.env` file:
    ```
    GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=xxx
    ```
 
----
-
-## Step 6 — Start the development server
-
-```bash
-npm start
-```
-
-You should see:
-```
-Express listening on http://localhost:3000
-Database connected
-```
-
-Open http://localhost:3000 in your browser. You should see:
-- A login screen with "Sign in with Google" button
-- Click it → you'll be redirected to Google → back to the app as a logged-in user
-
-**Behind the scenes:**
-- Your email is stored in the `users` table
-- A `workspace` is auto-created for you
-- A JWT token is issued and stored in an httpOnly cookie
-- All subsequent API calls include the JWT automatically
+> **Important**: `http://localhost:3000` must be in the authorized origins or local login will fail with a redirect URI mismatch error.
 
 ---
 
@@ -270,70 +255,55 @@ See `docs/LOGGING.md` for full reference on log levels, action naming convention
 
 ---
 
-## Production deployment
+## Deployment
 
-### On a Linux server (spare laptop or VPS)
+### Deploy to test server
 
-1. **SSH into the server:**
-   ```bash
-   ssh kim@homedev
-   ```
-
-2. **Clone the repo and install:**
-   ```bash
-   cd ~/dev
-   git clone https://github.com/your-username/LandlordGuru.git
-   cd LandlordGuru/backend
-   npm install --production
-   ```
-
-3. **Set up environment variables** on the server (create `.env`):
-   ```
-   PORT=3001
-   FRONTEND_URL=https://landlordguru.galant.info
-   DATABASE_URL=postgresql://user:pass@localhost/landlordguru_prod
-   JWT_SECRET=...
-   SESSION_SECRET=...
-   GOOGLE_CLIENT_ID=...
-   GOOGLE_CLIENT_SECRET=...
-   GOOGLE_CALLBACK_URL=https://landlordguru.galant.info/auth/google/callback
-   ```
-
-4. **Create the production database:**
-   ```bash
-   createdb landlordguru_prod
-   npm run migrate
-   ```
-
-5. **Start with PM2:**
-   ```bash
-   npm install -g pm2   # if not already installed
-   pm2 start src/index.js --name landlordguru
-   pm2 save
-   ```
-
-6. **Set up reverse proxy** (Nginx or Cloudflare Tunnel):
-   - Point `landlordguru.galant.info` → `http://localhost:3001`
-   - Enable HTTPS (Let's Encrypt or Cloudflare)
-
-### Deployment workflow
-
-After code changes:
+From your local machine (Mac or Windows Git Bash):
 
 ```bash
-# On your laptop
-git push origin main
-
-# On the server
-cd ~/dev/LandlordGuru
-git pull origin main
-cd backend
-npm install
-npm run migrate        # (if there are new migrations)
-pm2 reload landlordguru
+./deploy-test.sh       # bash
+.\deploy-test.ps1      # PowerShell
 ```
 
-Or use a GitHub webhook to auto-deploy on push.
+Pushes to origin, then SSHs into homedev, pulls, runs migrations, restarts PM2 (`landlordguru-test`, port 3001).
+
+### Deploy to production
+
+Production deploys are intentionally manual. SSH into homedev and run the script directly:
+
+```bash
+ssh kim@homedev
+bash ~/dev/landlordguru/scripts/prod-deploy.sh
+```
+
+Pulls from origin, runs migrations, restarts PM2 (`landlordguru`, port 3000).
+
+### First-time server setup on homedev
+
+Only needed once when setting up the environments from scratch:
+
+```bash
+# Rename dev directory to test
+pm2 delete landlordguru   # remove old process first to avoid ghost entries
+mv ~/dev/landlordguru-dev ~/dev/landlordguru-test
+
+# Create databases
+createdb -U kim landlordguru_dev    # for local dev (via tunnel)
+createdb -U kim landlordguru_prod   # for production
+
+# Set up PM2 processes
+PORT=3001 pm2 start ~/dev/landlordguru-test/backend/src/index.js --name landlordguru-test
+PORT=3000 pm2 start ~/dev/landlordguru/backend/src/index.js --name landlordguru
+
+# Persist and enable restart-on-boot
+pm2 save
+pm2 startup   # run the printed command to enable autostart
+```
+
+Create `.env` files manually on homedev (never committed to git):
+- `~/dev/landlordguru-test/backend/.env` — `DATABASE_URL` → `landlordguru_test`, `PORT=3001`
+- `~/dev/landlordguru/backend/.env` — `DATABASE_URL` → `landlordguru_prod`, `PORT=3000`
 
 ---
 

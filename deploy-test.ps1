@@ -1,11 +1,13 @@
-# Deploy script: push locally, pull on remote, restart PM2
-# Usage: .\deploy.ps1
+# Deploy to test server: push locally, pull on homedev, migrate, restart PM2.
+# Usage: .\deploy-test.ps1
+# Deploys to ~/dev/landlordguru-test (PM2: landlordguru-test, port 3001).
+# For production deployment, SSH into homedev and run: bash scripts/prod-deploy.sh
 
 $ErrorActionPreference = "Continue"
 
 $stepErrors = @()
 
-Write-Host "=== LandlordGuru Deploy Script ===" -ForegroundColor Cyan
+Write-Host "=== LandlordGuru Deploy → TEST SERVER ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Step 1: Push locally
@@ -28,7 +30,7 @@ $remoteCommands = @'
 set +e
 source ~/.nvm/nvm.sh
 
-cd ~/dev/landlordguru
+cd ~/dev/landlordguru-test
 echo "[2/4] Pulling latest changes..."
 git pull origin main
 GIT_PULL_EXIT=$?
@@ -41,7 +43,7 @@ npm run migrate
 MIGRATE_EXIT=$?
 
 echo "[4/4] Restarting PM2 (commit: $GIT_COMMIT)..."
-GIT_COMMIT=$GIT_COMMIT pm2 restart landlordguru --update-env
+GIT_COMMIT=$GIT_COMMIT pm2 restart landlordguru-test --update-env
 PM2_EXIT=$?
 
 printf '\n__DEPLOY_RESULTS__ git_pull=%d migrate=%d pm2=%d\n' $GIT_PULL_EXIT $MIGRATE_EXIT $PM2_EXIT
@@ -78,7 +80,7 @@ Write-Host ""
 # Summary
 if ($stepErrors.Count -eq 0) {
     Write-Host "Deployment complete — all steps succeeded." -ForegroundColor Green
-    Write-Host "Your changes are live on the dev server." -ForegroundColor Cyan
+    Write-Host "Your changes are live on the test server (homedev:3001)." -ForegroundColor Cyan
 } else {
     Write-Host "Deployment finished with $($stepErrors.Count) error(s):" -ForegroundColor Yellow
     foreach ($err in $stepErrors) {

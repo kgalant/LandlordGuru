@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
+    "start:local": "concurrently \"ssh -N -L 5433:localhost:5432 kim@homedev\" \"node --watch src/index.js\"",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "test": "jest --runInBand"
@@ -26,6 +27,7 @@
     "pg": "^8.11.0"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "jest": "^30.3.0",
     "supertest": "^7.2.2"
   }

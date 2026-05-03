@@ -27,27 +27,82 @@ LandlordGuru is a web app for tracking rental property income and expenses acros
 
 ---
 
-## Development
+## Environments
 
-- Local dev: run from `backend/` with `npm install && npm start` — app runs on `http://localhost:3000`
-- Environment: `.env` file required (see `backend/.env.example`)
-- Required vars: `PORT`, `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`
-- Code work happens on the local machine. To verify anything in the browser, changes must be committed, pushed, pulled on the test server, and the server restarted.
+Three environments, all databases on `homedev`:
+
+| Environment | Location | Database | Port | Deploy via |
+|-------------|----------|----------|------|-----------|
+| Local dev | Local machine | `landlordguru_dev` | 3000 | n/a |
+| Test | `homedev:~/dev/landlordguru-test` | `landlordguru_test` | 3001 | `deploy-test.sh` / `deploy-test.ps1` |
+| Production | `homedev:~/dev/landlordguru` | `landlordguru_prod` | 3000 | `scripts/prod-deploy.sh` (on homedev only) |
 
 ---
 
-## Test deployment
+## Local development
 
-- Server: SSH `kim@homedev`
-- Backend runs under PM2: `pm2 start backend/src/index.js`
-- Restart: `pm2 restart landlordguru` (verify actual PM2 app name if unsure)
-- Logs: `pm2 logs` or check `/var/log/` on server
-- Database backups: PostgreSQL dumps on server (managed separately, not in git)
-- Use `deploy.ps1` (Windows) or `deploy.sh` (bash) to automate push → pull → migrate → restart
+The database lives on `homedev`. A tunnel is required before starting the app.
+
+**Normal workflow (one command):**
+
+```bash
+cd backend
+npm run start:local   # opens SSH tunnel (localhost:5433 → homedev:5432) + starts server
+```
+
+Open `http://localhost:3000`.
+
+**First-time setup on a new machine:**
+
+1. Clone the repo
+2. `cp backend/.env.example backend/.env` — fill in credentials, leave `DATABASE_URL` pointing to `localhost:5433/landlordguru_dev`
+3. Ensure SSH key is configured for `kim@homedev`
+4. **Windows (Git Bash):** Add to `~/.bashrc` so the SSH agent loads your key automatically:
+   ```bash
+   eval $(ssh-agent -s) > /dev/null
+   ssh-add ~/.ssh/id_ed25519 2>/dev/null
+   ```
+5. Open the tunnel, then run migrations to create the schema:
+   ```bash
+   bash scripts/tunnel.sh   # leave this running in a separate terminal
+   cd backend && npm run migrate
+   ```
+6. Then use `npm run start:local` for normal dev
+
+**Standalone tunnel** (for migrations without starting the server):
+```bash
+bash scripts/tunnel.sh
+```
+
+See `docs/BACKEND-SETUP.md` for detailed setup steps.
+
+---
+
+## Test server deployment
+
+Deploys to `homedev:~/dev/landlordguru-test` (PM2: `landlordguru-test`, port 3001).
+
+```bash
+./deploy-test.sh       # bash (Mac or Windows Git Bash)
+.\deploy-test.ps1      # PowerShell
+```
+
+Steps: push to origin → pull on homedev → run migrations → restart PM2.
+
+---
 
 ## Production deployment
 
-TBD
+Production runs at `homedev:~/dev/landlordguru` (PM2: `landlordguru`, port 3000).
+
+Production deploys are intentionally manual — SSH in first, then run:
+
+```bash
+ssh kim@homedev
+bash ~/dev/landlordguru/scripts/prod-deploy.sh
+```
+
+Steps: pull from origin → run migrations → restart PM2.
 
 ---
 
