@@ -227,7 +227,7 @@ const DataTable = (() => {
       dd.innerHTML = columns.map(c => {
         const checked   = visibleCols[c.key] !== false;
         const isLast    = checked && visCount === 1;
-        return `<label><input type="checkbox" data-vis-key="${c.key}" ${checked ? 'checked' : ''} ${isLast ? 'disabled' : ''}> ${_esc(c.label)}</label>`;
+        return `<label><input type="checkbox" data-vis-key="${c.key}" ${checked ? 'checked' : ''} ${isLast ? 'disabled' : ''}><span>${_esc(c.label)}</span></label>`;
       }).join('');
     }
 
