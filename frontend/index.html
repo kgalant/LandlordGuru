@@ -220,18 +220,19 @@
               <input type="checkbox" id="import-float-toggle" onchange="renderImportTable()">
               <span data-i18n="import.floatToggle"></span>
             </label>
+            <button id="import-lock-btn" class="btn btn-secondary btn-sm" style="display:none" onclick="onImportLockBtnClick()"></button>
           </div>
           <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="import.reviewNote"></p>
           <div class="table-wrap" id="import-table-scroll">
             <table>
               <thead><tr>
                 <th style="width:28px"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll(this)"></th>
-                <th data-i18n="import.col.date"></th>
-                <th data-i18n="import.col.description"></th>
-                <th data-i18n="import.col.property"></th>
-                <th data-i18n="import.col.category"></th>
-                <th data-i18n="import.col.notes"></th>
-                <th class="amount-cell" data-i18n="import.col.amount"></th>
+                <th class="import-sortable" onclick="sortImportCol('date')"><span data-i18n="import.col.date"></span><span class="import-sort-ind" id="import-sort-ind-date"></span></th>
+                <th class="import-sortable" onclick="sortImportCol('description')"><span data-i18n="import.col.description"></span><span class="import-sort-ind" id="import-sort-ind-description"></span></th>
+                <th class="import-sortable" onclick="sortImportCol('property')"><span data-i18n="import.col.property"></span><span class="import-sort-ind" id="import-sort-ind-property"></span></th>
+                <th class="import-sortable" onclick="sortImportCol('category')"><span data-i18n="import.col.category"></span><span class="import-sort-ind" id="import-sort-ind-category"></span></th>
+                <th class="import-sortable" onclick="sortImportCol('notes')"><span data-i18n="import.col.notes"></span><span class="import-sort-ind" id="import-sort-ind-notes"></span></th>
+                <th class="amount-cell import-sortable" onclick="sortImportCol('amount')"><span data-i18n="import.col.amount"></span><span class="import-sort-ind" id="import-sort-ind-amount"></span></th>
                 <th style="text-align:center" data-i18n="import.col.ignore"></th>
                 <th style="text-align:center" data-i18n="import.col.storeMapping"></th>
               </tr></thead>

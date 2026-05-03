@@ -30,7 +30,7 @@ Start these after their dependencies complete.
 
 | Feature | Epic | Depends On | Status | Notes |
 |---------|------|-----------|--------|-------|
-| **F2-2** Property list UI | E2 | F2-1 | Planned | Frontend view for properties; ready after F2-1 ships. |
+| **F2-2** Property list UI | E2 | F2-1 | Done | Frontend view for properties. |
 | **F2-6** Account hierarchy management UI | E2 | F2-4 | Planned | Tree view for account structure; ready after F2-4 ships. |
 | **F2-7** Account linked-items view | E2 | F2-4, F2-6 | Planned | Shows transactions and properties linked to an account; needs both F2-4 and F2-6. |
 

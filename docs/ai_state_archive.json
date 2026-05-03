@@ -488,5 +488,13 @@
     "last_commit": "0ec3d3e",
     "changed_files": "backend/src/routes/transactions.js, backend/tests/transactions.test.js, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, frontend/index.html, frontend/css/style.css, docs/epics/05-integrations-data-import.md, version.json, AI_STATE.md",
     "git_status": "M AI_STATE.md, ?? .claude/hooks/checkpoint.sh"
+  },
+  {
+    "timestamp": "2026-05-02 to 2026-05-03",
+    "label": "F5-14 complete — create category inline from import preview; toggle row layout fix",
+    "branch": "main",
+    "last_commit": "3a72c0b",
+    "changed_files": "frontend/js/app.js, frontend/js/importer.js, frontend/index.html, version.json, docs/epics/05-integrations-data-import.md, AI_STATE.md",
+    "git_status": "M AI_STATE.md, ?? .claude/hooks/checkpoint.sh"
   }
 ]

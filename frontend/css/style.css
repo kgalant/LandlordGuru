@@ -407,6 +407,11 @@ textarea { resize: vertical; min-height: 70px; }
   color: var(--text1);
 }
 .dup-badge:hover .dup-badge-tip { display: block; }
+.preview-row-locked td { background: var(--bg2) !important; }
+.preview-row-locked td:nth-child(2) { border-left: none !important; }
+.import-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.import-sortable:hover { background: var(--bg3); }
+.import-sort-ind { font-size: 9px; margin-left: 3px; color: var(--text3); }
 
 /* ── Foldable tree (static preview) ──────────────────────── */
 

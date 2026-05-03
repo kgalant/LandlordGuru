@@ -164,7 +164,7 @@ The `fx_log` table from earlier designs is superseded by this approach.
 ---
 
 ### F5-9 Row locking in import preview `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Allow users to mark individual import preview rows as "finished" so they are excluded from bulk operations while still being reviewable.
 
@@ -191,7 +191,7 @@ Allow users to mark individual import preview rows as "finished" so they are exc
 ---
 
 ### F5-10 Sortable columns in import preview `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Allow the user to sort the import preview table by any data column with a single click, toggling between ascending and descending, with a clear sort indicator.
 
@@ -210,7 +210,7 @@ Allow the user to sort the import preview table by any data column with a single
 ---
 
 ### F5-11 Highlight missing required notes in import preview `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Visually flag notes fields that are required but empty, so the user can fill them before submitting the import.
 
@@ -229,6 +229,8 @@ Visually flag notes fields that are required but empty, so the user can fill the
 
 ### F5-12 Duplicate detection and auto-ignore in import preview `[MVP]`
 **Status:** Done
+
+**Implementation note:** Fully implemented. Backend: `POST /api/transactions/import/check` with workspace-scoped matching, property join, case-insensitive description, most-recent-match logic (with tests). Frontend: `_batchCheckDuplicates()` at preview load, `_checkSingleRowDuplicate(i)` on property/description change, `_applyDupResult()` sets `_isDuplicate`/`_duplicateMatch`/auto-ignore, amber row background, Duplicate badge with hover tooltip, integrated with F5-13 grouping sections.
 
 During the import preview (F5-5), each parsed row is checked against existing workspace transactions. Matched rows are visually flagged, defaulted to ignored, and show the matching existing transaction on hover/click so the user can make an informed decision before importing.
 

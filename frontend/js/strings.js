@@ -159,7 +159,10 @@ export const I18n = (() => {
           duplicate:   'Duplicate',
           ignored:     'Ignored',
           selected:    'Selected',
+          locked:      'Finished',
         },
+        lockBtn:   'Mark finished',
+        unlockBtn: 'Unlock',
         nextReview:     'Next: Review →',
         mapping: {
           title:           'Column mapping',
