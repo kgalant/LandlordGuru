@@ -733,7 +733,6 @@ function onRowFieldChange(i, field, value) {
     State.importRows[i].type = Importer.categoryToType(value, State.transactionCategories);
     State.importRows[i]._userPickedCategory = true;
   }
-  if (field === '_storeMapping' && value) State.importRows[i]._userPickedCategory = true;
   if (field === '_ignored')     State.importRows[i]._userPickedIgnore = true;
   if (field === 'property_id') State.importRows[i]._userPickedProperty = true;
   if (field === 'property_id' || field === 'description') _checkSingleRowDuplicate(i);
@@ -748,7 +747,6 @@ function onRowFieldChange(i, field, value) {
         row.type = Importer.categoryToType(value, State.transactionCategories);
         row._userPickedCategory = true;
       }
-      if (field === '_storeMapping' && value) row._userPickedCategory = true;
       _syncRowDOM(j, field, value);
       _applyRowStyle(j);
     });
@@ -776,7 +774,7 @@ function _applyRowStyle(i) {
   if (row._isDuplicate) tr.classList.add('preview-row-dup');
   else                  tr.classList.remove('preview-row-dup');
 
-  const warnResolved = row._isDuplicate || row._ignored || row._autoMatched || row._descMappingMatched || row._userPickedCategory || row._storeMapping;
+  const warnResolved = row._isDuplicate || row._ignored || row._autoMatched || row._descMappingMatched || row._userPickedCategory;
   if (warnResolved) tr.classList.remove('preview-row-warn');
   else              tr.classList.add('preview-row-warn');
 
