@@ -140,11 +140,15 @@ router.get('/', requireAuth, async (req, res) => {
 
     const baseQuery = db('transactions as t')
       .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+      .leftJoin('properties as p', function () {
+        this.on(db.raw('p.id = COALESCE(t.property_id, ap.property_id)'))
+            .andOn('p.workspace_id', 't.workspace_id');
+      })
       .where('t.workspace_id', req.workspace_id);
 
     const [{ count: totalCount }] = await applyFilters(baseQuery.clone()).count('t.id as count');
 
-    const SORT_COLS = { date: 't.date', amount: 't.amount', type: 't.type', category: 't.category', description: 't.description', source: 't.source', property: 'ap.property_id' };
+    const SORT_COLS = { date: 't.date', amount: 't.amount', type: 't.type', category: 't.category', description: 't.description', source: 't.source', property: 'p.name' };
     const sortColumn = SORT_COLS[sort_col] || 't.date';
     const sortDirection = sort_dir === 'asc' ? 'asc' : 'desc';
 

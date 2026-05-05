@@ -8,32 +8,30 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: chore
+- Type: bug
 - Epic: E7 Frontend Architecture / Infrastructure
-- ID: C-build-arch-1
-- Title: Three-environment build architecture
-- Short summary: Move dev from Remote SSH to local Mac/Windows. Three envs: local dev (tunnel to homedev DB), test server (homedev:3001), prod (homedev:3000). Scripts, docs, and npm scripts updated. Manual server steps remain.
+- ID: F7-B1
+- Title: Sort by property sorts by ID not name
+- Short summary: Done — joined `properties as p` in `GET /api/transactions` base query; `SORT_COLS.property` now maps to `p.name`. Regression test added, 70/70 tx tests pass.
 
 ---
 
 ## Previous focus
 
-- Type: bug
-- Epic: E5 Integrations
-- ID: F5-import-undo-fix
-- Title: Undo import — history splits batches by source, modal shows wrong count
-- Short summary: Done — GROUP BY import_batch only; MIN(created_by) dropped (UUID type incompatibility). All commits landed.
+- Type: chore
+- Epic: E7 Frontend Architecture / Infrastructure
+- ID: C-build-arch-1
+- Title: Three-environment build architecture
+- Short summary: Done — scripts, npm start:local, docs updated. All three envs (local dev/test/prod) verified working.
 - State: done
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: Create scripts/tunnel.sh, scripts/prod-deploy.sh, update deploy.sh→deploy-test.sh and deploy.ps1→deploy-test.ps1
-- [x] S2: Add start:local npm script + concurrently dep; update backend/.env.example
-- [x] S3: Update PROJECT_LANDLORDGURU.md and docs/BACKEND-SETUP.md
-- [ ] S4: Commit all changes
-- [ ] S5: Manual server steps (user performs): rename dir, create DBs, set up PM2, update .env files, pm2 startup, Google OAuth
+- [x] S1: Add `LEFT JOIN properties as p` to base query; change `SORT_COLS.property` from `ap.property_id` to `p.name`
+- [x] S2: Add regression test for `sort_col=property` sorting alphabetically by name
+- [x] S3: Update epic doc status, bump version.json (2.20.0 → 2.20.1), commit
 
 ---
 
@@ -41,7 +39,6 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
-- Known bugs: F7-B1 (property column sorts by ID not name — needs properties join in transactions API)
 - Backlog chores: F6-7 (consolidate version numbering)
 - Backlog features: F1-11, F3-8, F3-12
 - Next MVP candidates: F2-6, F2-7, F3-8, F3-12, F3-13, F3-17, F3-18, F4-1+F4-2, F5-7
@@ -61,18 +58,18 @@ Relevant epic docs:
 
 ## Next step
 
-Commit all changes (S4), then hand off manual server steps checklist to user (S5).
+Confirm next Current focus with user, then update AI_STATE.md and begin task breakdown.
 
 ---
 
 ## Validation
 
 - Commands to run:
-  - `cd /home/kim/dev/landlordguru-dev/backend && node_modules/.bin/jest --forceExit`
+  - `cd /Users/kimgalant/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
 
 - Last result:
-  - Date/time: 2026-05-03
-  - Outcome: 235/235 tests passing.
+  - Date/time: 2026-05-05
+  - Outcome: 70/70 transaction tests passing (236 total; 4 accounts tests fail only when run together due to pre-existing isolation issue, not caused by this fix).
 
 ---
 
@@ -80,112 +77,18 @@ Commit all changes (S4), then hand off manual server steps checklist to user (S5
 
 - `AI_STATE.md`
 - `docs/ai_state_archive.json`
-- `deploy.sh` → `deploy-test.sh` (renamed + updated target to landlordguru-test)
-- `deploy.ps1` → `deploy-test.ps1` (renamed + updated target to landlordguru-test)
-- `scripts/tunnel.sh` (new)
-- `scripts/prod-deploy.sh` (new)
-- `backend/package.json` (added start:local script + concurrently dev dep)
-- `backend/package-lock.json`
-- `backend/.env.example` (rewritten for three environments)
-- `PROJECT_LANDLORDGURU.md` (rewrote Development and Deployment sections)
-- `docs/BACKEND-SETUP.md` (rewrote setup guide for local dev + deployment)
+- `backend/src/routes/transactions.js`
+- `backend/tests/transactions.test.js`
+- `docs/epics/07-frontend-architecture.md`
+- `version.json`
+- `backend/.env.test` (local only, git-ignored)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-03 18:00:00 [build-arch]
+- 2026-05-05 [F7-B1 done]
   - branch: main
-  - last_commit: 2fddd17
-  - changed_files: deploy-test.sh, deploy-test.ps1, scripts/tunnel.sh, scripts/prod-deploy.sh, backend/package.json, backend/package-lock.json, backend/.env.example, PROJECT_LANDLORDGURU.md, docs/BACKEND-SETUP.md, AI_STATE.md, docs/ai_state_archive.json
-  - git_status: M AI_STATE.md, M PROJECT_LANDLORDGURU.md, M backend/.env.example, M backend/package-lock.json, M backend/package.json, RM deploy.ps1->deploy-test.ps1, RM deploy.sh->deploy-test.sh, M docs/BACKEND-SETUP.md, ?? scripts/prod-deploy.sh, ?? scripts/tunnel.sh
-
-- 2026-05-03 17:33:13 [Stop]
-  - branch: main
-  - last_commit: 2fddd17 chore: update epic docs and AI state after import-undo bug fix session
-  - changed_files: AI_STATE.md,backend/.env.example backend/package.json,backend/package-lock.json deploy-test.ps1,deploy-test.sh docs/ai_state_archive.json,docs/BACKEND-SETUP.md PROJECT_LANDLORDGURU.md
-  - git_status:
-     M AI_STATE.md
-     M PROJECT_LANDLORDGURU.md
-     M backend/.env.example
-     M backend/package-lock.json
-     M backend/package.json
-    RM deploy.ps1 -> deploy-test.ps1
-    RM deploy.sh -> deploy-test.sh
-     M docs/BACKEND-SETUP.md
-     M docs/ai_state_archive.json
-    ?? .claude/hooks/checkpoint.sh
-    ?? scripts/prod-deploy.sh
-    ?? scripts/tunnel.sh
-
-- 2026-05-03 17:36:36 [Stop]
-  - branch: main
-  - last_commit: 2fddd17 chore: update epic docs and AI state after import-undo bug fix session
-  - changed_files: AI_STATE.md,backend/.env.example backend/package.json,backend/package-lock.json deploy-test.ps1,deploy-test.sh docs/ai_state_archive.json,docs/BACKEND-SETUP.md PROJECT_LANDLORDGURU.md
-  - git_status:
-     M AI_STATE.md
-     M PROJECT_LANDLORDGURU.md
-     M backend/.env.example
-     M backend/package-lock.json
-     M backend/package.json
-    RM deploy.ps1 -> deploy-test.ps1
-    RM deploy.sh -> deploy-test.sh
-     M docs/BACKEND-SETUP.md
-     M docs/ai_state_archive.json
-    ?? .claude/hooks/checkpoint.sh
-    ?? scripts/prod-deploy.sh
-    ?? scripts/tunnel.sh
-
-- 2026-05-03 17:37:07 [Stop]
-  - branch: main
-  - last_commit: 2fddd17 chore: update epic docs and AI state after import-undo bug fix session
-  - changed_files: AI_STATE.md,backend/.env.example backend/package.json,backend/package-lock.json deploy-test.ps1,deploy-test.sh docs/ai_state_archive.json,docs/BACKEND-SETUP.md PROJECT_LANDLORDGURU.md
-  - git_status:
-     M AI_STATE.md
-     M PROJECT_LANDLORDGURU.md
-     M backend/.env.example
-     M backend/package-lock.json
-     M backend/package.json
-    RM deploy.ps1 -> deploy-test.ps1
-    RM deploy.sh -> deploy-test.sh
-     M docs/BACKEND-SETUP.md
-     M docs/ai_state_archive.json
-    ?? .claude/hooks/checkpoint.sh
-    ?? scripts/prod-deploy.sh
-    ?? scripts/tunnel.sh
-
-- 2026-05-03 17:38:14 [Stop]
-  - branch: main
-  - last_commit: 2fddd17 chore: update epic docs and AI state after import-undo bug fix session
-  - changed_files: AI_STATE.md,backend/.env.example backend/package.json,backend/package-lock.json deploy-test.ps1,deploy-test.sh docs/ai_state_archive.json,docs/BACKEND-SETUP.md PROJECT_LANDLORDGURU.md
-  - git_status:
-     M AI_STATE.md
-     M PROJECT_LANDLORDGURU.md
-     M backend/.env.example
-     M backend/package-lock.json
-     M backend/package.json
-    RM deploy.ps1 -> deploy-test.ps1
-    RM deploy.sh -> deploy-test.sh
-     M docs/BACKEND-SETUP.md
-     M docs/ai_state_archive.json
-    ?? .claude/hooks/checkpoint.sh
-    ?? scripts/prod-deploy.sh
-    ?? scripts/tunnel.sh
-
-- 2026-05-03 17:38:50 [Stop]
-  - branch: main
-  - last_commit: 2fddd17 chore: update epic docs and AI state after import-undo bug fix session
-  - changed_files: AI_STATE.md,backend/.env.example backend/package.json,backend/package-lock.json deploy-test.ps1,deploy-test.sh docs/ai_state_archive.json,docs/BACKEND-SETUP.md PROJECT_LANDLORDGURU.md,scripts/prod-deploy.sh scripts/tunnel.sh
-  - git_status:
-     M AI_STATE.md
-     M PROJECT_LANDLORDGURU.md
-     M backend/.env.example
-    M  backend/package-lock.json
-    M  backend/package.json
-    R  deploy.ps1 -> deploy-test.ps1
-    R  deploy.sh -> deploy-test.sh
-     M docs/BACKEND-SETUP.md
-     M docs/ai_state_archive.json
-    A  scripts/prod-deploy.sh
-    A  scripts/tunnel.sh
-    ?? .claude/hooks/checkpoint.sh
+  - last_commit: 250e853
+  - changed_files: AI_STATE.md, docs/ai_state_archive.json, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/epics/07-frontend-architecture.md, version.json
+  - git_status: M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, M docs/ai_state_archive.json, M docs/epics/07-frontend-architecture.md, M version.json

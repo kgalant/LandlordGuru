@@ -321,6 +321,35 @@ describe('GET /api/transactions', () => {
     expect(res.body.data[0].description).toBe('Reconciled tx');
   });
 
+  it('sorts by property name alphabetically (F7-B1 regression)', async () => {
+    const PROP_A = '00000000-0000-0000-0000-000000000081';
+    const PROP_Z = '00000000-0000-0000-0000-000000000082';
+    await db('properties').insert([
+      { id: PROP_A, workspace_id: WORKSPACE_ID, name: 'Aardvark House', created_by: USER_ID },
+      { id: PROP_Z, workspace_id: WORKSPACE_ID, name: 'Zebra Cottage',  created_by: USER_ID },
+    ]).onConflict('id').ignore();
+
+    await db('transactions').insert([
+      { id: '00000000-0000-0000-0000-000000000901', workspace_id: WORKSPACE_ID, property_id: PROP_Z, date: '2026-01-01', type: 'income', category: 'rent', amount: 100, currency: 'USD', description: 'Z rent', source: 'manual', created_by: USER_ID },
+      { id: '00000000-0000-0000-0000-000000000902', workspace_id: WORKSPACE_ID, property_id: PROP_A, date: '2026-01-02', type: 'income', category: 'rent', amount: 200, currency: 'USD', description: 'A rent', source: 'manual', created_by: USER_ID },
+    ]);
+
+    const asc = await request(app)
+      .get('/api/transactions?sort_col=property&sort_dir=asc')
+      .set('Authorization', `Bearer ${token}`);
+    expect(asc.status).toBe(200);
+    expect(asc.body.data[0].property_id).toBe(PROP_A);
+    expect(asc.body.data[1].property_id).toBe(PROP_Z);
+
+    const desc = await request(app)
+      .get('/api/transactions?sort_col=property&sort_dir=desc')
+      .set('Authorization', `Bearer ${token}`);
+    expect(desc.body.data[0].property_id).toBe(PROP_Z);
+    expect(desc.body.data[1].property_id).toBe(PROP_A);
+
+    await db('properties').whereIn('id', [PROP_A, PROP_Z]).del();
+  });
+
   it('returns 401 without a token', async () => {
     const res = await request(app).get('/api/transactions');
     expect(res.status).toBe(401);
