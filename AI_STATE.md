@@ -8,30 +8,30 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: bug
-- Epic: E7 Frontend Architecture / Infrastructure
-- ID: F7-B1
-- Title: Sort by property sorts by ID not name
-- Short summary: Done — joined `properties as p` in `GET /api/transactions` base query; `SORT_COLS.property` now maps to `p.name`. Regression test added, 70/70 tx tests pass.
+- Type: feature
+- Epic: E2 Account and Property Management
+- ID: F2-6
+- Title: Account hierarchy management UI
+- Short summary: Build the frontend UI for managing the account tree (add, edit, re-parent, set default, delete with reassignment). Includes migration 010 to seed missing default accounts and per-property accounts for existing data.
 
 ---
 
 ## Previous focus
 
-- Type: chore
-- Epic: E7 Frontend Architecture / Infrastructure
-- ID: C-build-arch-1
-- Title: Three-environment build architecture
-- Short summary: Done — scripts, npm start:local, docs updated. All three envs (local dev/test/prod) verified working.
-- State: done
+None
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: Add `LEFT JOIN properties as p` to base query; change `SORT_COLS.property` from `ap.property_id` to `p.name`
-- [x] S2: Add regression test for `sort_col=property` sorting alphabetically by name
-- [x] S3: Update epic doc status, bump version.json (2.20.0 → 2.20.1), commit
+- [x] S1: Migration 021 — seed default account per workspace (where missing), create + link per-property accounts (where missing), assign NULL account_id transactions to the workspace default account
+- [x] S2: Add "Accounts" nav button, page div, and `showPage()` routing to index.html + app.js
+- [x] S3: Add API client methods (`getAccounts`, `getAccount`, `createAccount`, `updateAccount`, `deleteAccount`, `setDefaultAccount`); fetch and render account tree with archived section
+- [x] S4: "Add account" form — name + parent dropdown + client-side depth validation + `POST /api/accounts`
+- [x] S5: "Edit account" form — name, notes, re-parent dropdown + `PATCH /api/accounts/:id`
+- [x] S6: "Set as default" action — confirmation prompt + `POST /api/accounts/:id/set-default`
+- [x] S7: Extended `GET /api/accounts/:id` with `transaction_count`/`property_count`; "Delete account" — reassignment picker with counts + `DELETE /api/accounts/:id`
+- [x] S8: i18n strings, test additions (linked counts), epic doc update, version bump (2.20.1 → 2.21.0)
 
 ---
 
@@ -41,7 +41,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Backlog chores: F6-7 (consolidate version numbering)
 - Backlog features: F1-11, F3-8, F3-12
-- Next MVP candidates: F2-6, F2-7, F3-8, F3-12, F3-13, F3-17, F3-18, F4-1+F4-2, F5-7
+- Next MVP candidates: F2-7, F3-8, F3-12, F3-13, F3-17, F3-18, F4-1+F4-2, F5-7
 - Post-MVP backlog added: F3-14 (year multi-select), F3-15 (multi-select filters), F3-16 (filter tooltip), E6 (tags & rules)
 
 Relevant epic docs:
@@ -58,7 +58,7 @@ Relevant epic docs:
 
 ## Next step
 
-Confirm next Current focus with user, then update AI_STATE.md and begin task breakdown.
+Confirm commit for F2-6 with user, then decide next focus (F2-7 or another MVP candidate).
 
 ---
 
@@ -77,18 +77,23 @@ Confirm next Current focus with user, then update AI_STATE.md and begin task bre
 
 - `AI_STATE.md`
 - `docs/ai_state_archive.json`
-- `backend/src/routes/transactions.js`
-- `backend/tests/transactions.test.js`
-- `docs/epics/07-frontend-architecture.md`
+- `backend/src/db/migrations/021_seed_default_accounts.js`
+- `backend/src/routes/accounts.js`
+- `backend/tests/accounts.test.js`
+- `frontend/index.html`
+- `frontend/js/app.js`
+- `frontend/js/api.js`
+- `frontend/js/strings.js`
+- `frontend/css/style.css`
+- `docs/epics/02-account-property-management.md`
 - `version.json`
-- `backend/.env.test` (local only, git-ignored)
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-05 [F7-B1 done]
+- 2026-05-08 [F2-6 implementation complete — pending commit]
   - branch: main
-  - last_commit: 250e853
-  - changed_files: AI_STATE.md, docs/ai_state_archive.json, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/epics/07-frontend-architecture.md, version.json
-  - git_status: M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, M docs/ai_state_archive.json, M docs/epics/07-frontend-architecture.md, M version.json
+  - last_commit: f208261
+  - changed_files: AI_STATE.md, backend/src/db/migrations/021_seed_default_accounts.js, backend/src/routes/accounts.js, backend/tests/accounts.test.js, frontend/index.html, frontend/js/app.js, frontend/js/api.js, frontend/js/strings.js, frontend/css/style.css, docs/epics/02-account-property-management.md, version.json, docs/ai_state_archive.json
+  - git_status: M (multiple files, pre-commit)

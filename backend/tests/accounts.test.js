@@ -157,6 +157,46 @@ describe('GET /api/accounts/:id', () => {
   it('returns 401 without token', async () => {
     expect((await request(app).get('/api/accounts/some-id')).status).toBe(401);
   });
+
+  it('returns transaction_count and property_count', async () => {
+    const a = await createAccount({ name: 'Counted' });
+
+    // Link a transaction to this account
+    await db('transactions').insert({
+      workspace_id: WORKSPACE_ID,
+      account_id:   a.id,
+      date:         '2026-01-01',
+      type:         'income',
+      category:     'rent',
+      amount:       1000,
+      currency:     'DKK',
+      description:  'test tx',
+      source:       'manual',
+    });
+
+    // Link a property to this account
+    const [prop] = await db('properties').insert({
+      workspace_id: WORKSPACE_ID,
+      name: 'Count Prop',
+      country: 'DK',
+      currency: 'DKK',
+      model: 'longterm',
+    }).returning('id');
+    await db('account_properties').insert({ account_id: a.id, property_id: prop.id });
+
+    const res = await request(app).get(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.transaction_count).toBe(1);
+    expect(res.body.property_count).toBe(1);
+  });
+
+  it('returns zero counts for an account with no linked items', async () => {
+    const a = await createAccount({ name: 'Empty' });
+    const res = await request(app).get(`/api/accounts/${a.id}`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.transaction_count).toBe(0);
+    expect(res.body.property_count).toBe(0);
+  });
 });
 
 // ---------------------------------------------------------------------------

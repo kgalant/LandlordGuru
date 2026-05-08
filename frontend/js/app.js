@@ -153,6 +153,7 @@ function renderCurrentPage() {
   if (currentPage === 'transactions') { if (!txTable) initTxTable(); else txTable.refresh(); }
   if (currentPage === 'reports')      renderReports();
   if (currentPage === 'properties')   renderPropertyList();
+  if (currentPage === 'accounts')     renderAccounts();
   if (currentPage === 'rules')        { if (!rulesTable) initRulesTable(); else rulesTable.refresh(); }
   if (currentPage === 'settings')     renderSettings();
   if (currentPage === 'import')       { loadImportHistory(); _updatePreviewBtnState(); }
@@ -1932,6 +1933,251 @@ async function archiveProperty(id) {
   setLoading(false);
 }
 
+// ── Accounts ──────────────────────────────────────────────
+
+let _accountsState = null; // { accounts: [], maxDepth: 5 }
+
+async function renderAccounts() {
+  const tree  = document.getElementById('accounts-tree');
+  const arch  = document.getElementById('accounts-archived');
+  tree.innerHTML = `<div class="loading-state"><small>${t('common.loading')}</small></div>`;
+  arch.innerHTML = '';
+
+  try {
+    const [accounts, wsSettings] = await Promise.all([
+      Api.getAccounts({ status: 'all' }),
+      Api.getWorkspaceSettings(),
+    ]);
+    _accountsState = { accounts, maxDepth: wsSettings.max_account_depth || 5 };
+    _renderAccountsTree();
+  } catch (e) {
+    tree.innerHTML = `<div class="empty-state">${e.message}</div>`;
+  }
+}
+
+function _renderAccountsTree() {
+  if (!_accountsState) return;
+  const { accounts } = _accountsState;
+  const active   = accounts.filter(a => a.is_active);
+  const archived = accounts.filter(a => !a.is_active);
+
+  document.getElementById('accounts-tree').innerHTML =
+    active.length ? _buildAccountTree(active) : `<div class="empty-state">${t('accounts.noAccounts')}</div>`;
+
+  const archEl = document.getElementById('accounts-archived');
+  if (archived.length) {
+    archEl.innerHTML = `
+      <details>
+        <summary style="cursor:pointer;font-size:13px;color:var(--text3);margin-bottom:0.5rem">
+          ${t('accounts.archivedSection')} (${archived.length})
+        </summary>
+        <div style="margin-top:0.5rem">${_buildAccountTree(archived, true)}</div>
+      </details>`;
+  } else {
+    archEl.innerHTML = '';
+  }
+}
+
+function _buildAccountTree(accounts, readOnly = false) {
+  // Build a flat map then render as an indented list
+  const byId   = Object.fromEntries(accounts.map(a => [a.id, a]));
+  const roots  = accounts.filter(a => !a.parent_account_id || !byId[a.parent_account_id]);
+
+  function renderNode(account, depth) {
+    const children = accounts.filter(a => a.parent_account_id === account.id);
+    const defaultBadge = account.is_default
+      ? `<span class="badge badge-info" style="margin-left:6px">${t('accounts.defaultBadge')}</span>` : '';
+    const actions = readOnly ? '' : `
+      <span class="row-actions">
+        <button class="btn-link" onclick="openEditAccountModal('${account.id}')">${t('common.edit')}</button>
+        ${!account.is_default ? `<button class="btn-link" onclick="confirmDeleteAccount('${account.id}')">${t('common.delete')}</button>` : ''}
+        ${!account.is_default && !account.parent_account_id ? `<button class="btn-link" onclick="confirmSetDefault('${account.id}')">${t('accounts.setDefault')}</button>` : ''}
+      </span>`;
+    return `
+      <div class="account-node" style="padding-left:${depth * 1.25}rem">
+        <span class="account-name">${escHtml(account.name)}</span>${defaultBadge}${actions}
+        ${children.map(c => renderNode(c, depth + 1)).join('')}
+      </div>`;
+  }
+
+  return roots.map(r => renderNode(r, 0)).join('');
+}
+
+function openAddAccountModal(parentId = null) {
+  _openAccountModal(null, parentId);
+}
+
+function openEditAccountModal(id) {
+  const account = _accountsState?.accounts.find(a => a.id === id);
+  if (account) _openAccountModal(account, null);
+}
+
+function _openAccountModal(account, defaultParentId) {
+  const accs       = _accountsState?.accounts.filter(a => a.is_active) || [];
+  const maxDepth   = _accountsState?.maxDepth || 5;
+  const isEdit     = !!account;
+  const title      = isEdit ? t('accounts.modal.editTitle') : t('accounts.modal.addTitle');
+  const parentOpts = accs
+    .filter(a => !isEdit || a.id !== account.id)
+    .map(a => {
+      const sel = (defaultParentId && a.id === defaultParentId) ||
+                  (isEdit && a.id === account.parent_account_id) ? 'selected' : '';
+      return `<option value="${a.id}" ${sel}>${escHtml(a.name)}</option>`;
+    })
+    .join('');
+
+  document.getElementById('modal-account').innerHTML = `
+    <div class="modal-content" style="min-width:340px">
+      <div class="modal-header">
+        <span class="modal-title">${title}</span>
+        <button class="modal-close" onclick="closeAccountModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="acc-m-id" value="${isEdit ? account.id : ''}">
+        <div class="form-group">
+          <label>${t('accounts.modal.name')}</label>
+          <input type="text" id="acc-m-name" value="${isEdit ? escHtml(account.name) : ''}" maxlength="255" required>
+        </div>
+        <div class="form-group">
+          <label>${t('accounts.modal.parent')}</label>
+          <select id="acc-m-parent">
+            <option value="">${t('accounts.modal.noParent')}</option>
+            ${parentOpts}
+          </select>
+          <small>${t('accounts.modal.depthHint', { max: maxDepth })}</small>
+        </div>
+        ${isEdit ? `<div class="form-group">
+          <label>${t('accounts.modal.notes')}</label>
+          <textarea id="acc-m-notes" rows="2">${escHtml(account.notes || '')}</textarea>
+        </div>` : ''}
+      </div>
+      <div class="modal-footer btn-row">
+        <button class="btn btn-primary btn-sm" onclick="saveAccountModal()">${isEdit ? t('common.save') : t('accounts.modal.createBtn')}</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeAccountModal()">${t('common.cancel')}</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-account').style.display = 'flex';
+}
+
+function closeAccountModal() { document.getElementById('modal-account').style.display = 'none'; }
+
+async function saveAccountModal() {
+  const id     = document.getElementById('acc-m-id').value;
+  const name   = document.getElementById('acc-m-name').value.trim();
+  const parent = document.getElementById('acc-m-parent').value || null;
+  const notes  = document.getElementById('acc-m-notes')?.value.trim() || undefined;
+
+  if (!name) { toast(t('accounts.toast.nameReq'), 'error'); return; }
+
+  // Client-side depth guard
+  if (parent && _accountsState) {
+    const depth = _calcDepth(parent, _accountsState.accounts);
+    if (depth >= _accountsState.maxDepth) {
+      toast(t('accounts.toast.depthExceeded', { max: _accountsState.maxDepth }), 'error');
+      return;
+    }
+  }
+
+  setLoading(true, t('status.saving'));
+  try {
+    if (id) {
+      const body = { name, parent_account_id: parent };
+      if (notes !== undefined) body.notes = notes;
+      await Api.updateAccount(id, body);
+    } else {
+      await Api.createAccount({ name, parent_account_id: parent });
+    }
+    closeAccountModal();
+    await renderAccounts();
+    toast(t('accounts.toast.saved'), 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(false);
+}
+
+function _calcDepth(accountId, accounts) {
+  // Returns 1-based depth of accountId in the tree (root = depth 1)
+  let depth = 1;
+  let id    = accountId;
+  const byId = Object.fromEntries(accounts.map(a => [a.id, a]));
+  while (byId[id]?.parent_account_id) {
+    depth++;
+    id = byId[id].parent_account_id;
+    if (depth > 20) break; // cycle guard
+  }
+  return depth;
+}
+
+async function confirmSetDefault(id) {
+  const account = _accountsState?.accounts.find(a => a.id === id);
+  if (!account) return;
+  if (!confirm(t('accounts.toast.setDefaultConfirm', { name: account.name }))) return;
+  setLoading(true, t('status.saving'));
+  try {
+    await Api.setDefaultAccount(id);
+    await renderAccounts();
+    toast(t('accounts.toast.defaultSet'), 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(false);
+}
+
+async function confirmDeleteAccount(id) {
+  const account  = _accountsState?.accounts.find(a => a.id === id);
+  const active   = _accountsState?.accounts.filter(a => a.is_active && a.id !== id) || [];
+  if (!account) return;
+
+  // Fetch linked counts then show picker
+  let counts = { transaction_count: 0, property_count: 0 };
+  try {
+    const detail = await Api.getAccount(id);
+    counts = { transaction_count: detail.transaction_count || 0, property_count: detail.property_count || 0 };
+  } catch (_) {}
+
+  const opts = active.map(a =>
+    `<option value="${a.id}">${escHtml(a.name)}</option>`).join('');
+
+  document.getElementById('modal-account').innerHTML = `
+    <div class="modal-content" style="min-width:340px">
+      <div class="modal-header">
+        <span class="modal-title">${t('accounts.modal.deleteTitle')}</span>
+        <button class="modal-close" onclick="closeAccountModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>${t('accounts.modal.deleteDesc', { name: escHtml(account.name) })}</p>
+        <p style="font-size:13px;color:var(--text3)">
+          ${t('accounts.modal.deleteCounts', { tx: counts.transaction_count, props: counts.property_count })}
+        </p>
+        <div class="form-group" style="margin-top:1rem">
+          <label>${t('accounts.modal.reassignTo')}</label>
+          <select id="acc-m-reassign">${opts}</select>
+        </div>
+      </div>
+      <div class="modal-footer btn-row">
+        <button class="btn btn-danger btn-sm" onclick="executeDeleteAccount('${id}')">${t('accounts.modal.deleteBtn')}</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeAccountModal()">${t('common.cancel')}</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-account').style.display = 'flex';
+}
+
+async function executeDeleteAccount(id) {
+  const reassign_to = document.getElementById('acc-m-reassign').value;
+  if (!reassign_to) { toast(t('accounts.toast.reassignReq'), 'error'); return; }
+  setLoading(true, t('status.saving'));
+  try {
+    await Api.deleteAccount(id, reassign_to);
+    closeAccountModal();
+    await renderAccounts();
+    toast(t('accounts.toast.deleted'), 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading(false);
+}
+
 // ── Rules ─────────────────────────────────────────────────
 
 let rulesTable = null;
@@ -2488,6 +2734,8 @@ Object.assign(window, {
   onDateFilterInput,
   setReportYear, setReportPeriod, renderReports,
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
+  openAddAccountModal, openEditAccountModal, closeAccountModal, saveAccountModal,
+  confirmSetDefault, confirmDeleteAccount, executeDeleteAccount,
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,
   saveSettings, toggleAddRateForm, submitAddRate, deleteRate,
   toggleAddCategoryForm, submitAddCategory, deleteCategoryItem,

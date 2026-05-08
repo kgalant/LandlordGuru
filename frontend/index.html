@@ -30,6 +30,7 @@
       <button onclick="showPage('import',this)"                       data-i18n="nav.import"></button>
       <button onclick="showPage('reports',this)"                      data-i18n="nav.reports"></button>
       <button onclick="showPage('properties',this)"                   data-i18n="nav.properties"></button>
+      <button onclick="showPage('accounts',this)"                     data-i18n="nav.accounts"></button>
       <button onclick="showPage('rules',this)"                        data-i18n="nav.rules"></button>
     </nav>
     <div class="header-right">
@@ -346,6 +347,16 @@
         </div>
       </div>
       <div id="apt-list"></div>
+    </div>
+
+    <!-- ── ACCOUNTS ── -->
+    <div id="page-accounts" class="page">
+      <div class="card-header" style="margin-bottom:1rem">
+        <span style="font-size:15px;font-weight:500" data-i18n="accounts.title"></span>
+        <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()" data-i18n="accounts.addBtn"></button>
+      </div>
+      <div id="accounts-tree"></div>
+      <div id="accounts-archived" style="margin-top:1.5rem"></div>
     </div>
 
     <!-- ── RULES ── -->
@@ -724,6 +735,9 @@
     </div>
   </div>
 </div>
+
+<!-- Account add/edit/delete modal — content is injected dynamically -->
+<div id="modal-account" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center"></div>
 
 <!-- Toast container -->
 <div id="toast-container"></div>

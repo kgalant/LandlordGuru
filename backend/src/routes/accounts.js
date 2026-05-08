@@ -74,8 +74,16 @@ router.get('/:id', requireAuth, async (req, res) => {
       .orderBy('name', 'asc')
       .select('id', 'name', 'is_active', 'is_default');
 
+    // Linked counts (used by the delete reassignment UI)
+    const [txRow, propRow] = await Promise.all([
+      db('transactions').where({ account_id: id, workspace_id: req.workspace_id }).count('id as cnt').first(),
+      db('account_properties').where({ account_id: id }).count('property_id as cnt').first(),
+    ]);
+    const transaction_count = parseInt(txRow.cnt, 10) || 0;
+    const property_count    = parseInt(propRow.cnt, 10) || 0;
+
     await req.logger.info('account.get.success', { account_id: id });
-    res.json({ ...account, parent_path, children });
+    res.json({ ...account, parent_path, children, transaction_count, property_count });
   } catch (err) {
     await req.logger.error('account.get.failed', { error: err.message });
     console.error('GET /api/accounts/:id error:', err.message);

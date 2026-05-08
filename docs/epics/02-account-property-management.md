@@ -209,7 +209,7 @@ specific tenants.
 ---
 
 ### F2-6 Account hierarchy management UI `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Configuration interface for managing the account tree.
 

@@ -161,6 +161,32 @@ export const Api = (() => {
     return request('DELETE', `/description-mappings/${id}`);
   }
 
+  // ── Accounts ────────────────────────────────────────────────
+
+  async function getAccounts({ status = 'active' } = {}) {
+    return request('GET', `/accounts?status=${status}`);
+  }
+
+  async function getAccount(id) {
+    return request('GET', `/accounts/${id}`);
+  }
+
+  async function createAccount(data) {
+    return request('POST', '/accounts', data);
+  }
+
+  async function updateAccount(id, data) {
+    return request('PATCH', `/accounts/${id}`, data);
+  }
+
+  async function deleteAccount(id, reassign_to) {
+    return request('DELETE', `/accounts/${id}`, { reassign_to });
+  }
+
+  async function setDefaultAccount(id) {
+    return request('POST', `/accounts/${id}/set-default`);
+  }
+
   // ── Batch import ────────────────────────────────────────────
 
   async function importTransactions(txList) {
@@ -186,6 +212,7 @@ export const Api = (() => {
     getWorkspaceSettings, updateWorkspaceSettings,
     getTransactionCategories, getTransactionCategoriesAll,
     createTransactionCategory, updateTransactionCategory, deleteTransactionCategory,
+    getAccounts, getAccount, createAccount, updateAccount, deleteAccount, setDefaultAccount,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     getDescMappings, saveDescMapping, deleteDescMapping,
     importTransactions, getImportHistory, deleteImportBatch, checkImportDuplicates,
