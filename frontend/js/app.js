@@ -1983,24 +1983,34 @@ function _buildAccountTree(accounts, readOnly = false) {
   const byId   = Object.fromEntries(accounts.map(a => [a.id, a]));
   const roots  = accounts.filter(a => !a.parent_account_id || !byId[a.parent_account_id]);
 
-  function renderNode(account, depth) {
+  function renderNode(account, prefix, isLast, isRoot) {
     const children = accounts.filter(a => a.parent_account_id === account.id);
     const defaultBadge = account.is_default
       ? `<span class="badge badge-info" style="margin-left:6px">${t('accounts.defaultBadge')}</span>` : '';
-    const actions = readOnly ? '' : `
-      <span class="row-actions">
+    const viewBtn = `<button class="btn-link" onclick="openLinkedItemsModal('${account.id}')">${t('accounts.linkedItems.viewBtn')}</button>`;
+    const actions = readOnly
+      ? `<span class="row-actions">${viewBtn}</span>`
+      : `<span class="row-actions">
+        ${viewBtn}
         <button class="btn-link" onclick="openEditAccountModal('${account.id}')">${t('common.edit')}</button>
         ${!account.is_default ? `<button class="btn-link" onclick="confirmDeleteAccount('${account.id}')">${t('common.delete')}</button>` : ''}
         ${!account.is_default && !account.parent_account_id ? `<button class="btn-link" onclick="confirmSetDefault('${account.id}')">${t('accounts.setDefault')}</button>` : ''}
       </span>`;
+
+    const connector   = isRoot ? '' : (isLast ? '└─ ' : '├─ ');
+    const childPrefix = isRoot ? '' : (isLast ? '   ' : '│  ');
+    const prefixHtml  = connector
+      ? `<span class="account-tree-prefix">${prefix}${connector}</span>`
+      : '';
+
     return `
-      <div class="account-node" style="padding-left:${depth * 1.25}rem">
-        <span class="account-name">${escHtml(account.name)}</span>${defaultBadge}${actions}
-        ${children.map(c => renderNode(c, depth + 1)).join('')}
-      </div>`;
+      <div class="account-node">
+        ${prefixHtml}<span class="account-name">${escHtml(account.name)}</span>${defaultBadge}${actions}
+      </div>
+      ${children.map((c, i) => renderNode(c, prefix + childPrefix, i === children.length - 1, false)).join('')}`;
   }
 
-  return roots.map(r => renderNode(r, 0)).join('');
+  return roots.map((r, i) => renderNode(r, '', i === roots.length - 1, true)).join('');
 }
 
 function openAddAccountModal(parentId = null) {
@@ -2122,6 +2132,84 @@ async function confirmSetDefault(id) {
     toast(e.message, 'error');
   }
   setLoading(false);
+}
+
+async function openLinkedItemsModal(id) {
+  const account = _accountsState?.accounts.find(a => a.id === id);
+  if (!account) return;
+
+  const modalEl = document.getElementById('modal-account');
+  const header = `
+    <div class="modal-header">
+      <span class="modal-title">${t('accounts.linkedItems.title', { name: escHtml(account.name) })}</span>
+      <button class="modal-close" onclick="closeAccountModal()">&times;</button>
+    </div>`;
+
+  modalEl.innerHTML = `<div class="modal-content" style="min-width:400px;max-width:660px">
+    ${header}
+    <div class="modal-body"><p style="color:var(--text3)">${t('common.loading')}</p></div>
+  </div>`;
+  modalEl.style.display = 'flex';
+
+  try {
+    const items = await Api.getAccountItems(id);
+
+    const txRows = items.transactions.length
+      ? items.transactions.map(tx => `
+          <tr class="clickable-row" onclick="closeAccountModal();showPage('transactions',document.querySelector('nav button:nth-child(2)'));openTxModal('${tx.id}')">
+            <td>${fmtDate(tx.date)}</td>
+            <td>${escHtml(tx.description || '')}</td>
+            <td style="text-align:right">${parseFloat(tx.amount).toLocaleString()}</td>
+            <td>${escHtml(tx.currency || '')}</td>
+          </tr>`).join('')
+      : `<tr><td colspan="4" style="color:var(--text3);font-style:italic">${t('accounts.linkedItems.noTx')}</td></tr>`;
+
+    const propRows = items.properties.length
+      ? items.properties.map(p => `
+          <tr class="clickable-row" onclick="closeAccountModal();showPage('properties',document.querySelector('nav button:nth-child(5)'));openPropertyModal('${p.id}')">
+            <td>${escHtml(p.name)}</td>
+            <td>${escHtml(p.address || '')}</td>
+          </tr>`).join('')
+      : `<tr><td colspan="2" style="color:var(--text3);font-style:italic">${t('accounts.linkedItems.noProps')}</td></tr>`;
+
+    modalEl.innerHTML = `<div class="modal-content" style="min-width:400px;max-width:660px">
+      ${header}
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text3);margin-bottom:1.25rem">
+          ${t('accounts.linkedItems.summary', { tx: items.transaction_count, props: items.property_count })}
+        </p>
+        <h4 style="margin:0 0 0.5rem">${t('accounts.linkedItems.txSection')}</h4>
+        <table class="data-table" style="margin-bottom:1.5rem;width:100%">
+          <thead><tr>
+            <th>${t('tx.col.date')}</th>
+            <th>${t('tx.col.description')}</th>
+            <th style="text-align:right">${t('tx.col.amount')}</th>
+            <th>${t('accounts.linkedItems.colCurrency')}</th>
+          </tr></thead>
+          <tbody>${txRows}</tbody>
+        </table>
+        <h4 style="margin:0 0 0.5rem">${t('accounts.linkedItems.propSection')}</h4>
+        <table class="data-table" style="width:100%">
+          <thead><tr>
+            <th>${t('accounts.linkedItems.colName')}</th>
+            <th>${t('accounts.linkedItems.colAddress')}</th>
+          </tr></thead>
+          <tbody>${propRows}</tbody>
+        </table>
+      </div>
+      <div class="modal-footer btn-row">
+        <button class="btn btn-secondary btn-sm" onclick="closeAccountModal()">${t('common.close')}</button>
+      </div>
+    </div>`;
+  } catch (e) {
+    modalEl.innerHTML = `<div class="modal-content" style="min-width:340px">
+      ${header}
+      <div class="modal-body"><p style="color:var(--error)">${escHtml(e.message)}</p></div>
+      <div class="modal-footer btn-row">
+        <button class="btn btn-secondary btn-sm" onclick="closeAccountModal()">${t('common.close')}</button>
+      </div>
+    </div>`;
+  }
 }
 
 async function confirmDeleteAccount(id) {
@@ -2735,7 +2823,7 @@ Object.assign(window, {
   setReportYear, setReportPeriod, renderReports,
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
   openAddAccountModal, openEditAccountModal, closeAccountModal, saveAccountModal,
-  confirmSetDefault, confirmDeleteAccount, executeDeleteAccount,
+  openLinkedItemsModal, confirmSetDefault, confirmDeleteAccount, executeDeleteAccount,
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,
   saveSettings, toggleAddRateForm, submitAddRate, deleteRate,
   toggleAddCategoryForm, submitAddCategory, deleteCategoryItem,

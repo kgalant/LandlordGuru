@@ -438,3 +438,101 @@ describe('POST /api/accounts/:id/properties', () => {
     expect((await request(app).post('/api/accounts/some-id/properties').send({ property_id: 'pid' })).status).toBe(401);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /api/accounts/:id/items
+// ---------------------------------------------------------------------------
+describe('GET /api/accounts/:id/items', () => {
+  it('returns empty lists and zero counts when nothing is linked', async () => {
+    const acc = await createAccount({ name: 'Empty' });
+    const res = await request(app).get(`/api/accounts/${acc.id}/items`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.transaction_count).toBe(0);
+    expect(res.body.property_count).toBe(0);
+    expect(res.body.transactions).toEqual([]);
+    expect(res.body.properties).toEqual([]);
+  });
+
+  it('returns linked transactions with correct fields', async () => {
+    const acc = await createAccount({ name: 'With Tx' });
+    await db('transactions').insert({
+      workspace_id: WORKSPACE_ID,
+      account_id:   acc.id,
+      date:         '2026-03-15',
+      type:         'income',
+      category:     'rent',
+      amount:       1500,
+      currency:     'DKK',
+      description:  'March rent',
+      source:       'manual',
+    });
+
+    const res = await request(app).get(`/api/accounts/${acc.id}/items`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.transaction_count).toBe(1);
+    expect(res.body.transactions).toHaveLength(1);
+    expect(res.body.transactions[0]).toMatchObject({
+      date: '2026-03-15',
+      description: 'March rent',
+      currency: 'DKK',
+    });
+    expect(parseFloat(res.body.transactions[0].amount)).toBe(1500);
+  });
+
+  it('returns linked properties with correct fields', async () => {
+    const acc = await createAccount({ name: 'With Prop' });
+    const [prop] = await db('properties').insert({
+      workspace_id: WORKSPACE_ID,
+      name: 'Sea View Apt',
+      address: '12 Ocean Drive',
+      country: 'DK',
+      currency: 'DKK',
+      model: 'longterm',
+    }).returning('*');
+    await db('account_properties').insert({ account_id: acc.id, property_id: prop.id });
+
+    const res = await request(app).get(`/api/accounts/${acc.id}/items`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.property_count).toBe(1);
+    expect(res.body.properties).toHaveLength(1);
+    expect(res.body.properties[0]).toMatchObject({ name: 'Sea View Apt', address: '12 Ocean Drive' });
+  });
+
+  it('does not include transactions from descendant accounts', async () => {
+    const parent = await createAccount({ name: 'Parent' });
+    const child  = await createAccount({ name: 'Child', parent_account_id: parent.id });
+    await db('transactions').insert({
+      workspace_id: WORKSPACE_ID,
+      account_id:   child.id,
+      date:         '2026-01-01',
+      type:         'income',
+      category:     'rent',
+      amount:       500,
+      currency:     'DKK',
+      description:  'Child tx',
+      source:       'manual',
+    });
+
+    const res = await request(app).get(`/api/accounts/${parent.id}/items`).set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.transaction_count).toBe(0);
+    expect(res.body.transactions).toEqual([]);
+  });
+
+  it('returns 404 for unknown account', async () => {
+    const res = await request(app).get('/api/accounts/00000000-0000-0000-0000-000000000099/items')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 404 for account in another workspace', async () => {
+    const acc = await createAccount({ name: 'Mine' });
+    const otherToken = makeToken({ workspace_id: '00000000-0000-0000-0000-000000000099' });
+    const res = await request(app).get(`/api/accounts/${acc.id}/items`).set('Authorization', `Bearer ${otherToken}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without token', async () => {
+    expect((await request(app).get('/api/accounts/some-id/items')).status).toBe(401);
+  });
+});

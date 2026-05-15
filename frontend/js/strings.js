@@ -41,6 +41,7 @@ export const I18n = (() => {
       common: {
         save:        'Save',
         cancel:      'Cancel',
+        close:       'Close',
         edit:        'Edit',
         delete:      'Delete',
         clear:       'Clear',
@@ -307,6 +308,18 @@ export const I18n = (() => {
           deleteCounts:'{tx} transaction(s) and {props} property link(s) will be reassigned.',
           reassignTo:  'Reassign items to',
           deleteBtn:   'Delete and reassign',
+        },
+        linkedItems: {
+          title:       'Linked items — {name}',
+          summary:     '{tx} transaction(s) · {props} property link(s)',
+          txSection:   'Transactions',
+          propSection: 'Properties',
+          noTx:        'No transactions linked to this account.',
+          noProps:     'No properties linked to this account.',
+          viewBtn:     'View',
+          colName:     'Name',
+          colAddress:  'Address',
+          colCurrency: 'Currency',
         },
         toast: {
           saved:              'Account saved.',

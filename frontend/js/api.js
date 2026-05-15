@@ -187,6 +187,10 @@ export const Api = (() => {
     return request('POST', `/accounts/${id}/set-default`);
   }
 
+  async function getAccountItems(id) {
+    return request('GET', `/accounts/${id}/items`);
+  }
+
   // ── Batch import ────────────────────────────────────────────
 
   async function importTransactions(txList) {
@@ -212,7 +216,7 @@ export const Api = (() => {
     getWorkspaceSettings, updateWorkspaceSettings,
     getTransactionCategories, getTransactionCategoriesAll,
     createTransactionCategory, updateTransactionCategory, deleteTransactionCategory,
-    getAccounts, getAccount, createAccount, updateAccount, deleteAccount, setDefaultAccount,
+    getAccounts, getAccount, createAccount, updateAccount, deleteAccount, setDefaultAccount, getAccountItems,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     getDescMappings, saveDescMapping, deleteDescMapping,
     importTransactions, getImportHistory, deleteImportBatch, checkImportDuplicates,

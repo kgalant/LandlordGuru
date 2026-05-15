@@ -373,6 +373,53 @@ router.post('/:id/set-default', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/accounts/:id/items
+// Returns all transactions and properties directly linked to this account (no descendants).
+router.get('/:id/items', requireAuth, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await req.logger.info('account.items.started', { account_id: id });
+
+    const account = await db('accounts')
+      .where({ id, workspace_id: req.workspace_id })
+      .first('id');
+
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    const [transactions, properties] = await Promise.all([
+      db('transactions')
+        .where({ account_id: id, workspace_id: req.workspace_id })
+        .orderBy('date', 'desc')
+        .select('id', 'date', 'description', 'amount', 'currency'),
+      db('properties as p')
+        .join('account_properties as ap', 'p.id', 'ap.property_id')
+        .where('ap.account_id', id)
+        .orderBy('p.name', 'asc')
+        .select('p.id', 'p.name', 'p.address'),
+    ]);
+
+    await req.logger.info('account.items.success', {
+      account_id: id,
+      transaction_count: transactions.length,
+      property_count: properties.length,
+    });
+
+    res.json({
+      transaction_count: transactions.length,
+      property_count: properties.length,
+      transactions,
+      properties,
+    });
+  } catch (err) {
+    await req.logger.error('account.items.failed', { error: err.message });
+    console.error('GET /api/accounts/:id/items error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch account items' });
+  }
+});
+
 // POST /api/accounts/:id/properties
 // Links a property to an account. Property must belong to the same workspace.
 router.post('/:id/properties', requireAuth, async (req, res) => {

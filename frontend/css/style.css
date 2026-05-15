@@ -593,11 +593,56 @@ textarea { resize: vertical; min-height: 70px; }
   align-items: center;
 }
 
+/* ── Generic modal shell (used by account modals) ────────── */
+
+.modal-content {
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-width: 95vw;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+  flex-shrink: 0;
+}
+.modal-title { font-weight: 600; font-size: 15px; }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text3);
+  line-height: 1;
+  padding: 0 2px;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 0 1.25rem 1rem; flex: 1; overflow-y: auto; min-height: 0; }
+.modal-body > :first-child { margin-top: 1rem; }
+.modal-footer {
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-body .data-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 1;
+}
+
 /* ── Account tree ────────────────────────────────────────── */
 
 .account-node {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   padding-top: 6px;
@@ -607,6 +652,13 @@ textarea { resize: vertical; min-height: 70px; }
 }
 .account-node:last-child { border-bottom: none; }
 .account-name { font-weight: 500; }
+.account-tree-prefix {
+  font-family: monospace;
+  color: var(--text3);
+  white-space: pre;
+  flex-shrink: 0;
+  font-size: 12px;
+}
 
 .row-actions {
   margin-left: auto;

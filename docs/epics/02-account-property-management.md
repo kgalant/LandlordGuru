@@ -232,7 +232,7 @@ Configuration interface for managing the account tree.
 ---
 
 ### F2-7 Account linked-items view `[MVP]`
-**Status:** Planned
+**Status:** Done
 
 Single view listing everything tied to a specific account, to support
 reassignment decisions before or during deletion.
