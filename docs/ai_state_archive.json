@@ -1,5 +1,13 @@
 [
   {
+    "timestamp": "2026-05-15 00:00:00",
+    "phase": "[F3-17 focus set — session start]",
+    "branch": "main",
+    "last_commit": "c9a33b2",
+    "changed_files": "AI_STATE.md, docs/ai_state_archive.json",
+    "git_status": "M AI_STATE.md, M docs/ai_state_archive.json"
+  },
+  {
     "timestamp": "2026-05-03 17:00:00",
     "phase": "[cleanup]",
     "branch": "main",
@@ -676,5 +684,35 @@
     "last_commit": "eb4cb3e",
     "changed_files": "AI_STATE.md, docs/ai_state_archive.json, backend/src/routes/accounts.js, backend/tests/accounts.test.js, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, docs/epics/02-account-property-management.md, version.json",
     "git_status": "M (multiple files, pre-commit)"
+  },
+  {
+    "timestamp": "2026-05-15 [F2-7 pin modal header/footer + sticky thead — pending commit]",
+    "phase": "[F2-7 pin modal header/footer + sticky thead — pending commit]",
+    "branch": "main",
+    "last_commit": "eb4cb3e",
+    "changed_files": "AI_STATE.md, docs/ai_state_archive.json, backend/src/routes/accounts.js, backend/tests/accounts.test.js, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, frontend/css/style.css, docs/epics/02-account-property-management.md, version.json",
+    "git_status": "M (multiple files, pre-commit)"
+  },
+  {
+    "timestamp": "2026-05-15 [F2-7 committed as c9a33b2]",
+    "phase": "[session-end / F3-17 focus set]",
+    "branch": "main",
+    "last_commit": "c9a33b2",
+    "changed_files": "(none since commit)",
+    "git_status": "clean (3 commits ahead of origin/main)"
+  },
+  {
+    "timestamp": "2026-05-16 [F3-17 S6 — split editor wired]",
+    "branch": "main",
+    "last_commit": "c9a33b2",
+    "changed_files": "frontend/js/strings.js, frontend/js/app.js, AI_STATE.md, docs/ai_state_archive.json",
+    "git_status": "M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, M docs/ai_state_archive.json, M frontend/css/style.css, M frontend/index.html, M frontend/js/api.js, M frontend/js/app.js, ?? backend/src/db/migrations/022_transaction_splits.js"
+  },
+  {
+    "timestamp": "2026-05-17 [F3-17 done — committing; F3-18 set as next focus]",
+    "branch": "main",
+    "last_commit": "c9a33b2",
+    "changed_files": "AI_STATE.md, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/ai_state_archive.json, frontend/css/datatable.css, frontend/css/style.css, frontend/index.html, frontend/js/api.js, frontend/js/app.js, frontend/js/datatable.js, frontend/js/strings.js, version.json, docs/epics/03-transaction-management.md, backend/src/db/migrations/022_transaction_splits.js",
+    "git_status": "M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, M docs/ai_state_archive.json, M frontend/css/datatable.css, M frontend/css/style.css, M frontend/index.html, M frontend/js/api.js, M frontend/js/app.js, M frontend/js/datatable.js, M frontend/js/strings.js, ?? backend/src/db/migrations/022_transaction_splits.js"
   }
 ]

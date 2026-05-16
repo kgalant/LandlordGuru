@@ -1090,6 +1090,335 @@ describe('POST /api/transactions/import/check', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// GET /api/transactions/:id (F3-17)
+// ---------------------------------------------------------------------------
+describe('GET /api/transactions/:id', () => {
+  it('returns a transaction with split_count=0 for a leaf', async () => {
+    const created = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send(VALID_TX);
+
+    const res = await request(app)
+      .get(`/api/transactions/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(created.body.id);
+    expect(res.body.split_count).toBe(0);
+    expect(res.body.parent_transaction_id).toBeNull();
+  });
+
+  it('returns 404 for unknown id', async () => {
+    const res = await request(app)
+      .get('/api/transactions/00000000-0000-0000-0000-000000000099')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app).get('/api/transactions/00000000-0000-0000-0000-000000000099');
+    expect(res.status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/transactions — split_count field (F3-17)
+// ---------------------------------------------------------------------------
+describe('GET /api/transactions — split_count', () => {
+  it('includes split_count=0 for leaf transactions', async () => {
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send(VALID_TX);
+
+    const res = await request(app)
+      .get('/api/transactions')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data[0]).toHaveProperty('split_count', 0);
+  });
+
+  it('includes split_count=2 for a transaction with two children', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000 });
+
+    await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent', description: 'Part A', amount: 600 },
+        { type: 'income', category: 'rent', description: 'Part B', amount: 400 },
+      ]);
+
+    const res = await request(app)
+      .get('/api/transactions')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    const parentRow = res.body.data.find(t => t.id === parent.body.id);
+    expect(parentRow.split_count).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/transactions/:id/splits (F3-17)
+// ---------------------------------------------------------------------------
+describe('PUT /api/transactions/:id/splits', () => {
+  it('creates children and returns parent + children', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000 });
+
+    const res = await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent',          description: 'Rent portion',    amount: 700 },
+        { type: 'income', category: 'heating_aconto', description: 'Heating portion', amount: 300 },
+      ]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.parent.id).toBe(parent.body.id);
+    expect(res.body.children.length).toBe(2);
+    expect(parseFloat(res.body.children[0].amount) + parseFloat(res.body.children[1].amount)).toBeCloseTo(1000);
+  });
+
+  it('children inherit date, currency, and account_id from parent', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000, date: '2026-03-01' });
+
+    const res = await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent', description: 'A', amount: 500 },
+        { type: 'income', category: 'rent', description: 'B', amount: 500 },
+      ]);
+
+    expect(res.status).toBe(200);
+    for (const child of res.body.children) {
+      expect(child.date).toBe('2026-03-01');
+      expect(child.currency).toBe('USD');
+      expect(child.parent_transaction_id).toBe(parent.body.id);
+    }
+  });
+
+  it('atomically replaces existing children on re-split', async () => {
+    // Seed parent + first split directly to DB to avoid 3 sequential HTTP calls
+    const [parent] = await db('transactions').insert({
+      workspace_id: WORKSPACE_ID, date: '2026-01-15', type: 'income', category: 'rent',
+      amount: 1000, currency: 'USD', source: 'manual', created_by: USER_ID, last_modified_by: USER_ID,
+    }).returning('*');
+    await db('transactions').insert([
+      { workspace_id: WORKSPACE_ID, parent_transaction_id: parent.id, date: '2026-01-15',
+        type: 'income', category: 'rent', amount: 500, currency: 'USD', source: 'manual',
+        description: 'A', created_by: USER_ID, last_modified_by: USER_ID },
+      { workspace_id: WORKSPACE_ID, parent_transaction_id: parent.id, date: '2026-01-15',
+        type: 'income', category: 'rent', amount: 500, currency: 'USD', source: 'manual',
+        description: 'B', created_by: USER_ID, last_modified_by: USER_ID },
+    ]);
+
+    const res = await request(app)
+      .put(`/api/transactions/${parent.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent',           description: 'X', amount: 200 },
+        { type: 'income', category: 'heating_aconto', description: 'Y', amount: 300 },
+        { type: 'income', category: 'rent',           description: 'Z', amount: 500 },
+      ]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.children.length).toBe(3);
+
+    const allChildren = await db('transactions').where({ parent_transaction_id: parent.id });
+    expect(allChildren.length).toBe(3);
+  });
+
+  it('returns 422 when amounts do not sum to parent amount', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000 });
+
+    const res = await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent', description: 'A', amount: 400 },
+        { type: 'income', category: 'rent', description: 'B', amount: 400 },
+      ]);
+
+    expect(res.status).toBe(422);
+    expect(res.body.error).toMatch(/sum/);
+  });
+
+  it('returns 400 when fewer than 2 children are provided', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000 });
+
+    const res = await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([{ type: 'income', category: 'rent', description: 'A', amount: 1000 }]);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 422 when a child has an invalid category for its type', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000 });
+
+    const res = await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'expense', category: 'rent', description: 'A', amount: 500 }, // rent is income-only
+        { type: 'income',  category: 'rent', description: 'B', amount: 500 },
+      ]);
+
+    expect(res.status).toBe(422);
+    expect(res.body.errors[0].row).toBe(0);
+  });
+
+  it('returns 422 when parent is itself a child transaction', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000 });
+
+    const splitRes = await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent', description: 'A', amount: 600 },
+        { type: 'income', category: 'rent', description: 'B', amount: 400 },
+      ]);
+
+    const childId = splitRes.body.children[0].id;
+
+    const res = await request(app)
+      .put(`/api/transactions/${childId}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent', description: 'X', amount: 300 },
+        { type: 'income', category: 'rent', description: 'Y', amount: 300 },
+      ]);
+
+    expect(res.status).toBe(422);
+    expect(res.body.error).toMatch(/child/);
+  });
+
+  it('returns 404 for unknown transaction id', async () => {
+    const res = await request(app)
+      .put('/api/transactions/00000000-0000-0000-0000-000000000099/splits')
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent', description: 'A', amount: 500 },
+        { type: 'income', category: 'rent', description: 'B', amount: 500 },
+      ]);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app)
+      .put('/api/transactions/00000000-0000-0000-0000-000000000099/splits')
+      .send([]);
+    expect(res.status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/transactions/:id/splits (F3-17)
+// ---------------------------------------------------------------------------
+describe('DELETE /api/transactions/:id/splits', () => {
+  it('removes all children and returns deleted count', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, amount: 1000 });
+
+    await request(app)
+      .put(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`)
+      .send([
+        { type: 'income', category: 'rent', description: 'A', amount: 600 },
+        { type: 'income', category: 'rent', description: 'B', amount: 400 },
+      ]);
+
+    const res = await request(app)
+      .delete(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.deleted).toBe(2);
+
+    const remaining = await db('transactions').where({ parent_transaction_id: parent.body.id });
+    expect(remaining.length).toBe(0);
+  });
+
+  it('returns deleted=0 when transaction has no children', async () => {
+    const parent = await request(app)
+      .post('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .send(VALID_TX);
+
+    const res = await request(app)
+      .delete(`/api/transactions/${parent.body.id}/splits`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.deleted).toBe(0);
+  });
+
+  it('deleting parent cascades to children', async () => {
+    // Seed parent + children directly to DB
+    const [parent] = await db('transactions').insert({
+      workspace_id: WORKSPACE_ID, date: '2026-01-15', type: 'income', category: 'rent',
+      amount: 1000, currency: 'USD', source: 'manual', created_by: USER_ID, last_modified_by: USER_ID,
+    }).returning('*');
+    await db('transactions').insert([
+      { workspace_id: WORKSPACE_ID, parent_transaction_id: parent.id, date: '2026-01-15',
+        type: 'income', category: 'rent', amount: 600, currency: 'USD', source: 'manual',
+        description: 'A', created_by: USER_ID, last_modified_by: USER_ID },
+      { workspace_id: WORKSPACE_ID, parent_transaction_id: parent.id, date: '2026-01-15',
+        type: 'income', category: 'rent', amount: 400, currency: 'USD', source: 'manual',
+        description: 'B', created_by: USER_ID, last_modified_by: USER_ID },
+    ]);
+
+    await request(app)
+      .delete(`/api/transactions/${parent.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const orphans = await db('transactions').where({ parent_transaction_id: parent.id });
+    expect(orphans.length).toBe(0);
+  });
+
+  it('returns 404 for unknown transaction id', async () => {
+    const res = await request(app)
+      .delete('/api/transactions/00000000-0000-0000-0000-000000000099/splits')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app)
+      .delete('/api/transactions/00000000-0000-0000-0000-000000000099/splits');
+    expect(res.status).toBe(401);
+  });
+});
+
 describe('PATCH /api/transactions/:id — currency rate validation', () => {
   const { WORKSPACE_ID: WS } = require('./helpers');
   const db2 = require('../src/db/knex');

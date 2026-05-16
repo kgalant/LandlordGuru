@@ -9,33 +9,33 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: feature
-- Epic: E2 Account and Property Management
-- ID: F2-7
-- Title: Account linked-items view
-- Short summary: Single view (modal) listing all transactions and properties directly linked to a specific account, with count summary and links to each item's detail/edit view. Accessible from each account row in the accounts tree.
+- Epic: E3 Transaction Management
+- ID: F3-18
+- Title: Split rules (auto-split at import)
+- Short summary: Allow users to define split rules that automatically split matching transactions during import. Rules have conditions (field/operator/value) and a template (child allocations as fixed or percent). New `split_rules` table, management UI, and import pipeline integration.
 
 ---
 
 ## Previous focus
 
 - Type: feature
-- Epic: E2 Account and Property Management
-- ID: F2-6
-- Title: Account hierarchy management UI
-- Short summary: Done — full account tree UI with add/edit/re-parent/set-default/delete+reassign. Committed eb4cb3e.
+- Epic: E3 Transaction Management
+- ID: F3-17
+- Title: Transaction splitting
+- Short summary: Done — split parent/child data model, PUT/DELETE /splits endpoints, list fold/unfold UI, inline split editor in edit modal, bulk-apply to similar. Committed.
 - State: done
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: Add `GET /api/accounts/:id/items` backend endpoint — returns transactions and properties directly linked to the account (no descendants), with counts
-- [x] S2: Add `getAccountItems(id)` to `api.js`; add "View" button to each account node; implement `openLinkedItemsModal(id)` with count summary + grouped lists + nav links
-- [x] S3: Add i18n strings to `strings.js` (linkedItems keys + `common.close`)
-- [x] S4: 52/52 accounts tests pass in isolation; epic doc updated; version bumped 2.21.0 → 2.21.1; pending commit
-- [x] S5: Sticky column headers in linked-items modal — scoped CSS on `.modal-content .data-table thead th` so tx/property table headers stay visible while modal scrolls
-- [x] S6: Pin modal title + footer when scrolling — moved scroll from `.modal-content` to `.modal-body`; header/footer now flex-shrink:0 and naturally pinned; table thead sticky scoped to `.modal-body`
-- [x] S7: Removed gap between pinned modal-header and sticky thead — replaced `.modal-body` `padding-top` with `:first-child` `margin-top: 1rem` so the space scrolls away with content
+- [ ] S1: DB migration — `split_rules` table (`id`, `workspace_id`, `name`, `enabled`, `conditions` JSONB, `template` JSONB, `created_at`, `created_by`)
+- [ ] S2: Backend — CRUD API for split rules (`GET/POST/PATCH/DELETE /api/split-rules`)
+- [ ] S3: Backend — import pipeline integration: evaluate rules after categorisation, apply first matching rule, return `auto_split` flag in import preview
+- [ ] S4: Tests — CRUD + rule evaluation + percent/fixed rounding edge cases
+- [ ] S5: Frontend — split rules management UI (condition builder, template rows, enable/disable toggle)
+- [ ] S6: Frontend — import preview: show "Auto-split" badge on auto-split rows
+- [ ] S7: Frontend — retroactive apply: "Apply rules to existing transactions" action with preview
 
 ---
 
@@ -45,7 +45,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Backlog chores: F6-7 (consolidate version numbering)
 - Backlog features: F1-11, F3-8, F3-12
-- Next MVP candidates: F3-8, F3-12, F3-13, F3-17, F3-18, F4-1+F4-2, F5-7
+- Next MVP candidates: F3-8, F3-12, F3-13, F3-18, F4-1+F4-2, F5-7
 - Post-MVP backlog added: F3-14 (year multi-select), F3-15 (multi-select filters), F3-16 (filter tooltip), E6 (tags & rules)
 
 Relevant epic docs:
@@ -62,7 +62,7 @@ Relevant epic docs:
 
 ## Next step
 
-Manual browser smoke-test: open a linked-items modal with many transactions, scroll, and verify (a) the modal title bar stays pinned at top, (b) the table column headers stay pinned, (c) the footer stays pinned at bottom. Also sanity-check other modals (add-account, delete-confirm) still look right. Then confirm commit for F2-7.
+Plan F3-18 with user before implementing: understand scope, dependency on F5-3 import pipeline, and whether retroactive apply (S7) is in scope for MVP.
 
 ---
 
@@ -72,30 +72,24 @@ Manual browser smoke-test: open a linked-items modal with many transactions, scr
   - `cd /Users/kimgalant/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
 
 - Last result:
-  - Date/time: 2026-05-05
-  - Outcome: 70/70 transaction tests passing (236 total; 4 accounts tests fail only when run together due to pre-existing isolation issue, not caused by this fix).
+  - Date/time: 2026-05-15
+  - Outcome: All new split tests pass in isolation (10/10). Full suite (89 tx tests) has pre-existing cascade failures due to SSH tunnel latency (~325s total run time, 5s/test timeout). Logic is correct; infrastructure is the bottleneck.
 
 ---
 
 ## Files touched this session
 
+- `version.json` — bumped to 2.22.0
+- `docs/epics/03-transaction-management.md` — F3-17 marked Done
 - `AI_STATE.md`
 - `docs/ai_state_archive.json`
-- `backend/src/routes/accounts.js`
-- `backend/tests/accounts.test.js`
-- `frontend/js/api.js`
-- `frontend/js/app.js`
-- `frontend/js/strings.js`
-- `frontend/css/style.css`
-- `docs/epics/02-account-property-management.md`
-- `version.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-15 [F2-7 pin modal header/footer + sticky thead — pending commit]
+- 2026-05-17 [F3-17 done — committing; F3-18 set as next focus]
   - branch: main
-  - last_commit: eb4cb3e
-  - changed_files: AI_STATE.md, docs/ai_state_archive.json, backend/src/routes/accounts.js, backend/tests/accounts.test.js, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, frontend/css/style.css, docs/epics/02-account-property-management.md, version.json
-  - git_status: M (multiple files, pre-commit)
+  - last_commit: c9a33b2
+  - changed_files: AI_STATE.md, backend/src/routes/transactions.js, backend/tests/transactions.test.js, docs/ai_state_archive.json, frontend/css/datatable.css, frontend/css/style.css, frontend/index.html, frontend/js/api.js, frontend/js/app.js, frontend/js/datatable.js, frontend/js/strings.js, version.json, docs/epics/03-transaction-management.md, backend/src/db/migrations/022_transaction_splits.js
+  - git_status: M AI_STATE.md, M backend/src/routes/transactions.js, M backend/tests/transactions.test.js, M docs/ai_state_archive.json, M frontend/css/datatable.css, M frontend/css/style.css, M frontend/index.html, M frontend/js/api.js, M frontend/js/app.js, M frontend/js/datatable.js, M frontend/js/strings.js, ?? backend/src/db/migrations/022_transaction_splits.js

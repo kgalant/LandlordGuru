@@ -104,18 +104,22 @@ const DataTable = (() => {
     }
 
     function _buildColGroup(cols, hasBulk) {
-      let html = hasBulk ? '<col style="width:2rem">' : '';
+      let html = hasBulk ? '<col data-col-key="_bulk" style="width:2rem">' : '';
       cols.forEach(c => {
         if (c.filterOnly) return;
-        html += c.width ? `<col style="width:${c.width}">` : '<col>';
+        html += c.width
+          ? `<col data-col-key="${c.key}" style="width:${c.width}">`
+          : `<col data-col-key="${c.key}">`;
       });
       return `<colgroup>${html}</colgroup>`;
     }
 
     function _buildHeaderBar(title, actions, cv) {
-      const actionBtns = actions.map(a =>
-        `<button class="btn btn-sm btn-primary" onclick="${a.onclick}">${a.label}</button>`
-      ).join('');
+      const actionBtns = actions.map(a => {
+        const cls   = a.className || 'btn btn-sm btn-primary';
+        const idStr = a.id ? ` id="${a.id}"` : '';
+        return `<button class="${cls}"${idStr} onclick="${a.onclick}">${a.label}</button>`;
+      }).join('');
 
       const colVisBtn = cv.enabled
         ? `<div class="dt-col-vis-wrap">
@@ -286,6 +290,7 @@ const DataTable = (() => {
       _renderPager(total);
       _applyColVisibility();
       if (colVis.enabled) _renderColVisDropdown();
+      if (config.postRender) config.postRender(data);
     }
 
     function _populateSelectOptions() {

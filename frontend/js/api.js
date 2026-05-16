@@ -62,7 +62,9 @@ export const Api = (() => {
     if (filters.limit)       params.append('limit',       filters.limit);
     if (filters.sort_col)    params.append('sort_col',    filters.sort_col);
     if (filters.sort_dir)    params.append('sort_dir',    filters.sort_dir);
-    if (filters.import_batch) params.append('import_batch', filters.import_batch);
+    if (filters.import_batch)     params.append('import_batch',     filters.import_batch);
+    if (filters.reconciled)       params.append('reconciled',       filters.reconciled);
+    if (filters.exclude_children) params.append('exclude_children', filters.exclude_children);
     if (params.toString()) path += '?' + params.toString();
     return request('GET', path);
   }
@@ -77,6 +79,18 @@ export const Api = (() => {
 
   async function deleteTransaction(id) {
     return request('DELETE', `/transactions/${id}`);
+  }
+
+  async function getSplits(id) {
+    return request('GET', `/transactions/${id}/splits`);
+  }
+
+  async function saveSplits(id, rows) {
+    return request('PUT', `/transactions/${id}/splits`, rows);
+  }
+
+  async function removeSplits(id) {
+    return request('DELETE', `/transactions/${id}/splits`);
   }
 
   // ── Rules ────────────────────────────────────────────
@@ -212,6 +226,7 @@ export const Api = (() => {
   return {
     getProperties, createProperty, updateProperty, deleteProperty,
     getTransactions, createTransaction, updateTransaction, deleteTransaction,
+    getSplits, saveSplits, removeSplits,
     getRules, createRule, updateRule, deleteRule,
     getWorkspaceSettings, updateWorkspaceSettings,
     getTransactionCategories, getTransactionCategoriesAll,

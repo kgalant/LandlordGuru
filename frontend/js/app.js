@@ -282,6 +282,7 @@ function renderDashboard() {
 // ── Transactions table ────────────────────────────────────
 
 let txTable = null;
+let _splitExpanded = {};
 
 // Keep --nav-h CSS var in sync so #tx-table-wrap height calc stays correct.
 function updateTxStickyOffsets() {
@@ -303,10 +304,17 @@ function initTxTable() {
     title: t('tx.title'),
     actions: [
       { label: t('tx.addBtn'), onclick: 'openTxModal()' },
+      {
+        label:     t('tx.split.collapseAll'),
+        onclick:   'toggleAllSplits()',
+        id:        'tx-split-toggle-all-btn',
+        className: 'btn btn-sm btn-secondary',
+      },
     ],
     columns: [
+      { key: '_chevron', label: '', sortable: false, defaultVisible: true, width: '2rem' },
       {
-        key: 'property', label: t('tx.col.property'), sortable: true,defaultVisible: true,
+        key: 'property', label: t('tx.col.property'), sortable: true, defaultVisible: true,
         filter: {
           type: 'select',
           placeholder: t('tx.filter.allProperties'),
@@ -330,7 +338,7 @@ function initTxTable() {
         },
       },
       {
-        key: 'type', label: t('tx.col.type'), sortable: true,defaultVisible: true,
+        key: 'type', label: t('tx.col.type'), sortable: true, defaultVisible: true, width: '6rem',
         filter: {
           type: 'select',
           placeholder: t('tx.filter.allTypes'),
@@ -343,7 +351,7 @@ function initTxTable() {
         },
       },
       {
-        key: 'category', label: t('tx.col.category'), sortable: true,defaultVisible: true,
+        key: 'category', label: t('tx.col.category'), sortable: true, defaultVisible: true, width: '9rem',
         filter: {
           type: 'select',
           placeholder: t('tx.filter.allCats'),
@@ -359,7 +367,7 @@ function initTxTable() {
         },
       },
       {
-        key: 'description', label: t('tx.col.description'), sortable: true,defaultVisible: true,
+        key: 'description', label: t('tx.col.description'), sortable: true, defaultVisible: true,
         filter: { type: 'text', placeholder: t('common.search') },
       },
       { key: 'source',   label: t('tx.col.source'), sortable: true,  defaultVisible: true },
@@ -369,25 +377,40 @@ function initTxTable() {
         filter: { type: 'toggle', placeholder: t('tx.filter.unreconciled') },
         width: '6rem',
       },
-      { key: '_actions', label: '',                 sortable: false, defaultVisible: true, width: '5rem' },
+      { key: '_actions', label: '', sortable: false, defaultVisible: true, width: '5rem' },
     ],
     fetchData: async (params) => {
-      const filters = { page: params.page, limit: params.limit };
+      const filters = { page: params.page, limit: params.limit, exclude_children: 1 };
       if (params.sort_col) { filters.sort_col = params.sort_col; filters.sort_dir = params.sort_dir; }
-      if (params.property)    filters.property_id = params.property;
-      if (params.type)        filters.type        = params.type;
-      if (params.category)    filters.category    = params.category;
+      if (params.property)   filters.property_id = params.property;
+      if (params.type)       filters.type        = params.type;
+      if (params.category)   filters.category    = params.category;
       const dateFrom = parseDateToISO(params['date-from'] || '');
       const dateTo   = parseDateToISO(params['date-to']   || '');
       if (dateFrom) filters.from = dateFrom;
       if (dateTo)   filters.to   = dateTo;
-      if (params.description)  filters.search      = params.description;
-      if (params.reconciled)   filters.reconciled  = 'false';
+      if (params.description) filters.search     = params.description;
+      if (params.reconciled)  filters.reconciled = 'false';
       const result = await Api.getTransactions(filters);
-      return {
-        data:  (result.data ?? []).map(tx => ({ ...tx, amount: parseFloat(tx.amount) })),
-        total: result.total ?? 0,
-      };
+      const rows = (result.data ?? []).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
+
+      const splitParents = rows.filter(tx => (tx.split_count || 0) > 0);
+      if (splitParents.length === 0) return { data: rows, total: result.total ?? 0 };
+
+      const childResults = await Promise.all(
+        splitParents.map(p => Api.getSplits(p.id).catch(() => []))
+      );
+      const childMap = {};
+      splitParents.forEach((p, i) => {
+        childMap[p.id] = (childResults[i] || []).map(c => ({ ...c, amount: parseFloat(c.amount) }));
+      });
+
+      const grouped = [];
+      for (const tx of rows) {
+        grouped.push(tx);
+        if (childMap[tx.id]) grouped.push(...childMap[tx.id]);
+      }
+      return { data: grouped, total: result.total ?? 0 };
     },
     renderRow: (tx) => txRow(tx),
     pagination: {
@@ -402,6 +425,36 @@ function initTxTable() {
       enabled: true,
       storageKey: 'datatable-tx-columns',
     },
+    postRender: (data) => {
+      const hasSplits = data.some(tx => (tx.split_count || 0) > 0);
+
+      const hdr = document.querySelector('#tx-table-wrap-col-hdr [data-sort-key="_chevron"]');
+      if (hdr) hdr.classList.toggle('dt-col-zero', !hasSplits);
+      document.querySelectorAll('#tx-table-wrap-body [data-col="_chevron"]').forEach(el => {
+        el.classList.toggle('dt-col-zero', !hasSplits);
+      });
+      document.querySelectorAll('#tx-table-wrap [data-col-key="_chevron"]').forEach(col => {
+        col.style.width    = hasSplits ? '2rem' : '0';
+        col.style.minWidth = hasSplits ? '' : '0';
+      });
+
+      const toggleBtn = document.getElementById('tx-split-toggle-all-btn');
+      if (toggleBtn) toggleBtn.style.display = hasSplits ? '' : 'none';
+
+      if (!hasSplits) return;
+
+      data.filter(tx => tx.parent_transaction_id).forEach(child => {
+        const expanded = _splitExpanded[child.parent_transaction_id] !== false;
+        document.querySelectorAll(`#tx-table-wrap-body tr[data-parent-id="${child.parent_transaction_id}"]`)
+          .forEach(tr => { tr.style.display = expanded ? '' : 'none'; });
+      });
+
+      data.filter(tx => (tx.split_count || 0) > 0).forEach(parent => {
+        _updateChevron(parent.id, _splitExpanded[parent.id] !== false);
+      });
+
+      _updateToggleAllBtn();
+    },
   });
 }
 
@@ -410,10 +463,15 @@ function dashTxRow(tx) {
   const catLbl = catLabel(tx.category);
   const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
   const currency = tx.currency || prop?.currency || '';
+  let desc = tx.description;
+  if (!desc && tx.parent_transaction_id) {
+    const parent = State.transactions.find(p => p.id === tx.parent_transaction_id);
+    desc = parent?.description ? `${parent.description} (Split)` : '(Split)';
+  }
   return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
     <td>${fmtDate(tx.date)}</td>
     <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
-    <td>${tx.description}</td>
+    <td>${desc || ''}</td>
     <td><span class="tag tag-${tx.type}">${catLbl}</span></td>
     <td class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, currency)}<span class="muted" style="font-size:11px;margin-left:4px">${currency}</span></td>
   </tr>`;
@@ -423,12 +481,15 @@ function txRow(tx) {
   const prop   = State.properties.find(p => p.id === tx.property_id);
   const catLbl = catLabel(tx.category);
   const srcLbl = tx.source === 'manual' ? t('common.manual') : (BANK_PROFILES[tx.source]?.label || tx.source);
-  const amtCls = tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '';
   const currency = tx.currency || prop?.currency || '';
+
+  const isSplitParent = (tx.split_count || 0) > 0;
+  const isChild       = !!tx.parent_transaction_id;
+  const amtCls = isSplitParent ? 'muted' : (tx.type === 'income' ? 'positive' : tx.type === 'expense' ? 'negative' : '');
 
   const reportingCurrency = State.workspaceSettings?.reporting_currency;
   let convertedHtml = '';
-  if (reportingCurrency && currency !== reportingCurrency) {
+  if (!isSplitParent && reportingCurrency && currency !== reportingCurrency) {
     const rates = State.currencyRates || [];
     const rate = rates
       .filter(r => r.from_currency === currency && r.to_currency === reportingCurrency && r.effective_date <= tx.date)
@@ -439,22 +500,42 @@ function txRow(tx) {
     }
   }
 
+  const descPrefix  = isChild ? '<span class="tx-child-prefix">↳</span> ' : '';
+  const splitBadge  = isSplitParent ? ' <span class="tag tag-split">Split</span>' : '';
+
   const recBtn = `<button class="btn-reconcile${tx.reconciled ? ' is-reconciled' : ''}" title="${tx.reconciled ? t('tx.unreconcileBtnTitle') : t('tx.reconcileBtnTitle')}" onclick="event.stopPropagation();toggleReconciled('${tx.id}',${!!tx.reconciled})">${tx.reconciled ? t('tx.reconcileBtn') : t('tx.unreconcileBtn')}</button>`;
   const deleteBtn = window.AUTH_TOKEN
     ? `<button class="btn btn-sm btn-secondary" style="margin-left:6px" onclick="event.stopPropagation();deleteTxWithConfirm('${tx.id}')">${t('common.delete')}</button>`
     : '';
-  const recClass = tx.reconciled ? ' tx-reconciled' : '';
-  return `<tr class="clickable-row${recClass}" onclick="openTxModal('${tx.id}')">
-    <td onclick="event.stopPropagation()"><input type="checkbox" data-row-id="${tx.id}"></td>
-    <td data-col="property">${prop ? prop.name : '<span class="muted">—</span>'}</td>
-    <td data-col="date">${fmtDate(tx.date)}</td>
+  const recClass  = tx.reconciled ? ' tx-reconciled' : '';
+  const rowAttrs  = isSplitParent ? ` data-split-parent="${tx.id}"` : isChild ? ` data-parent-id="${tx.parent_transaction_id}"` : '';
+  const rowClass  = `clickable-row${recClass}${isChild ? ' tx-split-child' : ''}`;
+
+  const chevronCell = isSplitParent
+    ? `<td data-col="_chevron" onclick="event.stopPropagation()"><button class="tx-chevron-btn" onclick="toggleSplitRows('${tx.id}')">▼</button></td>`
+    : `<td data-col="_chevron"></td>`;
+  const checkboxCell = isChild
+    ? `<td></td>`
+    : `<td onclick="event.stopPropagation()"><input type="checkbox" data-row-id="${tx.id}"></td>`;
+  const propCell = isChild
+    ? `<td data-col="property"></td>`
+    : `<td data-col="property">${prop ? prop.name : '<span class="muted">—</span>'}</td>`;
+  const dateCell = isChild
+    ? `<td data-col="date"></td>`
+    : `<td data-col="date">${fmtDate(tx.date)}</td>`;
+
+  return `<tr class="${rowClass}"${rowAttrs} onclick="openTxModal('${tx.id}')">
+    ${checkboxCell}
+    ${chevronCell}
+    ${propCell}
+    ${dateCell}
     <td data-col="type"><span class="tag tag-${tx.type}">${t('categories.' + tx.type)}</span></td>
-    <td data-col="category"><span class="tag tag-${tx.type}">${catLbl}</span></td>
-    <td data-col="description">${tx.description}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
+    <td data-col="category"><span class="tag tag-${tx.type}${catLbl.length > 20 ? ' tag-wrap' : ''}">${catLbl}</span></td>
+    <td data-col="description">${descPrefix}${tx.description || ''}${splitBadge}${tx.notes ? `<div style="font-size:11px;color:var(--text3)">${tx.notes}</div>` : ''}</td>
     <td data-col="source"><span class="muted" style="font-size:11px">${srcLbl}</span></td>
     <td data-col="amount" class="amount-cell ${amtCls}">${Reports.fmt(tx.amount, currency)}<span class="muted" style="font-size:11px;margin-left:4px">${currency}</span>${convertedHtml}</td>
     <td data-col="reconciled" style="text-align:center">${recBtn}</td>
-    <td><div style="display:flex">${deleteBtn}</div></td>
+    <td data-col="_actions"><div style="display:flex">${deleteBtn}</div></td>
   </tr>`;
 }
 
@@ -503,6 +584,7 @@ async function bulkDeleteSelectedTx(ids) {
 
 function openTxModal(txId) {
   State.editingTxId = txId || null;
+  closeSplitEditor();
   const modal  = document.getElementById('modal-tx');
   const delBtn = document.getElementById('tx-m-delete-btn');
   populateAllDropdowns();
@@ -552,7 +634,248 @@ function openTxModal(txId) {
   modal.style.display = 'flex';
 }
 
-function closeTxModal() { document.getElementById('modal-tx').style.display = 'none'; }
+function closeTxModal() {
+  document.getElementById('modal-tx').style.display = 'none';
+  closeSplitEditor();
+}
+
+// ── Split editor ──────────────────────────────────────────
+let _splitEditorActive = false;
+
+function _fmtSplitAmt(n) {
+  return parseFloat(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+}
+
+async function openSplitEditor() {
+  const tx = State.transactions.find(t => t.id === State.editingTxId);
+  if (!tx) return;
+
+  _splitEditorActive = true;
+  document.getElementById('tx-m-split-section').style.display = 'block';
+  document.getElementById('tx-m-split-btn').style.display     = 'none';
+
+  const totalInfo = document.getElementById('tx-m-split-total-info');
+  totalInfo.textContent = t('tx.split.total', { amount: _fmtSplitAmt(tx.amount), currency: tx.currency });
+
+  const tbody = document.getElementById('tx-m-split-tbody');
+  tbody.innerHTML = '';
+
+  if ((tx.split_count || 0) > 0) {
+    // Load existing children
+    document.getElementById('tx-m-remove-splits-btn').style.display = 'inline-block';
+    try {
+      const children = await Api.getSplits(tx.id);
+      for (const child of children) {
+        _addSplitRowEl(child.type, child.category, child.description || '', child.amount);
+      }
+    } catch (e) {
+      // Fallback: 2 blank rows
+      _addSplitRowEl(tx.type, tx.category, '', '');
+      _addSplitRowEl(tx.type, tx.category, '', '');
+    }
+  } else {
+    document.getElementById('tx-m-remove-splits-btn').style.display = 'none';
+    _addSplitRowEl(tx.type, tx.category, '', '');
+    _addSplitRowEl(tx.type, tx.category, '', '');
+  }
+
+  _updateSplitRemaining();
+}
+
+function closeSplitEditor() {
+  _splitEditorActive = false;
+  const section = document.getElementById('tx-m-split-section');
+  if (section) section.style.display = 'none';
+  const splitBtn = document.getElementById('tx-m-split-btn');
+  if (splitBtn) {
+    if (State.editingTxId) {
+      const tx = State.transactions.find(t => t.id === State.editingTxId);
+      splitBtn.style.display = (tx && !tx.parent_transaction_id) ? 'inline-block' : 'none';
+    } else {
+      splitBtn.style.display = 'none';
+    }
+  }
+  _updateSaveBtnState();
+}
+
+function addSplitRow() {
+  _addSplitRowEl('income', '', '', '');
+  _updateSplitRemaining();
+}
+
+function _addSplitRowEl(type, category, description, amount) {
+  const tbody = document.getElementById('tx-m-split-tbody');
+  const idx   = tbody.querySelectorAll('tr').length;
+  const tr    = document.createElement('tr');
+
+  const typeOpts = ['income','expense','deposit','transfer']
+    .map(v => `<option value="${v}" ${v === type ? 'selected' : ''}>${t('categories.' + v)}</option>`)
+    .join('');
+
+  tr.innerHTML = `
+    <td style="padding:3px"><select class="split-row-type" onchange="_onSplitTypeChange(this)">${typeOpts}</select></td>
+    <td style="padding:3px"><select class="split-row-cat" onchange="_updateSplitRemaining()"></select></td>
+    <td style="padding:3px"><input type="text" class="split-row-desc" value="${_esc(description)}" style="width:100%"></td>
+    <td style="padding:3px"><input type="number" class="split-row-amt" min="0.01" step="0.01" value="${amount || ''}" oninput="_updateSplitRemaining()" style="width:80px;text-align:right"></td>
+    <td style="padding:3px;text-align:center">
+      <button class="btn btn-sm" style="padding:2px 6px;font-size:11px" onclick="_removeSplitRow(this)">✕</button>
+      <button class="btn btn-sm btn-secondary split-fill-btn" style="padding:2px 6px;font-size:11px;display:none" onclick="_fillSplitRemaining(this)" title="${t('tx.split.fillRemaining')}">→</button>
+    </td>`;
+
+  tbody.appendChild(tr);
+  _populateSplitCatSelect(tr.querySelector('.split-row-cat'), type, category);
+  _updateFillButtons();
+}
+
+function _populateSplitCatSelect(sel, type, selectedCat) {
+  sel.innerHTML = '<option value="">—</option>';
+  const cats = (State.transactionCategories[type] || []).filter(c => c.is_active);
+  for (const c of cats) {
+    const opt = document.createElement('option');
+    opt.value = c.value;
+    opt.textContent = catLabel(c.value);
+    if (c.value === selectedCat) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function _onSplitTypeChange(sel) {
+  const row = sel.closest('tr');
+  const catSel = row.querySelector('.split-row-cat');
+  _populateSplitCatSelect(catSel, sel.value, '');
+  _updateSplitRemaining();
+}
+
+function _removeSplitRow(btn) {
+  btn.closest('tr').remove();
+  _updateSplitRemaining();
+  _updateFillButtons();
+}
+
+function _updateFillButtons() {
+  const rows = document.querySelectorAll('#tx-m-split-tbody tr');
+  rows.forEach((row, i) => {
+    const fillBtn = row.querySelector('.split-fill-btn');
+    if (fillBtn) fillBtn.style.display = (i === rows.length - 1) ? 'inline-block' : 'none';
+  });
+}
+
+function _fillSplitRemaining(btn) {
+  const tx = State.transactions.find(t => t.id === State.editingTxId);
+  if (!tx) return;
+  const total  = parseFloat(tx.amount);
+  const rows   = document.querySelectorAll('#tx-m-split-tbody tr');
+  let sum = 0;
+  rows.forEach((row, i) => {
+    if (i < rows.length - 1) sum += parseFloat(row.querySelector('.split-row-amt').value) || 0;
+  });
+  const remaining = Math.max(0, parseFloat((total - sum).toFixed(6)));
+  btn.closest('tr').querySelector('.split-row-amt').value = remaining;
+  _updateSplitRemaining();
+}
+
+function _updateSplitRemaining() {
+  const tx = State.editingTxId ? State.transactions.find(t => t.id === State.editingTxId) : null;
+  if (!tx) return;
+
+  const total   = parseFloat(tx.amount);
+  const rows    = document.querySelectorAll('#tx-m-split-tbody tr');
+  let sum = 0;
+  rows.forEach(row => { sum += parseFloat(row.querySelector('.split-row-amt')?.value) || 0; });
+  sum = parseFloat(sum.toFixed(6));
+
+  const remaining = parseFloat((total - sum).toFixed(6));
+  const el = document.getElementById('tx-m-split-remaining');
+  if (el) {
+    const currency = tx.currency || '';
+    if (Math.abs(remaining) < 0.0000005) {
+      el.innerHTML = `<span style="color:var(--success)">✓ ${t('tx.split.balanced')}</span>`;
+    } else {
+      el.innerHTML = `<span style="color:var(--red)">${t('tx.split.remaining')}: ${_fmtSplitAmt(remaining)} ${currency}</span>`;
+    }
+  }
+  _updateSaveBtnState();
+  _updateFillButtons();
+}
+
+function _updateSaveBtnState() {
+  const saveBtn = document.getElementById('tx-m-save-btn');
+  if (!saveBtn) return;
+
+  if (!_splitEditorActive) {
+    saveBtn.disabled = false;
+    saveBtn.title = '';
+    return;
+  }
+
+  const tx = State.editingTxId ? State.transactions.find(t => t.id === State.editingTxId) : null;
+  if (!tx) return;
+
+  const total = parseFloat(tx.amount);
+  const rows  = document.querySelectorAll('#tx-m-split-tbody tr');
+  if (rows.length < 2) { saveBtn.disabled = true; saveBtn.title = t('tx.split.minRows'); return; }
+
+  let sum = 0;
+  rows.forEach(row => { sum += parseFloat(row.querySelector('.split-row-amt')?.value) || 0; });
+  sum = parseFloat(sum.toFixed(6));
+
+  const balanced = Math.abs(total - sum) < 0.0000005;
+  saveBtn.disabled = !balanced;
+  saveBtn.title    = balanced ? '' : t('tx.split.saveDisabledHint');
+}
+
+function toggleSplitRows(parentId) {
+  const newExpanded = _splitExpanded[parentId] === false;
+  _splitExpanded[parentId] = newExpanded;
+  document.querySelectorAll(`#tx-table-wrap-body tr[data-parent-id="${parentId}"]`)
+    .forEach(tr => { tr.style.display = newExpanded ? '' : 'none'; });
+  _updateChevron(parentId, newExpanded);
+  _updateToggleAllBtn();
+}
+
+function toggleAllSplits() {
+  const children = [...document.querySelectorAll('#tx-table-wrap-body tr[data-parent-id]')];
+  const anyExpanded = children.some(tr => tr.style.display !== 'none');
+  const expand = !anyExpanded;
+  children.forEach(tr => {
+    tr.style.display = expand ? '' : 'none';
+    _splitExpanded[tr.dataset.parentId] = expand;
+  });
+  document.querySelectorAll('#tx-table-wrap-body tr[data-split-parent]')
+    .forEach(tr => _updateChevron(tr.dataset.splitParent, expand));
+  _updateToggleAllBtn();
+}
+
+function _updateChevron(parentId, expanded) {
+  const btn = document.querySelector(`#tx-table-wrap-body tr[data-split-parent="${parentId}"] .tx-chevron-btn`);
+  if (btn) btn.textContent = expanded ? '▼' : '▶';
+}
+
+function _updateToggleAllBtn() {
+  const btn = document.getElementById('tx-split-toggle-all-btn');
+  if (!btn) return;
+  const anyExpanded = [...document.querySelectorAll('#tx-table-wrap-body tr[data-parent-id]')]
+    .some(tr => tr.style.display !== 'none');
+  btn.textContent = anyExpanded ? t('tx.split.collapseAll') : t('tx.split.expandAll');
+}
+
+async function removeSplitsConfirm() {
+  if (!confirm(t('tx.split.confirmRemove'))) return;
+  setLoading(true, t('status.saving'));
+  try {
+    await Api.removeSplits(State.editingTxId);
+    await refreshAll();
+    closeTxModal();
+    toast(t('tx.split.removed'), 'success');
+  } catch(e) {
+    toast(t('tx.toast.saveFailed', { error: e.message }), 'error');
+  }
+  setLoading(false);
+}
+
+function _esc(str) {
+  return String(str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 function onCategoryChange() {
   const cat  = document.getElementById('tx-m-cat').value;
@@ -604,7 +927,18 @@ async function saveTxModal() {
         }
       }
       await Api.updateTransaction(State.editingTxId, data);
-      toast(t('tx.toast.updated'), 'success');
+      if (_splitEditorActive) {
+        const splitRows = [...document.querySelectorAll('#tx-m-split-tbody tr')].map(row => ({
+          type:        row.querySelector('.split-row-type').value,
+          category:    row.querySelector('.split-row-cat').value || null,
+          description: row.querySelector('.split-row-desc').value.trim(),
+          amount:      parseFloat(row.querySelector('.split-row-amt').value),
+        }));
+        await Api.saveSplits(State.editingTxId, splitRows);
+        toast(t('tx.split.saved'), 'success');
+      } else {
+        toast(t('tx.toast.updated'), 'success');
+      }
     } else {
       await Api.createTransaction(data);
       toast(t('tx.toast.saved'), 'success');
@@ -2811,6 +3145,9 @@ window.addEventListener('DOMContentLoaded', boot);
 Object.assign(window, {
   showPage, refreshAll,
   openTxModal, closeTxModal, saveTxModal, deleteTxModal, onCategoryChange,
+  openSplitEditor, closeSplitEditor, addSplitRow, removeSplitsConfirm,
+  _fillSplitRemaining, _removeSplitRow, _onSplitTypeChange, _updateSplitRemaining,
+  toggleSplitRows, toggleAllSplits,
   toggleReconciled, deleteTxWithConfirm,
   onProfileChange, onImportFileChange, onImportDragOver, onImportDragLeave, onImportDrop,
   toggleImportPaste, clearImport, runImportPreview, renderImportTable, toggleImportSection, _updatePreviewBtnState,

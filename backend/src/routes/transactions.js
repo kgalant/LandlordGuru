@@ -112,7 +112,7 @@ async function validateFields(body, workspaceId, requireAll) {
 // Optional query params: account_id, property_id, type, category, from, to, search, import_batch, page, limit
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { account_id, property_id, type, category, from, to, search, sort_col, sort_dir, import_batch, reconciled } = req.query;
+    const { account_id, property_id, type, category, from, to, search, sort_col, sort_dir, import_batch, reconciled, exclude_children } = req.query;
     let page = parseInt(req.query.page, 10) || 1;
     let limit = parseInt(req.query.limit, 10) || DEFAULT_PAGE_LIMIT;
     if (page < 1) page = 1;
@@ -135,6 +135,7 @@ router.get('/', requireAuth, async (req, res) => {
       if (import_batch)  q = q.where('t.import_batch', import_batch);
       if (reconciled === 'true')  q = q.where('t.reconciled', true);
       if (reconciled === 'false') q = q.where('t.reconciled', false);
+      if (exclude_children)       q = q.whereNull('t.parent_transaction_id');
       return q;
     }
 
@@ -153,7 +154,14 @@ router.get('/', requireAuth, async (req, res) => {
     const sortDirection = sort_dir === 'asc' ? 'asc' : 'desc';
 
     const dataQuery = applyFilters(baseQuery.clone())
-      .select('t.*', db.raw('COALESCE(t.property_id, ap.property_id) as property_id'))
+      .select(
+        't.*',
+        db.raw('COALESCE(t.property_id, ap.property_id) as property_id'),
+        db.raw(
+          '(SELECT COUNT(*)::int FROM transactions WHERE parent_transaction_id = t.id AND workspace_id = ?) as split_count',
+          [req.workspace_id],
+        ),
+      )
       .orderBy(sortColumn, sortDirection)
       .orderBy('t.created_at', 'desc')
       .limit(limit)
@@ -453,6 +461,201 @@ router.delete('/import/:batch_id', requireAuth, async (req, res) => {
     await req.logger.error('transaction.import.rollback.failed', { batch_id, error: err.message });
     console.error('DELETE /api/transactions/import/:batch_id error:', err.message);
     res.status(500).json({ error: 'Failed to roll back import batch' });
+  }
+});
+
+// GET /api/transactions/:id
+// Returns a single transaction including split_count and parent_transaction_id.
+router.get('/:id', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const tx = await db('transactions as t')
+      .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+      .where({ 't.id': id, 't.workspace_id': req.workspace_id })
+      .select(
+        't.*',
+        db.raw('COALESCE(t.property_id, ap.property_id) as property_id'),
+        db.raw(
+          '(SELECT COUNT(*)::int FROM transactions WHERE parent_transaction_id = t.id AND workspace_id = ?) as split_count',
+          [req.workspace_id],
+        ),
+      )
+      .first();
+
+    if (!tx) {
+      await req.logger.debug('transaction.get.notfound', { transaction_id: id });
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    await req.logger.info('transaction.get.success', { transaction_id: id });
+    res.json(formatDate(tx));
+  } catch (err) {
+    await req.logger.error('transaction.get.failed', { transaction_id: id, error: err.message });
+    console.error('GET /api/transactions/:id error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch transaction' });
+  }
+});
+
+// GET /api/transactions/:id/splits
+// Returns the child transactions of a split parent.
+router.get('/:id/splits', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const workspace_id = req.workspace_id;
+
+  const parent = await db('transactions').where({ id, workspace_id }).first();
+  if (!parent) {
+    await req.logger.debug('transaction.splits.get.notfound', { transaction_id: id });
+    return res.status(404).json({ error: 'Transaction not found' });
+  }
+
+  try {
+    const children = await db('transactions as t')
+      .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+      .where({ 't.parent_transaction_id': id, 't.workspace_id': workspace_id })
+      .select('t.*', 'ap.property_id')
+      .orderBy('t.created_at', 'asc');
+
+    await req.logger.info('transaction.splits.get', { transaction_id: id, child_count: children.length });
+    res.json(children.map(c => ({ ...formatDate(c), amount: parseFloat(c.amount) })));
+  } catch (err) {
+    await req.logger.error('transaction.splits.get.failed', { transaction_id: id, error: err.message });
+    console.error('GET /api/transactions/:id/splits error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch split children' });
+  }
+});
+
+// PUT /api/transactions/:id/splits
+// Atomically replaces all children of a transaction with a new set of splits.
+// Parent must be a root transaction (not itself a child). Children inherit
+// date, account_id, currency, import_batch, and source from the parent.
+// All child amounts must be positive and sum exactly to the parent amount.
+router.put('/:id/splits', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const workspace_id = req.workspace_id;
+  const user_id = req.user.id;
+
+  const parent = await db('transactions').where({ id, workspace_id }).first();
+  if (!parent) {
+    await req.logger.debug('transaction.split.notfound', { transaction_id: id });
+    return res.status(404).json({ error: 'Transaction not found' });
+  }
+
+  if (parent.parent_transaction_id !== null) {
+    return res.status(422).json({ error: 'Cannot split a child transaction' });
+  }
+
+  const children = req.body;
+  if (!Array.isArray(children) || children.length < 2) {
+    return res.status(400).json({ error: 'Body must be an array of at least 2 split rows' });
+  }
+
+  // Validate each child row
+  const rowErrors = [];
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    const errs = [];
+
+    if (!child.type || !VALID_TYPES.includes(child.type)) {
+      errs.push(`type must be one of: ${VALID_TYPES.join(', ')}`);
+    }
+    if (!child.category) {
+      errs.push('category is required');
+    } else if (child.type && VALID_TYPES.includes(child.type)) {
+      const valid = await db('workspace_enum_values')
+        .where({ enum_type: 'transaction_category', type_bucket: child.type, value: child.category, is_active: true })
+        .where(function () { this.whereNull('workspace_id').orWhere('workspace_id', workspace_id); })
+        .first();
+      if (!valid) errs.push(`category '${child.category}' is not valid for type '${child.type}'`);
+    }
+    const amt = parseFloat(child.amount);
+    if (isNaN(amt) || amt <= 0) errs.push('amount must be a positive number');
+    if (child.category === 'other_expense' && (!child.notes || !child.notes.trim())) {
+      errs.push('notes are required when category is other_expense');
+    }
+
+    if (errs.length) rowErrors.push({ row: i, errors: errs });
+  }
+  if (rowErrors.length) {
+    return res.status(422).json({ errors: rowErrors });
+  }
+
+  const total = children.reduce((sum, c) => sum + parseFloat(c.amount), 0);
+  const parentAmount = parseFloat(parent.amount);
+  if (Math.abs(total - parentAmount) > 0.005) {
+    return res.status(422).json({
+      error: `Split amounts must sum to parent amount (${parentAmount}); got ${total.toFixed(2)}`,
+    });
+  }
+
+  try {
+    await req.logger.info('transaction.split.started', { transaction_id: id, child_count: children.length });
+
+    const parentDate = formatDate({ date: parent.date }).date;
+
+    await db.transaction(async (trx) => {
+      await trx('transactions').where({ parent_transaction_id: id, workspace_id }).del();
+      await trx('transactions').insert(
+        children.map(child => ({
+          workspace_id,
+          parent_transaction_id: id,
+          date:             parentDate,
+          account_id:       parent.account_id,
+          type:             child.type,
+          category:         child.category,
+          amount:           parseFloat(child.amount),
+          currency:         parent.currency,
+          description:      child.description || null,
+          notes:            child.notes || null,
+          import_batch:     parent.import_batch || null,
+          source:           parent.source || 'manual',
+          reconciled:       false,
+          created_by:       user_id,
+          last_modified_by: user_id,
+        })),
+      );
+    });
+
+    const updatedParent = await fetchTransactionWithProperty(id, workspace_id);
+    const updatedChildren = await db('transactions as t')
+      .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
+      .where({ 't.parent_transaction_id': id, 't.workspace_id': workspace_id })
+      .select('t.*', 'ap.property_id');
+
+    await req.logger.info('transaction.split.success', { transaction_id: id, child_count: children.length });
+    res.json({
+      parent:   formatDate(updatedParent),
+      children: updatedChildren.map(formatDate),
+    });
+  } catch (err) {
+    await req.logger.error('transaction.split.failed', { transaction_id: id, error: err.message });
+    console.error('PUT /api/transactions/:id/splits error:', err.message);
+    res.status(500).json({ error: 'Failed to save transaction splits' });
+  }
+});
+
+// DELETE /api/transactions/:id/splits
+// Removes all children of a transaction, returning it to leaf status.
+router.delete('/:id/splits', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const workspace_id = req.workspace_id;
+
+  const parent = await db('transactions').where({ id, workspace_id }).first();
+  if (!parent) {
+    await req.logger.debug('transaction.split.remove.notfound', { transaction_id: id });
+    return res.status(404).json({ error: 'Transaction not found' });
+  }
+
+  try {
+    const deleted = await db('transactions')
+      .where({ parent_transaction_id: id, workspace_id })
+      .del();
+
+    await req.logger.info('transaction.split.remove', { transaction_id: id, deleted });
+    res.json({ deleted });
+  } catch (err) {
+    await req.logger.error('transaction.split.remove.failed', { transaction_id: id, error: err.message });
+    console.error('DELETE /api/transactions/:id/splits error:', err.message);
+    res.status(500).json({ error: 'Failed to remove transaction splits' });
   }
 });
 

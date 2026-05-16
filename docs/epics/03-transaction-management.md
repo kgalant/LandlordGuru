@@ -367,7 +367,7 @@ Display a concise verbal summary of the active filter state as a tooltip/popover
 ---
 
 ### F3-17 Transaction splitting `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Allow a single bank transaction (e.g. a combined rent + utilities payment) to be split into two or more child transactions with individual types, categories, and amounts. The children replace the parent in all reporting and aggregation; the parent is retained as a permanent reference to the original bank entry. No double-counting is possible by design.
 
