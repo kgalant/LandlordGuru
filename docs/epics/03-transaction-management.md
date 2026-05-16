@@ -443,7 +443,7 @@ This naturally handles the normal case (no children → not excluded) and the sp
 ### F3-18 Split rules (auto-split at import) `[MVP]`
 **Status:** Backlog
 
-Allow users to define split rules that automatically split matching transactions during import. A split rule is a combination of match conditions (same pattern as categorisation rules in F5-3) and a reusable split template (the child allocations). When an imported transaction matches a rule, it is immediately split without manual intervention.
+Allow users to define split rules that automatically split matching transactions during import. A split rule is a combination of match conditions (same pattern as categorisation rules in F5-3) and a reusable split template (the child allocations). When an imported transaction matches a rule, it is immediately split without manual intervention. Rules can also be created directly from a manual split via a "Save as rule" shortcut in the split editor.
 
 **Data model:**
 
@@ -456,22 +456,43 @@ Allow users to define split rules that automatically split matching transactions
   - Validation at save time: fixed rows must sum to the expected parent amount (only enforceable at runtime for variable-amount parents using percent mode); percent rows must sum to exactly 100
 - `split_rules` are workspace-scoped, ordered by `created_at` (first matching rule wins)
 
-**Split rule UI:**
-- Managed in a dedicated section (alongside or adjacent to the categorisation rules table in F5-3)
-- Create/edit form: name, condition builder (field + operator + value rows), split template rows (type + category + description + amount_type/value), enable/disable toggle
-- Fixed-amount vs. percent-amount mode is selected once per rule; all template rows follow the same mode
+**Split rule UI (reusable form component):**
+- The rule creation/edit form is a single reusable component used in two contexts (see below):
+  - **Fields:** name, condition builder (field + operator + value rows, add/remove row), split template rows (type + category + description + amount_type/value, add/remove row), fixed-vs-percent mode toggle (one mode per rule), enable/disable toggle
+  - Fixed-amount vs. percent-amount mode is selected once per rule; switching mode resets all template row amounts
+- **Context 1 — standalone management section:** Managed alongside or adjacent to the categorisation rules table (F5-3); lists all workspace split rules with create/edit/delete/enable-disable actions
+- **Context 2 — "Save as rule" from the split editor:** After saving a manual split in the edit modal (F3-17), a secondary action "Save as split rule" is available alongside "Apply to similar"
+  - Clicking opens the rule form in a modal, pre-populated:
+    - **Template:** the split rows just saved (types, categories, descriptions, amounts); `amount_type` defaults to `fixed`; user can switch to `percent` (amounts recalculate as percentages of parent amount)
+    - **Conditions:** pre-filled with `account_id` equals this transaction's account and `amount` equals this transaction's amount; user can add, remove, or edit conditions before saving
+  - Saving creates the rule and confirms with a toast; the form is the same component as the standalone view — no separate implementation
 
 **Import pipeline integration:**
 - Split rule evaluation runs after categorisation rules (F5-3) have been applied to each row
 - For each row, the first matching enabled split rule is applied: the row's `amount` is used to compute child amounts (for `'fixed'` rules this is a direct copy; for `'percent'` rules each child amount = `parent_amount × percent / 100`, rounded to 2 decimal places with any rounding remainder added to the last child)
-- If a split rule matches, the imported transaction is saved as a split parent with its children; the import preview shows these rows with a "Auto-split" badge
+- If a split rule matches, the imported transaction is saved as a split parent with its children; the import preview shows these rows with an "Auto-split" badge and expandable child rows
 - If no split rule matches, the transaction imports as a single leaf transaction (normal behaviour)
 
-**Retroactive application:**
-- A "Apply rules to existing transactions" action (like the equivalent in F5-3) re-evaluates split rules against all unsplit leaf transactions in the workspace
-- User can preview matches before confirming
+**Non-goals (out of scope for this feature):**
+- Retroactive application of rules to existing transactions — see F3-19
 
 **Dependencies:** F3-17 (split data model and `PUT /api/transactions/:id/splits` endpoint), F5-3 (import rules pipeline — split rule evaluation runs in the same pass)
+
+---
+
+### F3-19 Retroactive split rule application `[Post-MVP]`
+**Status:** Backlog
+
+Re-evaluate split rules against existing unsplit transactions so users can apply rules created after past imports.
+
+**Acceptance criteria:**
+- A "Apply split rules to existing transactions" action appears in the split rules management section
+- Clicking shows a preview: list of all unsplit leaf transactions in the workspace that match at least one enabled split rule, grouped by matching rule, showing date, description, amount, and which rule would apply
+- Individual transactions can be deselected from the preview before confirming
+- Confirming applies each matching rule atomically (one `PUT /api/transactions/:id/splits` call per transaction, or a batch endpoint)
+- A summary toast confirms how many transactions were split
+
+**Dependencies:** F3-18 (split rules data model, CRUD API, and rule evaluation logic)
 
 ---
 
