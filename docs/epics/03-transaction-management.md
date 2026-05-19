@@ -441,7 +441,7 @@ This naturally handles the normal case (no children → not excluded) and the sp
 ---
 
 ### F3-18 Split rules (auto-split at import) `[MVP]`
-**Status:** Backlog
+**Status:** Done
 
 Allow users to define split rules that automatically split matching transactions during import. A split rule is a combination of match conditions (same pattern as categorisation rules in F5-3) and a reusable split template (the child allocations). When an imported transaction matches a rule, it is immediately split without manual intervention. Rules can also be created directly from a manual split via a "Save as rule" shortcut in the split editor.
 

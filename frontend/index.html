@@ -378,6 +378,16 @@
         <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="rules.defaultDesc"></p>
         <button class="btn btn-secondary btn-sm" onclick="loadDefaultRules()" data-i18n="rules.loadDefault"></button>
       </div>
+
+      <!-- Split rules section -->
+      <div class="card" style="margin-top:1rem">
+        <div class="card-header">
+          <span class="card-title" data-i18n="splitRules.title"></span>
+          <button class="btn btn-primary btn-sm" onclick="openSplitRuleModal()" data-i18n="splitRules.addBtn"></button>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="splitRules.description"></p>
+        <div id="split-rules-list"></div>
+      </div>
     </div>
 
     <!-- ── SETTINGS ── -->
@@ -522,7 +532,7 @@
       <span class="card-title" id="tx-modal-title"></span>
       <button class="btn btn-sm btn-secondary" onclick="closeTxModal()">✕</button>
     </div>
-    <div class="form-grid">
+    <div class="form-grid cols-3">
       <div class="form-group">
         <label data-i18n="tx.modal.date"></label>
         <input type="date" id="tx-m-date">
@@ -547,17 +557,17 @@
         <label data-i18n="tx.modal.currency"></label>
         <input type="text" id="tx-m-currency" maxlength="3" placeholder="USD">
       </div>
-      <div class="form-group span-2">
+      <div class="form-group span-3">
         <label data-i18n="tx.modal.description"></label>
         <input type="text" id="tx-m-desc" data-i18n-placeholder="tx.modal.descPlaceholder">
         <small id="tx-m-original-desc" class="original-value-hint" style="display:none"></small>
       </div>
-      <div class="form-group span-2">
+      <div class="form-group span-3">
         <label id="tx-m-notes-label" data-i18n="tx.modal.notes"></label>
         <textarea id="tx-m-notes" rows="2" data-i18n-placeholder="tx.modal.notesPlaceholder"></textarea>
         <span id="tx-m-notes-hint" class="note-hint" style="display:none" data-i18n="tx.modal.notesHint"></span>
       </div>
-      <div class="span-2" id="tx-m-reconciled-group" style="display:none">
+      <div class="span-3" id="tx-m-reconciled-group" style="display:none">
         <label style="display:inline-flex;align-items:center;gap:0.5rem;cursor:pointer;font-weight:normal">
           <input type="checkbox" id="tx-m-reconciled">
           <span data-i18n="tx.modal.reconciled"></span>
@@ -590,6 +600,15 @@
       <div style="display:flex;align-items:center;margin-top:0.5rem;gap:0.5rem">
         <button class="btn btn-sm btn-secondary" onclick="addSplitRow()" data-i18n="tx.split.addRow"></button>
         <span id="tx-m-split-remaining" style="margin-left:auto;font-size:13px"></span>
+      </div>
+    </div>
+
+    <!-- Post-split secondary actions (shown after a split is saved) -->
+    <div id="tx-m-post-split-actions" style="display:none;margin-top:0.75rem;border-top:1px solid var(--border);padding-top:0.75rem;display:none">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:0.5rem" data-i18n="tx.split.postSaveHint"></div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <button class="btn btn-sm btn-secondary" id="tx-m-apply-similar-btn" onclick="applyToSimilar()" data-i18n="tx.split.applyToSimilar"></button>
+        <button class="btn btn-sm btn-secondary" id="tx-m-save-as-rule-btn" onclick="openSplitRuleModalFromSplit()" data-i18n="tx.split.saveAsRule"></button>
       </div>
     </div>
 
@@ -769,6 +788,87 @@
 
 <!-- Account add/edit/delete modal — content is injected dynamically -->
 <div id="modal-account" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center"></div>
+
+<!-- ID picker popup (account / property selector for split rule conditions) -->
+<div id="modal-id-picker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:800;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.25rem;min-width:240px;max-width:min(90vw,420px);max-height:80vh;display:flex;flex-direction:column">
+    <div class="card-header" style="margin-bottom:0.75rem">
+      <span class="card-title" id="id-picker-title"></span>
+      <button class="btn btn-sm btn-secondary" onclick="_closeIdPickerPopup()">✕</button>
+    </div>
+    <div id="id-picker-list" style="overflow-y:auto;flex:1;max-height:280px"></div>
+    <div class="btn-row" style="margin-top:0.75rem">
+      <button class="btn btn-primary btn-sm" onclick="_applyIdPickerSelection()">Done</button>
+      <button class="btn btn-secondary btn-sm" onclick="_closeIdPickerPopup()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Split rule modal -->
+<div id="modal-split-rule" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:600;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto">
+    <div class="card-header">
+      <span class="card-title" id="split-rule-modal-title"></span>
+      <button class="btn btn-sm btn-secondary" onclick="closeSplitRuleModal()">✕</button>
+    </div>
+
+    <div class="form-group" style="margin-top:1rem">
+      <label data-i18n="splitRules.modal.name"></label>
+      <input type="text" id="sr-m-name" data-i18n-placeholder="splitRules.modal.namePlaceholder">
+    </div>
+
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+      <label style="display:flex;align-items:center;gap:0.4rem;font-size:13px;cursor:pointer">
+        <input type="checkbox" id="sr-m-enabled" checked>
+        <span data-i18n="splitRules.modal.enabled"></span>
+      </label>
+    </div>
+
+    <!-- Conditions -->
+    <div style="margin-bottom:1rem">
+      <div style="font-weight:600;font-size:13px;margin-bottom:0.5rem" data-i18n="splitRules.modal.conditionsTitle"></div>
+      <div id="sr-m-conditions"></div>
+      <button class="btn btn-sm btn-secondary" style="margin-top:0.4rem" onclick="addSplitRuleCondition()" data-i18n="splitRules.modal.addCondition"></button>
+    </div>
+
+    <!-- Template -->
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem">
+        <span style="font-weight:600;font-size:13px" data-i18n="splitRules.modal.templateTitle"></span>
+        <label style="display:flex;align-items:center;gap:0.4rem;font-size:12px;cursor:pointer">
+          <input type="radio" name="sr-m-mode" value="fixed" id="sr-m-mode-fixed" onchange="onSplitRuleModeChange()">
+          <span data-i18n="splitRules.modal.modeFixed"></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;font-size:12px;cursor:pointer">
+          <input type="radio" name="sr-m-mode" value="percent" id="sr-m-mode-percent" onchange="onSplitRuleModeChange()">
+          <span data-i18n="splitRules.modal.modePercent"></span>
+        </label>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="color:var(--text3);border-bottom:1px solid var(--border)">
+            <th style="padding:4px 6px;font-weight:500;text-align:left" data-i18n="tx.col.type"></th>
+            <th style="padding:4px 6px;font-weight:500;text-align:left" data-i18n="tx.col.category"></th>
+            <th style="padding:4px 6px;font-weight:500;text-align:left" data-i18n="tx.col.description"></th>
+            <th style="padding:4px 6px;font-weight:500;text-align:right" id="sr-m-amount-header"></th>
+            <th style="width:2rem"></th>
+          </tr>
+        </thead>
+        <tbody id="sr-m-template-tbody"></tbody>
+      </table>
+      <div style="display:flex;align-items:center;margin-top:0.5rem;gap:0.5rem">
+        <button class="btn btn-sm btn-secondary" onclick="addSplitRuleTemplateRow()" data-i18n="tx.split.addRow"></button>
+        <span id="sr-m-template-summary" style="margin-left:auto;font-size:13px;color:var(--text3)"></span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveSplitRuleModal()" data-i18n="splitRules.modal.saveBtn"></button>
+      <button class="btn btn-secondary" onclick="closeSplitRuleModal()" data-i18n="common.cancel"></button>
+      <button class="btn btn-danger btn-sm" id="sr-m-delete-btn" style="display:none;margin-left:auto" onclick="deleteSplitRuleModal()" data-i18n="common.delete"></button>
+    </div>
+  </div>
+</div>
 
 <!-- Toast container -->
 <div id="toast-container"></div>

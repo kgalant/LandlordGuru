@@ -205,6 +205,24 @@ export const Api = (() => {
     return request('GET', `/accounts/${id}/items`);
   }
 
+  // ── Split rules ─────────────────────────────────────────────
+
+  async function getSplitRules() {
+    return request('GET', '/split-rules');
+  }
+
+  async function createSplitRule(rule) {
+    return request('POST', '/split-rules', rule);
+  }
+
+  async function updateSplitRule(id, patch) {
+    return request('PATCH', `/split-rules/${id}`, patch);
+  }
+
+  async function deleteSplitRule(id) {
+    return request('DELETE', `/split-rules/${id}`);
+  }
+
   // ── Batch import ────────────────────────────────────────────
 
   async function importTransactions(txList) {
@@ -235,5 +253,6 @@ export const Api = (() => {
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
     getDescMappings, saveDescMapping, deleteDescMapping,
     importTransactions, getImportHistory, deleteImportBatch, checkImportDuplicates,
+    getSplitRules, createSplitRule, updateSplitRule, deleteSplitRule,
   };
 })();

@@ -17,6 +17,7 @@ let State = {
   properties:           [],
   transactions:         [],
   rules:                [],
+  splitRules:           [],
   descMappings:         [],
   transactionCategories: {},
   editingTxId:          null,
@@ -72,9 +73,43 @@ function _buildMatchTag(row) {
       : '?';
     return `<span class="dup-badge"><span class="tag tag-dup">Duplicate</span><div class="dup-badge-tip">${escHtml(fmtDate(m.date))} &bull; ${escHtml(m.description || '—')} &bull; ${parseFloat(m.amount).toLocaleString()}<br>Imported on ${escHtml(importedOn)}</div></span> `;
   }
+  if (row._autoSplit)          return `<span class="tag tag-split" title="${escHtml(row._autoSplitRuleName || 'Split rule')}">Auto-split</span> `;
   if (row._descMappingMatched) return '<span class="tag tag-mapping">mapped</span> ';
   if (row._autoMatched)        return '<span class="tag tag-auto">auto</span> ';
   return '';
+}
+
+// Evaluates enabled split rules against each row (client-side mirror of server logic for preview).
+function _markAutoSplitRows(rows) {
+  const rules = (State.splitRules || []).filter(r => r.enabled);
+  rows.forEach(row => {
+    const match = rules.find(rule => rule.conditions.every(c => {
+      const field = c.field;
+      const op    = c.operator;
+      const val   = c.value;
+      if (op === 'in') {
+        const ids    = Array.isArray(val) ? val : [];
+        if (ids.length === 0) return true;
+        const rowVal = field === 'property_id' ? row.property_id : row.account_id;
+        return ids.includes(rowVal);
+      }
+      if (field === 'amount') {
+        const amt = parseFloat(row.amount);
+        const cmp = parseFloat(val);
+        if (op === 'equals')       return amt === cmp;
+        if (op === 'greater_than') return amt > cmp;
+        if (op === 'less_than')    return amt < cmp;
+      }
+      if (field === 'description') {
+        const desc = (row.description || '').toLowerCase();
+        if (op === 'contains') return desc.includes(String(val).toLowerCase());
+        if (op === 'equals')   return desc === String(val).toLowerCase();
+      }
+      return false;
+    }));
+    row._autoSplit         = !!match;
+    row._autoSplitRuleName = match ? match.name : null;
+  });
 }
 
 // Returns flat array of all category objects from the grouped State
@@ -107,10 +142,11 @@ async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
     // v2 mode: data from backend API
-    const [props, txs, rules, descMappings, wsSettings, rates, txCategories] = await Promise.all([
+    const [props, txs, rules, splitRules, descMappings, wsSettings, rates, txCategories] = await Promise.all([
       Api.getProperties(),
       Api.getTransactions({ limit: 10000 }),
       Api.getRules(),
+      Api.getSplitRules(),
       Api.getDescMappings(),
       Api.getWorkspaceSettings(),
       Api.getCurrencyRates(),
@@ -119,6 +155,7 @@ async function refreshAll() {
     State.properties             = props;
     State.transactions           = (txs.data ?? txs).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
     State.rules                  = rules;
+    State.splitRules             = splitRules;
     State.descMappings           = descMappings;
     State.workspaceSettings      = wsSettings;
     State.currencyRates          = rates;
@@ -154,7 +191,7 @@ function renderCurrentPage() {
   if (currentPage === 'reports')      renderReports();
   if (currentPage === 'properties')   renderPropertyList();
   if (currentPage === 'accounts')     renderAccounts();
-  if (currentPage === 'rules')        { if (!rulesTable) initRulesTable(); else rulesTable.refresh(); }
+  if (currentPage === 'rules')        { if (!rulesTable) initRulesTable(); else rulesTable.refresh(); renderSplitRulesList(); }
   if (currentPage === 'settings')     renderSettings();
   if (currentPage === 'import')       { loadImportHistory(); _updatePreviewBtnState(); }
 }
@@ -178,18 +215,22 @@ function populateAllDropdowns() {
   ['tx-m-apt','import-apt','rule-m-apt'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
+    const saved = el.value;
     let blank;
     if (id === 'rule-m-apt')  blank = `<option value="">${t('rules.modal.anyProperty')}</option>`;
     else if (id === 'import-apt') blank = `<option value="">${t('import.autoDetect')}</option>`;
     else                      blank = `<option value="">${t('common.select')}</option>`;
     el.innerHTML = blank + propOpts;
+    if (saved) el.value = saved;
   });
 
   const catOpts = Importer.buildCategoryOptions('');
   ['tx-m-cat','rule-m-cat'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
+    const saved = el.value;
     el.innerHTML = `<option value="">${t('common.select')}</option>` + catOpts;
+    if (saved) el.value = saved;
   });
 }
 
@@ -632,10 +673,20 @@ function openTxModal(txId) {
   }
   onCategoryChange();
   modal.style.display = 'flex';
+
+  // Auto-open the split editor if this transaction already has children
+  if (txId) {
+    const tx = State.transactions.find(t => t.id === txId);
+    if (tx && (tx.split_count || 0) > 0) openSplitEditor();
+  }
 }
 
 function closeTxModal() {
   document.getElementById('modal-tx').style.display = 'none';
+  const postActions = document.getElementById('tx-m-post-split-actions');
+  if (postActions) postActions.style.display = 'none';
+  State._lastSavedSplitRows = null;
+  State._lastSavedSplitTxId = null;
   closeSplitEditor();
 }
 
@@ -860,7 +911,6 @@ function _updateToggleAllBtn() {
 }
 
 async function removeSplitsConfirm() {
-  if (!confirm(t('tx.split.confirmRemove'))) return;
   setLoading(true, t('status.saving'));
   try {
     await Api.removeSplits(State.editingTxId);
@@ -935,7 +985,15 @@ async function saveTxModal() {
           amount:      parseFloat(row.querySelector('.split-row-amt').value),
         }));
         await Api.saveSplits(State.editingTxId, splitRows);
+        State._lastSavedSplitRows = splitRows;
+        State._lastSavedSplitTxId = State.editingTxId;
         toast(t('tx.split.saved'), 'success');
+        await refreshAll();
+        // Show post-split secondary actions without closing the modal
+        const postActions = document.getElementById('tx-m-post-split-actions');
+        if (postActions) postActions.style.display = 'block';
+        closeSplitEditor();
+        return;
       } else {
         toast(t('tx.toast.updated'), 'success');
       }
@@ -1649,6 +1707,9 @@ async function runImportPreview() {
 
   // Apply description mappings (highest priority — overrides rule matches)
   applyDescMappings(result.rows, profileKey);
+
+  // Mark rows that would be auto-split by an enabled split rule (preview badge only; actual split happens server-side on import)
+  _markAutoSplitRows(result.rows);
 
   // Initialise per-row UI flags
   State.importRows = result.rows.map(r => Object.assign(r, { _selected: false, _ignored: false, _locked: false, _storeMapping: false, _userPickedCategory: false, _userPickedProperty: false, _isDuplicate: false, _duplicateMatch: null, _userPickedIgnore: false }));
@@ -2729,6 +2790,511 @@ async function loadDefaultRules() {
   }
 }
 
+// ── Split rules ───────────────────────────────────────────
+
+const SR_FIELDS = [
+  { value: 'account_id',  label: 'Account' },
+  { value: 'property_id', label: 'Property' },
+  { value: 'amount',      label: 'Amount' },
+  { value: 'description', label: 'Description' },
+];
+const SR_OPS = {
+  account_id:  [],   // multiselect — no operator shown
+  property_id: [],   // multiselect — no operator shown
+  amount:      [{ value: 'equals',       label: '=' },
+                { value: 'greater_than', label: '>' },
+                { value: 'less_than',    label: '<' }],
+  description: [{ value: 'contains',    label: 'contains' },
+                { value: 'equals',      label: '=' }],
+};
+
+function _isIdField(field) {
+  return field === 'account_id' || field === 'property_id';
+}
+
+// Returns the display label for a set of selected IDs (shown in the picker button).
+function _srIdPickerLabel(field, ids) {
+  if (!ids.length) return 'All';
+  if (field === 'account_id') {
+    const accounts = _accountsState?.accounts || [];
+    return ids.map(id => accounts.find(a => a.id === id)?.name || id).join(', ');
+  }
+  return ids.map(id => State.properties.find(p => p.id === id)?.name || id).join(', ');
+}
+
+// Builds the clickable display pill for account_id / property_id conditions.
+function _srIdPickerDisplayHtml(field, selectedIds) {
+  const ids   = Array.isArray(selectedIds) ? selectedIds : [];
+  const label = _srIdPickerLabel(field, ids);
+  const json  = _esc(JSON.stringify(ids));
+  return `<button type="button" class="sr-cond-val sr-id-picker-btn" data-field="${field}" data-selected="${json}"
+    onclick="_openIdPickerPopup(this)"
+    style="flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:3px 8px;font-size:13px;cursor:pointer"
+    >${_esc(label)}</button>`;
+}
+
+// ── ID picker popup ───────────────────────────────────────
+let _idPickerTarget = null; // the .sr-id-picker-btn that opened the popup
+
+function _openIdPickerPopup(btn) {
+  _idPickerTarget = btn;
+  const field    = btn.dataset.field;
+  const selected = JSON.parse(btn.dataset.selected || '[]');
+
+  document.getElementById('id-picker-title').textContent =
+    field === 'account_id' ? 'Select accounts' : 'Select properties';
+
+  const list = document.getElementById('id-picker-list');
+  let items = [];
+  if (field === 'account_id') {
+    items = (_accountsState?.accounts || []).filter(a => a.is_active).map(a => ({ id: a.id, label: a.name }));
+  } else {
+    items = State.properties.filter(p => !p.archived).map(p => ({ id: p.id, label: p.name }));
+  }
+
+  const allChecked = selected.length === 0;
+  list.textContent = '';
+
+  // Use a table so the text <td> is completely isolated from the checkbox's layout box.
+  // The global CSS rule `input { width:100%; padding:8px 10px }` bloats checkboxes
+  // as inline elements; putting them in their own <td> avoids that entirely.
+  const table = document.createElement('table');
+  table.style.cssText = 'border-collapse:collapse;width:100%';
+  const tbody = document.createElement('tbody');
+  table.appendChild(tbody);
+
+  const addRow = (id, labelText, checked, isAll) => {
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+
+    const tdCb = document.createElement('td');
+    tdCb.style.cssText = 'width:1px;padding:4px 8px 4px 0;vertical-align:middle';
+
+    const cb = document.createElement('input');
+    cb.type    = 'checkbox';
+    cb.value   = id;
+    cb.checked = checked;
+    cb.style.cssText = 'width:auto;padding:0;margin:0;vertical-align:middle;cursor:pointer;flex-shrink:0';
+    if (isAll) {
+      cb.id = 'id-picker-all';
+      cb.addEventListener('change', () => _onIdPickerAllChange(cb));
+    } else {
+      cb.className = 'id-picker-item';
+      cb.addEventListener('change', () => _onIdPickerItemChange(cb));
+    }
+    tdCb.appendChild(cb);
+
+    const tdLabel = document.createElement('td');
+    tdLabel.style.cssText = 'padding:4px 0;font-size:13px;color:var(--text);white-space:nowrap;vertical-align:middle' + (isAll ? ';font-weight:500' : '');
+    tdLabel.textContent = labelText;
+
+    tr.appendChild(tdCb);
+    tr.appendChild(tdLabel);
+    tr.addEventListener('click', e => { if (e.target !== cb) cb.click(); });
+    tbody.appendChild(tr);
+  };
+
+  addRow('', 'All', allChecked, true);
+  items.forEach(item => addRow(item.id, item.label, selected.includes(item.id), false));
+  list.appendChild(table);
+
+  document.getElementById('modal-id-picker').style.display = 'flex';
+}
+
+function _closeIdPickerPopup() {
+  document.getElementById('modal-id-picker').style.display = 'none';
+  _idPickerTarget = null;
+}
+
+function _applyIdPickerSelection() {
+  if (!_idPickerTarget) return;
+  const field    = _idPickerTarget.dataset.field;
+  const selected = [...document.querySelectorAll('.id-picker-item:checked')].map(cb => cb.value);
+  _idPickerTarget.dataset.selected = JSON.stringify(selected);
+  _idPickerTarget.textContent = _srIdPickerLabel(field, selected);
+  _closeIdPickerPopup();
+}
+
+function _onIdPickerAllChange(cb) {
+  if (cb.checked) {
+    document.querySelectorAll('.id-picker-item').forEach(el => { el.checked = false; });
+  }
+}
+
+function _onIdPickerItemChange(cb) {
+  if (cb.checked) {
+    const allCb = document.getElementById('id-picker-all');
+    if (allCb) allCb.checked = false;
+  } else {
+    const anyChecked = [...document.querySelectorAll('.id-picker-item')].some(el => el.checked);
+    if (!anyChecked) {
+      const allCb = document.getElementById('id-picker-all');
+      if (allCb) allCb.checked = true;
+    }
+  }
+}
+
+let _srEditingId = null;
+let _srFromSplitContext = false;
+let _srSourceTx = null; // source transaction when opening from a manual split
+
+function renderSplitRulesList() {
+  const container = document.getElementById('split-rules-list');
+  if (!container) return;
+  if (!State.splitRules.length) {
+    container.innerHTML = `<p style="color:var(--text3);font-size:13px">${t('splitRules.noRules')}<br><span style="font-size:12px">${t('splitRules.noRulesSub')}</span></p>`;
+    return;
+  }
+  container.innerHTML = State.splitRules.map(r => `
+    <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;margin-bottom:2px">${_esc(r.name)}</div>
+        <div style="font-size:11px;color:var(--text3)">
+          ${r.conditions.map(c => {
+            const displayVal = Array.isArray(c.value)
+              ? (c.value.length === 0 ? 'all' : c.value.length + ' selected')
+              : c.value;
+            return `${c.field} ${c.operator} "${displayVal}"`;
+          }).join(' AND ')}
+          &nbsp;→&nbsp;
+          ${r.template.length} rows (${r.template[0]?.amount_type || '?'})
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap;cursor:pointer">
+        <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleSplitRuleEnabled('${r.id}', this.checked)">
+        On
+      </label>
+      <button class="btn btn-sm btn-secondary" onclick="openSplitRuleModal('${r.id}')" style="white-space:nowrap">Edit</button>
+    </div>`).join('');
+}
+
+async function openSplitRuleModal(editId, prefill) {
+  // Ensure accounts are loaded (they are lazy-loaded only when the accounts page is visited)
+  if (!_accountsState) {
+    try {
+      const [accounts, wsSettings] = await Promise.all([
+        Api.getAccounts({ status: 'all' }),
+        Api.getWorkspaceSettings(),
+      ]);
+      _accountsState = { accounts, maxDepth: wsSettings.max_account_depth || 5 };
+    } catch (e) {
+      _accountsState = { accounts: [], maxDepth: 5 };
+    }
+  }
+
+  _srEditingId = editId || null;
+  _srFromSplitContext = false;
+  _srSourceTx = prefill?._sourceTx || null;
+
+  const title = document.getElementById('split-rule-modal-title');
+  title.textContent = _srEditingId ? t('splitRules.modal.titleEdit') : t('splitRules.modal.titleAdd');
+
+  document.getElementById('sr-m-delete-btn').style.display = _srEditingId ? 'inline-block' : 'none';
+
+  // Reset form
+  document.getElementById('sr-m-name').value = '';
+  document.getElementById('sr-m-enabled').checked = true;
+  document.getElementById('sr-m-mode-fixed').checked = true;
+  document.getElementById('sr-m-conditions').innerHTML = '';
+  document.getElementById('sr-m-template-tbody').innerHTML = '';
+
+  if (_srEditingId) {
+    const rule = State.splitRules.find(r => r.id === _srEditingId);
+    if (rule) {
+      document.getElementById('sr-m-name').value = rule.name;
+      document.getElementById('sr-m-enabled').checked = rule.enabled;
+      const mode = rule.template[0]?.amount_type || 'fixed';
+      document.getElementById(mode === 'percent' ? 'sr-m-mode-percent' : 'sr-m-mode-fixed').checked = true;
+      rule.conditions.forEach(c => _addSrConditionRow(c.field, c.operator, c.value));
+      rule.template.forEach(r => _addSrTemplateRow(r.type, r.category, r.description, r.amount_value));
+    }
+  } else if (prefill) {
+    document.getElementById('sr-m-name').value = prefill.name || '';
+    const mode = prefill.mode || 'fixed';
+    document.getElementById(mode === 'percent' ? 'sr-m-mode-percent' : 'sr-m-mode-fixed').checked = true;
+    (prefill.conditions || []).forEach(c => _addSrConditionRow(c.field, c.operator, c.value));
+    (prefill.template  || []).forEach(r => _addSrTemplateRow(r.type, r.category, r.description, r.amount_value));
+  } else {
+    _addSrConditionRow('amount', 'equals', '');
+    _addSrTemplateRow('income', '', '', '');
+    _addSrTemplateRow('expense', '', '', '');
+  }
+
+  _updateSrModeHeader();
+  _updateSrTemplateSummary();
+  document.getElementById('modal-split-rule').style.display = 'flex';
+}
+
+async function openSplitRuleModalFromSplit() {
+  const tx   = State.transactions.find(t => t.id === State._lastSavedSplitTxId);
+  const rows = State._lastSavedSplitRows || [];
+  if (!tx || !rows.length) { await openSplitRuleModal(null); return; }
+
+  const prefill = {
+    name: '',
+    mode: 'fixed',
+    conditions: [
+      { field: 'description', operator: 'contains', value: tx.description || '' },
+    ],
+    template: rows.map(r => ({
+      type:         r.type,
+      category:     r.category,
+      description:  r.description || '',
+      amount_value: r.amount,
+    })),
+    _sourceTx: tx,
+  };
+  await openSplitRuleModal(null, prefill);
+  // Set context flag after modal is open so _onSrCondFieldChange can reference it
+  _srFromSplitContext = true;
+}
+
+function closeSplitRuleModal() {
+  document.getElementById('modal-split-rule').style.display = 'none';
+  _srEditingId = null;
+  _srFromSplitContext = false;
+  _srSourceTx = null;
+}
+
+async function saveSplitRuleModal() {
+  const name    = document.getElementById('sr-m-name').value.trim();
+  const enabled = document.getElementById('sr-m-enabled').checked;
+  const mode    = document.querySelector('input[name="sr-m-mode"]:checked')?.value || 'fixed';
+
+  if (!name) { toast(t('splitRules.toast.nameReq'), 'error'); return; }
+
+  const condRows = document.querySelectorAll('.sr-cond-row');
+  if (!condRows.length) { toast(t('splitRules.toast.condReq'), 'error'); return; }
+  const conditions = [...condRows].map(row => {
+    const field   = row.querySelector('.sr-cond-field').value;
+    if (_isIdField(field)) {
+      const btn      = row.querySelector('.sr-id-picker-btn');
+      const selected = JSON.parse(btn?.dataset.selected || '[]');
+      return { field, operator: 'in', value: selected };
+    }
+    return {
+      field,
+      operator: row.querySelector('.sr-cond-op').value,
+      value:    row.querySelector('.sr-cond-val').value,
+    };
+  });
+
+  const tmplRows = document.querySelectorAll('#sr-m-template-tbody tr');
+  if (tmplRows.length < 2) { toast(t('splitRules.toast.templateReq'), 'error'); return; }
+  const template = [...tmplRows].map(row => ({
+    type:         row.querySelector('.sr-tmpl-type').value,
+    category:     row.querySelector('.sr-tmpl-cat').value,
+    description:  row.querySelector('.sr-tmpl-desc').value.trim(),
+    amount_type:  mode,
+    amount_value: parseFloat(row.querySelector('.sr-tmpl-amt').value) || 0,
+  }));
+
+  if (mode === 'percent') {
+    const sum = template.reduce((s, r) => s + r.amount_value, 0);
+    if (Math.abs(sum - 100) > 0.001) { toast(t('splitRules.toast.pctSum'), 'error'); return; }
+  }
+
+  try {
+    if (_srEditingId) {
+      const updated = await Api.updateSplitRule(_srEditingId, { name, enabled, conditions, template });
+      const idx = State.splitRules.findIndex(r => r.id === _srEditingId);
+      if (idx !== -1) State.splitRules[idx] = updated;
+    } else {
+      const created = await Api.createSplitRule({ name, enabled, conditions, template });
+      State.splitRules.push(created);
+    }
+    renderSplitRulesList();
+    closeSplitRuleModal();
+    toast(t('splitRules.toast.saved'), 'success');
+  } catch(e) {
+    toast(t('splitRules.toast.saveFailed', { error: e.message }), 'error');
+  }
+}
+
+async function deleteSplitRuleModal() {
+  if (!_srEditingId) return;
+  if (!confirm('Delete this split rule?')) return;
+  try {
+    await Api.deleteSplitRule(_srEditingId);
+    State.splitRules = State.splitRules.filter(r => r.id !== _srEditingId);
+    renderSplitRulesList();
+    closeSplitRuleModal();
+    toast(t('splitRules.toast.deleted'), 'success');
+  } catch(e) {
+    toast(t('splitRules.toast.saveFailed', { error: e.message }), 'error');
+  }
+}
+
+async function toggleSplitRuleEnabled(id, enabled) {
+  try {
+    const updated = await Api.updateSplitRule(id, { enabled });
+    const idx = State.splitRules.findIndex(r => r.id === id);
+    if (idx !== -1) State.splitRules[idx] = updated;
+  } catch(e) {
+    toast(t('splitRules.toast.saveFailed', { error: e.message }), 'error');
+    renderSplitRulesList(); // revert toggle
+  }
+}
+
+function addSplitRuleCondition() {
+  _addSrConditionRow('amount', 'equals', '');
+}
+
+function _addSrConditionRow(field, operator, value) {
+  const container = document.getElementById('sr-m-conditions');
+  const row = document.createElement('div');
+  row.className = 'sr-cond-row';
+  row.style.cssText = 'display:flex;gap:0.4rem;align-items:center;margin-bottom:0.4rem';
+
+  const idField   = _isIdField(field);
+  const fieldOpts = SR_FIELDS.map(f => `<option value="${f.value}" ${f.value === field ? 'selected' : ''}>${f.label}</option>`).join('');
+  const ops    = SR_OPS[field] || SR_OPS.amount;
+  const opOpts = ops.map(o => `<option value="${o.value}" ${o.value === operator ? 'selected' : ''}>${o.label}</option>`).join('');
+
+  const valueWidget = idField
+    ? _srIdPickerDisplayHtml(field, Array.isArray(value) ? value : [])
+    : `<input type="text" class="sr-cond-val" value="${_esc(value || '')}" style="flex:1;min-width:0">`;
+
+  row.innerHTML = `
+    <select class="sr-cond-field" onchange="_onSrCondFieldChange(this)" style="flex:none;width:auto">${fieldOpts}</select>
+    <select class="sr-cond-op" style="flex:none;width:auto;${idField ? 'display:none' : ''}">${opOpts}</select>
+    ${valueWidget}
+    <button class="btn btn-sm" style="padding:2px 6px;font-size:11px;flex:none" onclick="this.closest('.sr-cond-row').remove()">✕</button>`;
+  container.appendChild(row);
+}
+
+function _onSrCondFieldChange(sel) {
+  const row     = sel.closest('.sr-cond-row');
+  const field   = sel.value;
+  const idField = _isIdField(field);
+  const opSel   = row.querySelector('.sr-cond-op');
+
+  // Show/hide operator select
+  opSel.style.display = idField ? 'none' : '';
+  if (!idField) {
+    const ops = SR_OPS[field] || SR_OPS.amount;
+    opSel.innerHTML = ops.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+  }
+
+  // Replace the value widget, pre-populating from the source transaction when available
+  const existing = row.querySelector('.sr-cond-val');
+  if (idField) {
+    // Pre-select the transaction's account or property if we have a source tx
+    let preSelected = [];
+    if (_srSourceTx) {
+      const txVal = field === 'account_id' ? _srSourceTx.account_id : _srSourceTx.property_id;
+      if (txVal) preSelected = [txVal];
+    }
+    const tmp = document.createElement('div');
+    tmp.innerHTML = _srIdPickerDisplayHtml(field, preSelected);
+    existing.replaceWith(tmp.firstElementChild);
+  } else {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'sr-cond-val';
+    input.style.cssText = 'flex:1;min-width:0';
+    // Pre-populate from source transaction
+    if (_srSourceTx) {
+      if (field === 'description') input.value = _srSourceTx.description || '';
+      if (field === 'amount')      input.value = _srSourceTx.amount != null ? String(_srSourceTx.amount) : '';
+    }
+    if (existing.tagName !== 'INPUT') existing.replaceWith(input);
+    else existing.replaceWith(input);
+  }
+}
+
+function addSplitRuleTemplateRow() {
+  _addSrTemplateRow('expense', '', '', '');
+  _updateSrTemplateSummary();
+}
+
+function _addSrTemplateRow(type, category, description, amtValue) {
+  const tbody = document.getElementById('sr-m-template-tbody');
+  const tr    = document.createElement('tr');
+
+  const typeOpts = ['income','expense','deposit','transfer']
+    .map(v => `<option value="${v}" ${v === type ? 'selected' : ''}>${t('categories.' + v)}</option>`)
+    .join('');
+
+  tr.innerHTML = `
+    <td style="padding:3px"><select class="sr-tmpl-type" onchange="_onSrTmplTypeChange(this)">${typeOpts}</select></td>
+    <td style="padding:3px"><select class="sr-tmpl-cat"></select></td>
+    <td style="padding:3px"><input type="text" class="sr-tmpl-desc" value="${_esc(description)}" style="width:100%"></td>
+    <td style="padding:3px"><input type="number" class="sr-tmpl-amt" min="0.01" step="0.01" value="${amtValue || ''}" oninput="_updateSrTemplateSummary()" style="width:80px;text-align:right"></td>
+    <td style="padding:3px;text-align:center"><button class="btn btn-sm" style="padding:2px 6px;font-size:11px" onclick="this.closest('tr').remove();_updateSrTemplateSummary()">✕</button></td>`;
+
+  tbody.appendChild(tr);
+  _populateSplitCatSelect(tr.querySelector('.sr-tmpl-cat'), type, category);
+}
+
+function _onSrTmplTypeChange(sel) {
+  const row = sel.closest('tr');
+  _populateSplitCatSelect(row.querySelector('.sr-tmpl-cat'), sel.value, '');
+  _updateSrTemplateSummary();
+}
+
+function onSplitRuleModeChange() {
+  _updateSrModeHeader();
+  _updateSrTemplateSummary();
+}
+
+function _updateSrModeHeader() {
+  const mode = document.querySelector('input[name="sr-m-mode"]:checked')?.value || 'fixed';
+  const hdr  = document.getElementById('sr-m-amount-header');
+  if (hdr) hdr.textContent = mode === 'percent' ? t('splitRules.modal.amountHeaderPct') : t('splitRules.modal.amountHeaderFixed');
+}
+
+function _updateSrTemplateSummary() {
+  const mode = document.querySelector('input[name="sr-m-mode"]:checked')?.value || 'fixed';
+  const rows = document.querySelectorAll('#sr-m-template-tbody tr');
+  const sum  = [...rows].reduce((s, r) => s + (parseFloat(r.querySelector('.sr-tmpl-amt')?.value) || 0), 0);
+  const el   = document.getElementById('sr-m-template-summary');
+  if (!el) return;
+  if (mode === 'percent') {
+    const ok = Math.abs(sum - 100) < 0.001;
+    el.innerHTML = ok
+      ? `<span style="color:var(--success)">✓ 100%</span>`
+      : `<span style="color:var(--red)">${sum.toFixed(2)}% of 100%</span>`;
+  } else {
+    el.textContent = `Total: ${sum.toFixed(2)}`;
+  }
+}
+
+async function applyToSimilar() {
+  const tx   = State.transactions.find(t => t.id === State._lastSavedSplitTxId);
+  const rows = State._lastSavedSplitRows || [];
+  if (!tx || !rows.length) return;
+
+  const similar = State.transactions.filter(s =>
+    s.id !== tx.id &&
+    s.account_id === tx.account_id &&
+    Math.abs(parseFloat(s.amount) - parseFloat(tx.amount)) < 0.001 &&
+    !s.parent_transaction_id &&
+    (s.split_count || 0) === 0
+  );
+
+  if (!similar.length) { toast('No similar unsplit transactions found.', 'info'); return; }
+
+  const names = similar.slice(0, 5).map(s => `${fmtDate(s.date)}: ${s.description || '—'} (${s.amount})`).join('\n');
+  const extra = similar.length > 5 ? `\n…and ${similar.length - 5} more` : '';
+  if (!confirm(`Apply this split to ${similar.length} similar transaction(s)?\n\n${names}${extra}`)) return;
+
+  setLoading(true, t('status.saving'));
+  let applied = 0;
+  try {
+    for (const s of similar) {
+      await Api.saveSplits(s.id, rows);
+      applied++;
+    }
+    await refreshAll();
+    closeTxModal();
+    toast(`Split applied to ${applied} transaction(s).`, 'success');
+  } catch(e) {
+    toast(t('tx.toast.saveFailed', { error: e.message }), 'error');
+  }
+  setLoading(false);
+}
+
 // ── Settings ──────────────────────────────────────────────
 
 async function renderSettings() {
@@ -3162,6 +3728,11 @@ Object.assign(window, {
   openAddAccountModal, openEditAccountModal, closeAccountModal, saveAccountModal,
   openLinkedItemsModal, confirmSetDefault, confirmDeleteAccount, executeDeleteAccount,
   openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,
+  openSplitRuleModal, openSplitRuleModalFromSplit, closeSplitRuleModal, saveSplitRuleModal, deleteSplitRuleModal,
+  addSplitRuleCondition, addSplitRuleTemplateRow, onSplitRuleModeChange,
+  toggleSplitRuleEnabled, _onSrCondFieldChange, _onSrTmplTypeChange, _updateSrTemplateSummary,
+  _openIdPickerPopup, _closeIdPickerPopup, _applyIdPickerSelection, _onIdPickerAllChange, _onIdPickerItemChange,
+  applyToSimilar,
   saveSettings, toggleAddRateForm, submitAddRate, deleteRate,
   toggleAddCategoryForm, submitAddCategory, deleteCategoryItem,
   onCatLabelBlur, toggleCategoryActive,

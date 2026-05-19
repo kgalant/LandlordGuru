@@ -176,6 +176,11 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 .tx-chevron-btn:hover { color:var(--text1); }
 .tx-split-child td { background: var(--bg2); }
 .tx-child-prefix { color: var(--text3); margin-right: 4px; }
+.split-row-amt::-webkit-outer-spin-button,
+.split-row-amt::-webkit-inner-spin-button,
+.sr-tmpl-amt::-webkit-outer-spin-button,
+.sr-tmpl-amt::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.split-row-amt, .sr-tmpl-amt { -moz-appearance: textfield; }
 
 /* ── Tables ───────────────────────────────────────────────── */
 

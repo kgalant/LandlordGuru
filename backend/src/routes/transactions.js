@@ -3,6 +3,72 @@ const express = require('express');
 const db = require('../db/knex');
 const { requireAuth } = require('../middleware/auth');
 
+// Returns true if a transaction row satisfies all conditions of a split rule.
+function matchesRule(row, rule) {
+  return rule.conditions.every(c => {
+    const field = c.field;
+    const op    = c.operator;
+    const val   = c.value;
+
+    if (op === 'in') {
+      const ids = Array.isArray(val) ? val : [];
+      if (ids.length === 0) return true; // empty = all
+      const rowVal = field === 'property_id' ? row.property_id : row.account_id;
+      return ids.includes(rowVal);
+    }
+    if (field === 'amount') {
+      const amt = parseFloat(row.amount);
+      const cmp = parseFloat(val);
+      if (op === 'equals')       return amt === cmp;
+      if (op === 'greater_than') return amt > cmp;
+      if (op === 'less_than')    return amt < cmp;
+    }
+    if (field === 'description') {
+      const desc = (row.description || '').toLowerCase();
+      if (op === 'contains') return desc.includes(String(val).toLowerCase());
+      if (op === 'equals')   return desc === String(val).toLowerCase();
+    }
+    return false;
+  });
+}
+
+// Computes child transaction rows for a matched rule.
+// Percent mode: amounts rounded to 2dp; any rounding remainder added to the last child.
+function computeChildren(parentRow, parentId, rule, importBatch, userId, workspaceId) {
+  const template  = rule.template;
+  const mode      = template[0].amount_type;
+  const parentAmt = parseFloat(parentRow.amount);
+
+  let amounts;
+  if (mode === 'fixed') {
+    amounts = template.map(r => parseFloat(r.amount_value));
+  } else {
+    const raw = template.map(r => Math.round(parentAmt * parseFloat(r.amount_value)) / 100);
+    const allocated = raw.reduce((s, v) => s + v, 0);
+    raw[raw.length - 1] = Math.round((raw[raw.length - 1] + (parentAmt - allocated)) * 100) / 100;
+    amounts = raw;
+  }
+
+  return template.map((r, i) => ({
+    workspace_id:           workspaceId,
+    parent_transaction_id:  parentId,
+    date:                   parentRow.date,
+    account_id:             parentRow.account_id || null,
+    type:                   r.type,
+    category:               r.category,
+    amount:                 amounts[i],
+    currency:               parentRow.currency.trim().toUpperCase(),
+    description:            r.description || null,
+    raw_description:        null,
+    source:                 parentRow.source || 'import',
+    import_batch:           importBatch,
+    notes:                  r.notes || null,
+    reconciled:             false,
+    created_by:             userId,
+    last_modified_by:       userId,
+  }));
+}
+
 const router = express.Router();
 
 // PostgreSQL returns date columns as JS Date objects (midnight local time).
@@ -337,31 +403,54 @@ router.post('/import', requireAuth, async (req, res) => {
 
   const import_batch = crypto.randomUUID();
 
+  // Load enabled split rules for this workspace (ordered by created_at — first match wins).
+  const splitRules = await db('split_rules')
+    .where({ workspace_id, enabled: true })
+    .orderBy('created_at', 'asc');
+
+  // Pair each row with the first matching split rule (null if no match).
+  const rowRules = rows.map(row => splitRules.find(r => matchesRule(row, r)) || null);
+  const autoSplitCount = rowRules.filter(Boolean).length;
+
   try {
     await db.transaction(async (trx) => {
-      const inserts = rows.map(row => ({
-        workspace_id,
-        date:             row.date,
-        account_id:       row.account_id  || null,
-        property_id:      row.property_id || null,
-        type:             row.type,
-        category:         row.category,
-        amount:           parseFloat(row.amount),
-        currency:         row.currency.trim().toUpperCase(),
-        description:      row.description     || null,
-        raw_description:  row.raw_description || null,
-        source:           row.source          || 'import',
-        import_batch,
-        notes:            row.notes           || null,
-        reconciled:       row.reconciled      || false,
-        created_by:       user_id,
-        last_modified_by: user_id,
-      }));
-      await trx('transactions').insert(inserts);
+      for (let i = 0; i < rows.length; i++) {
+        const row  = rows[i];
+        const rule = rowRules[i];
+        const base = {
+          workspace_id,
+          date:             row.date,
+          account_id:       row.account_id  || null,
+          type:             row.type,
+          category:         row.category,
+          amount:           parseFloat(row.amount),
+          currency:         row.currency.trim().toUpperCase(),
+          description:      row.description     || null,
+          raw_description:  row.raw_description || null,
+          source:           row.source          || 'import',
+          import_batch,
+          notes:            row.notes           || null,
+          reconciled:       row.reconciled      || false,
+          created_by:       user_id,
+          last_modified_by: user_id,
+        };
+
+        if (rule) {
+          const [parent] = await trx('transactions').insert(base).returning('*');
+          const children = computeChildren(row, parent.id, rule, import_batch, user_id, workspace_id);
+          await trx('transactions').insert(children);
+        } else {
+          await trx('transactions').insert(base);
+        }
+      }
     });
 
-    await req.logger.info('transaction.import.success', { inserted: rows.length, import_batch });
-    res.status(201).json({ inserted: rows.length, import_batch });
+    await req.logger.info('transaction.import.success', {
+      inserted: rows.length,
+      import_batch,
+      auto_split_count: autoSplitCount,
+    });
+    res.status(201).json({ inserted: rows.length, import_batch, auto_split_count: autoSplitCount });
   } catch (err) {
     await req.logger.error('transaction.import.failed', { error: err.message });
     console.error('POST /api/transactions/import error:', err.message);
