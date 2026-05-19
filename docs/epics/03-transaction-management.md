@@ -496,6 +496,28 @@ Re-evaluate split rules against existing unsplit transactions so users can apply
 
 ---
 
+### F3-20 Bulk-operation progress overlay `[Backlog]`
+**Status:** Backlog
+
+When a user triggers a server-side operation that affects more than 3 transactions, show a full-screen overlay with a spinner and contextual message so the user knows work is in progress and the app has not hung.
+
+**Scope — operations to cover:**
+- Bulk import (`POST /api/transactions/import`) — any batch > 3 rows
+- Bulk delete — any selection > 3 rows
+- Any future bulk write that affects > 3 records
+
+**Acceptance criteria:**
+- Overlay appears immediately when the operation starts, before the API call resolves
+- Overlay shows a spinner + short contextual label including the item count (e.g. "Importing 47 transactions…", "Deleting 12 transactions…")
+- Overlay disappears automatically on completion (success or error)
+- Overlay blocks interaction with the rest of the UI while active (prevents double-submit)
+- Not shown for ≤ 3 items (those resolve fast enough not to need it)
+- A single reusable `showBusyOverlay(msg)` / `hideBusyOverlay()` utility in `app.js` keeps this DRY across all call sites
+
+**Note:** No real-time progress counter (e.g. "4 of 17") — both import and bulk delete are single-call batch operations, not per-item loops. A spinner + count label is accurate and sufficient.
+
+---
+
 ### F3-7 Tenant linking on transactions `[Future]`
 **Status:** Future
 
