@@ -12,7 +12,7 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 - Epic: E4 Reporting and Analytics
 - ID: F4-1+F4-2
 - Title: P&L report — backend API + frontend UI
-- Short summary: Build `GET /api/reports/pnl` endpoint (date range, property/account filters, recursive account descendant resolution, native-currency amounts by category); replace client-side renderReports() computation with API call; add currency toggle and print-friendly CSS.
+- Short summary: Done — GET /api/reports/pnl with date/property/account filters, recursive CTE, property via account_properties join. renderReports() replaced with API call; currency toggle; print CSS. Committed + deployed to test.
 
 ---
 
@@ -61,7 +61,7 @@ Relevant epic docs:
 
 ## Next step
 
-Update `frontend/js/app.js` `renderReports()` and `frontend/js/api.js` to call `GET /api/reports/pnl` instead of computing client-side; map `income`/`expenses` arrays from the response to the `_repIncCats` and `_repExpCats` DataTable arrays.
+Choose next MVP feature from candidates. Consult `docs/roadmap.md`. F4-1+F4-2 is done — F4-3 (per-property P&L breakdown), F3-8, F3-12, F3-13, F5-7 remain.
 
 ---
 
@@ -87,13 +87,15 @@ Update `frontend/js/app.js` `renderReports()` and `frontend/js/api.js` to call `
 - `frontend/js/strings.js`
 - `frontend/index.html`
 - `frontend/css/style.css`
+- `version.json`
+- `deploy-test.sh`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-19 [F3-18 committed]
+- 2026-05-23 [F4-1+F4-2 committed + deployed to test]
   - branch: main
-  - last_commit: 9ab24a9
-  - changed_files: backend/src/db/migrations/023_split_rules.js, backend/src/routes/split-rules.js, backend/tests/split-rules.test.js, backend/src/app.js, backend/src/routes/transactions.js, frontend/js/api.js, frontend/js/strings.js, frontend/index.html, frontend/js/app.js, frontend/css/style.css, version.json, docs/epics/03-transaction-management.md, AI_STATE.md, docs/ai_state_archive.json
-  - git_status: M+?? (multiple files, pre-commit)
+  - last_commit: 791325f
+  - changed_files: backend/src/routes/reports.js, backend/src/app.js, backend/tests/reports.test.js, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, frontend/index.html, frontend/css/style.css, version.json, deploy-test.sh, AI_STATE.md, docs/ai_state_archive.json
+  - git_status: clean
