@@ -17,11 +17,9 @@ afterEach(async () => {
   ).del();
   await db('transactions').where('workspace_id', WORKSPACE_ID).update({ account_id: null });
   await db('accounts').where('workspace_id', WORKSPACE_ID).del();
+  await db('properties').where('workspace_id', WORKSPACE_ID).del();
 });
 
-afterAll(async () => {
-  await db.destroy();
-});
 
 async function createAccount(overrides = {}) {
   const res = await request(app)

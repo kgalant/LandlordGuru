@@ -15,10 +15,6 @@ afterEach(async () => {
   await db('currency_rates').where('workspace_id', WORKSPACE_ID).del();
 });
 
-afterAll(async () => {
-  await db.destroy();
-});
-
 const VALID_RATE = {
   from_currency: 'USD',
   to_currency:   'SGD',

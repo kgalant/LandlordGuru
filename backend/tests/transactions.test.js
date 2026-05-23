@@ -26,10 +26,6 @@ afterEach(async () => {
   await db('transactions').where('workspace_id', WORKSPACE_ID).del();
 });
 
-afterAll(async () => {
-  await db.destroy();
-});
-
 // ---------------------------------------------------------------------------
 // POST /api/transactions
 // ---------------------------------------------------------------------------

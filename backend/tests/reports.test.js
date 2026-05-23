@@ -22,10 +22,6 @@ afterEach(async () => {
   await db('properties').where('id', PROPERTY_ID).del();
 });
 
-afterAll(async () => {
-  await db.destroy();
-});
-
 function tx(overrides = {}) {
   return {
     workspace_id:     WORKSPACE_ID,

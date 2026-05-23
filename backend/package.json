@@ -13,7 +13,8 @@
   "jest": {
     "testEnvironment": "node",
     "globalSetup": "./tests/globalSetup.js",
-    "globalTeardown": "./tests/globalTeardown.js"
+    "globalTeardown": "./tests/globalTeardown.js",
+    "forceExit": true
   },
   "dependencies": {
     "cors": "^2.8.5",

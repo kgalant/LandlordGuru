@@ -427,6 +427,7 @@ router.post('/import', requireAuth, async (req, res) => {
           currency:         row.currency.trim().toUpperCase(),
           description:      row.description     || null,
           raw_description:  row.raw_description || null,
+          property_id:      row.property_id     || null,
           source:           row.source          || 'import',
           import_batch,
           notes:            row.notes           || null,

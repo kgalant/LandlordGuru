@@ -15,10 +15,6 @@ afterEach(async () => {
   await db('description_mappings').where('workspace_id', WORKSPACE_ID).del();
 });
 
-afterAll(async () => {
-  await db.destroy();
-});
-
 const VALID_MAPPING = {
   keyword:      'Monthly rent from tenant',
   category:     'rent',

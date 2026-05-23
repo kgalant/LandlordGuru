@@ -28,10 +28,6 @@ afterEach(async () => {
   await db('properties').where('workspace_id', WORKSPACE_ID).del();
 });
 
-afterAll(async () => {
-  await db.destroy();
-});
-
 // ---------------------------------------------------------------------------
 // POST /api/properties
 // ---------------------------------------------------------------------------
