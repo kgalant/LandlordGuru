@@ -28,7 +28,7 @@ source ~/.nvm/nvm.sh
 
 cd ~/dev/landlordguru-test
 echo "[2/4] Pulling latest changes..."
-git pull origin main
+git fetch origin main && git reset --hard origin/main
 GIT_PULL_EXIT=$?
 GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 echo "{\"git_commit\":\"$GIT_COMMIT\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > frontend/build.json
@@ -92,7 +92,7 @@ fi
 echo ""
 
 # Summary
-deployed_commit=$(echo "$remote_output" | grep -oP 'commit: \K[a-f0-9]+' | tail -1)
+deployed_commit=$(echo "$remote_output" | grep -o 'commit: [a-f0-9]*' | tail -1 | sed 's/commit: //')
 
 if [[ ${#step_errors[@]} -eq 0 ]]; then
     echo "Deployment complete — all steps succeeded."
