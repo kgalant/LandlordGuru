@@ -2079,9 +2079,10 @@ async function confirmUndoImport() {
 let repIncomeTable  = null;
 let repExpenseTable = null;
 let repPnlTable     = null;
-let _repIncCats  = [];
-let _repExpCats  = [];
-let _repPnlRows  = [];
+let _repIncCats   = [];
+let _repExpCats   = [];
+let _repPnlRows   = [];
+let _repShowNative = false;
 
 function initReportTables() {
   repIncomeTable = DataTable.create({
@@ -2090,14 +2091,15 @@ function initReportTables() {
     columns: [
       { key: 'category', label: t('reports.col.category'), sortable: true },
       { key: 'amount',   label: t('reports.col.amount'),   sortable: true, align: 'right' },
-      { key: 'count',    label: t('reports.col.count'),    sortable: true, align: 'right' },
     ],
-    fetchData: async () => ({ data: _repIncCats,  total: _repIncCats.length }),
-    renderRow: (c) => `<tr>
-      <td data-col="category">${catLabel(c.category)}</td>
-      <td data-col="amount" class="amount-cell positive">${c.amount.toLocaleString()}</td>
-      <td data-col="count"  class="amount-cell muted">${c.count}</td>
-    </tr>`,
+    fetchData: async () => ({ data: _repIncCats, total: _repIncCats.length }),
+    renderRow: (c) => {
+      const badge = _repShowNative && c.currency ? ` <span class="muted" style="font-size:0.75em">${c.currency}</span>` : '';
+      return `<tr>
+        <td data-col="category">${catLabel(c.category)}</td>
+        <td data-col="amount" class="amount-cell positive">${Reports.fmt(c.amount, c.currency)}${badge}</td>
+      </tr>`;
+    },
     columnVisibility: { enabled: true, storageKey: 'datatable-rep-income' },
   });
 
@@ -2107,14 +2109,15 @@ function initReportTables() {
     columns: [
       { key: 'category', label: t('reports.col.category'), sortable: true },
       { key: 'amount',   label: t('reports.col.amount'),   sortable: true, align: 'right' },
-      { key: 'count',    label: t('reports.col.count'),    sortable: true, align: 'right' },
     ],
     fetchData: async () => ({ data: _repExpCats, total: _repExpCats.length }),
-    renderRow: (c) => `<tr>
-      <td data-col="category">${catLabel(c.category)}</td>
-      <td data-col="amount" class="amount-cell negative">${c.amount.toLocaleString()}</td>
-      <td data-col="count"  class="amount-cell muted">${c.count}</td>
-    </tr>`,
+    renderRow: (c) => {
+      const badge = _repShowNative && c.currency ? ` <span class="muted" style="font-size:0.75em">${c.currency}</span>` : '';
+      return `<tr>
+        <td data-col="category">${catLabel(c.category)}</td>
+        <td data-col="amount" class="amount-cell negative">${Reports.fmt(c.amount, c.currency)}${badge}</td>
+      </tr>`;
+    },
     columnVisibility: { enabled: true, storageKey: 'datatable-rep-expense' },
   });
 
@@ -2153,6 +2156,11 @@ function _updateDateInputPlaceholders() {
   });
 }
 
+function toggleRepCurrency() {
+  _repShowNative = !_repShowNative;
+  renderReports();
+}
+
 function setReportPeriod(preset) {
   document.getElementById('rep-year').value = '';
   const yr = new Date().getFullYear();
@@ -2169,31 +2177,74 @@ function setReportPeriod(preset) {
   renderReports();
 }
 
-function renderReports() {
+async function renderReports() {
   if (!repIncomeTable) initReportTables();
 
-  const propId     = document.getElementById('rep-apt')?.value  || 'all';
-  const dateFrom   = parseDateToISO(document.getElementById('rep-from')?.value || '');
-  const dateTo     = parseDateToISO(document.getElementById('rep-to')?.value   || '');
+  const propId   = document.getElementById('rep-apt')?.value  || 'all';
+  const dateFrom = parseDateToISO(document.getElementById('rep-from')?.value || '');
+  const dateTo   = parseDateToISO(document.getElementById('rep-to')?.value   || '');
+  const reportingCurrency = State.workspaceSettings?.reporting_currency || CONFIG.BASE_CURRENCY;
 
   _updateDateInputPlaceholders();
+
+  // Sync toggle button label
+  const currBtn = document.getElementById('rep-currency-btn');
+  if (currBtn) currBtn.textContent = _repShowNative
+    ? t('reports.showConverted', { currency: reportingCurrency })
+    : t('reports.showNative');
+
+  // Fetch aggregated P&L from backend
+  try {
+    const params = {};
+    if (propId !== 'all') params.property_id = propId;
+    if (dateFrom) params.from = dateFrom;
+    if (dateTo)   params.to   = dateTo;
+
+    const report = await Api.getPnlReport(params);
+
+    if (_repShowNative) {
+      // Native mode: one row per category+currency pair from the API
+      const toNativeEntries = rows => rows.map(r => ({ category: r.category, amount: r.amount, currency: r.currency }))
+        .sort((a, b) => b.amount - a.amount);
+      _repIncCats = toNativeEntries(report.income);
+      _repExpCats = toNativeEntries(report.expenses);
+    } else {
+      // Converted mode: aggregate by category, convert to reporting currency.
+      // FX_RATES provides approximate rates for summary display (not bookkeeping).
+      const aggregateByCategory = rows => {
+        const map = {};
+        rows.forEach(r => {
+          const rate = CONFIG.FX_RATES[r.currency] ?? 1;
+          if (!map[r.category]) map[r.category] = { category: r.category, amount: 0, currency: reportingCurrency };
+          map[r.category].amount += r.amount * rate;
+        });
+        return Object.values(map).sort((a, b) => b.amount - a.amount);
+      };
+      _repIncCats = aggregateByCategory(report.income);
+      _repExpCats = aggregateByCategory(report.expenses);
+    }
+
+    // Metrics always shown in reporting currency (converted)
+    const totalIncome   = report.income.reduce((s, r)   => s + r.amount * (CONFIG.FX_RATES[r.currency] ?? 1), 0);
+    const totalExpenses = report.expenses.reduce((s, r) => s + r.amount * (CONFIG.FX_RATES[r.currency] ?? 1), 0);
+    const net           = totalIncome - totalExpenses;
+
+    document.getElementById('rep-metrics').innerHTML = `
+      <div class="metric"><div class="m-label">${t('reports.metrics.totalIncome')}</div><div class="m-value positive">${Reports.fmt(totalIncome, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
+      <div class="metric"><div class="m-label">${t('reports.metrics.totalExpenses')}</div><div class="m-value negative">${Reports.fmt(totalExpenses, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
+      <div class="metric"><div class="m-label">${t('reports.metrics.net')}</div><div class="m-value ${net >= 0 ? 'positive' : 'negative'}">${Reports.fmt(net, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
+    `;
+  } catch (e) {
+    toast(t('reports.loadFailed', { error: e.message }), 'error');
+    document.getElementById('rep-metrics').innerHTML = '';
+    _repIncCats = [];
+    _repExpCats = [];
+  }
+
+  // P&L by Property stays client-side (F4-3 scope)
   const filtered     = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
-  const visibleProps = propId !== 'all'
-    ? State.properties.filter(p => p.id === propId)
-    : State.properties;
-  const summary      = Reports.pnl(filtered, visibleProps);
-
-  document.getElementById('rep-metrics').innerHTML = `
-    <div class="metric"><div class="m-label">${t('reports.metrics.totalIncome')}</div><div class="m-value positive">${Reports.fmtDKK(summary.totals.income_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
-    <div class="metric"><div class="m-label">${t('reports.metrics.totalExpenses')}</div><div class="m-value negative">${Reports.fmtDKK(summary.totals.expenses_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
-    <div class="metric"><div class="m-label">${t('reports.metrics.net')}</div><div class="m-value ${summary.totals.net_dkk>=0?'positive':'negative'}">${Reports.fmtDKK(summary.totals.net_dkk)}</div><div class="m-sub">${t('reports.metrics.dkkEquiv')}</div></div>
-    <div class="metric"><div class="m-label">${t('reports.metrics.transactions')}</div><div class="m-value">${filtered.length}</div><div class="m-sub">${t('reports.metrics.inPeriod')}</div></div>
-  `;
-
-  const cats  = Reports.categoryBreakdown(filtered);
-  _repIncCats = cats.filter(c => c.type === 'income');
-  _repExpCats = cats.filter(c => c.type === 'expense');
-  _repPnlRows = Object.values(summary.byProperty);
+  const visibleProps = propId !== 'all' ? State.properties.filter(p => p.id === propId) : State.properties;
+  _repPnlRows = Object.values(Reports.pnl(filtered, visibleProps).byProperty);
 
   repIncomeTable.refresh();
   repExpenseTable.refresh();
@@ -3723,7 +3774,7 @@ Object.assign(window, {
   toggleTree, doImport,
   toggleImportHistory, undoImportBatch, closeUndoModal, confirmUndoImport,
   onDateFilterInput,
-  setReportYear, setReportPeriod, renderReports,
+  setReportYear, setReportPeriod, toggleRepCurrency, renderReports,
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
   openAddAccountModal, openEditAccountModal, closeAccountModal, saveAccountModal,
   openLinkedItemsModal, confirmSetDefault, confirmDeleteAccount, executeDeleteAccount,

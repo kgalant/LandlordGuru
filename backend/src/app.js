@@ -41,6 +41,7 @@ app.use('/api/description-mappings', require('./routes/description-mappings'));
 app.use('/api/workspace',        require('./routes/workspace'));
 app.use('/api/accounts',        require('./routes/accounts'));
 app.use('/api/currency-rates',  require('./routes/currency-rates'));
+app.use('/api/reports',         require('./routes/reports'));
 app.use('/api/version',         require('./routes/version'));
 
 // Static files

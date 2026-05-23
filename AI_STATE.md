@@ -9,10 +9,10 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: feature
-- Epic: E3 Transaction Management
-- ID: F3-18
-- Title: Split rules (auto-split at import)
-- Short summary: Done — split_rules table + CRUD API, import pipeline rule evaluation, reusable rule form UI, account/property picker popup, "Save as rule" from split editor, auto-split badge in import preview. Committed.
+- Epic: E4 Reporting and Analytics
+- ID: F4-1+F4-2
+- Title: P&L report — backend API + frontend UI
+- Short summary: Build `GET /api/reports/pnl` endpoint (date range, property/account filters, recursive account descendant resolution, native-currency amounts by category); replace client-side renderReports() computation with API call; add currency toggle and print-friendly CSS.
 
 ---
 
@@ -20,22 +20,21 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 - Type: feature
 - Epic: E3 Transaction Management
-- ID: F3-17
-- Title: Transaction splitting
-- Short summary: Done — split parent/child data model, PUT/DELETE /splits endpoints, list fold/unfold UI, inline split editor in edit modal, bulk-apply to similar. Committed.
+- ID: F3-18
+- Title: Split rules (auto-split at import)
+- Short summary: Done — split_rules table + CRUD API, import pipeline rule evaluation, reusable rule form UI, account/property picker popup, "Save as rule" from split editor, auto-split badge in import preview. Committed.
 - State: done
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: DB migration — `split_rules` table
-- [x] S2: Backend — CRUD API (`GET/POST/PATCH/DELETE /api/split-rules`)
-- [x] S3: Backend — import pipeline integration: evaluate rules per-row after categorisation
-- [x] S4: Tests — CRUD + rule evaluation + percent/fixed rounding + sum/100 validation
-- [x] S5: Frontend — reusable rule form + standalone management section
-- [x] S6: Frontend — import preview: "Auto-split" badge
-- [x] S7: Frontend — "Save as rule" secondary action in split editor
+- [x] S1: Backend — `GET /api/reports/pnl` in `backend/src/routes/reports.js` (date range, property_id, account_id/account_scope filters; recursive CTE for account descendants; group by category+currency; exclude transfers/inter_account)
+- [x] S2: Backend — Register reports route in `backend/src/app.js`
+- [x] S3: Tests — `backend/tests/reports.test.js` (date range, property filter, transfer exclusion, category grouping, account filter exact vs recursive) — 14/14 pass
+- [x] S4: Frontend — Replace `renderReports()` client-side computation with `/api/reports/pnl` API call; map response to DataTable arrays
+- [x] S5: Frontend — Currency toggle (native amounts vs converted to reporting currency)
+- [x] S6: Frontend — Print-friendly CSS (`@media print`)
 
 ---
 
@@ -62,7 +61,7 @@ Relevant epic docs:
 
 ## Next step
 
-Choose next MVP feature from candidates: F3-8, F3-12, F3-13, F4-1+F4-2, F5-7. Consult `docs/roadmap.md` for dependency order.
+Update `frontend/js/app.js` `renderReports()` and `frontend/js/api.js` to call `GET /api/reports/pnl` instead of computing client-side; map `income`/`expenses` arrays from the response to the `_repIncCats` and `_repExpCats` DataTable arrays.
 
 ---
 
@@ -79,20 +78,15 @@ Choose next MVP feature from candidates: F3-8, F3-12, F3-13, F4-1+F4-2, F5-7. Co
 
 ## Files touched this session
 
-- `version.json` — bumped to 2.23.0
-- `docs/epics/03-transaction-management.md` — F3-18 marked Done
-- `backend/src/db/migrations/023_split_rules.js`
-- `backend/src/routes/split-rules.js`
+- `AI_STATE.md`
+- `backend/src/routes/reports.js` (new)
 - `backend/src/app.js`
-- `backend/src/routes/transactions.js`
-- `backend/tests/split-rules.test.js`
+- `backend/tests/reports.test.js` (new)
 - `frontend/js/api.js`
+- `frontend/js/app.js`
 - `frontend/js/strings.js`
 - `frontend/index.html`
-- `frontend/js/app.js`
 - `frontend/css/style.css`
-- `AI_STATE.md`
-- `docs/ai_state_archive.json`
 
 ---
 

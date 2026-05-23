@@ -223,6 +223,19 @@ export const Api = (() => {
     return request('DELETE', `/split-rules/${id}`);
   }
 
+  // ── Reports ────────────────────────────────────────────────
+
+  async function getPnlReport({ from, to, property_id, account_id, account_scope } = {}) {
+    const qs = new URLSearchParams();
+    if (from)          qs.set('from', from);
+    if (to)            qs.set('to', to);
+    if (property_id)   qs.set('property_id', property_id);
+    if (account_id)    qs.set('account_id', account_id);
+    if (account_scope) qs.set('account_scope', account_scope);
+    const q = qs.toString();
+    return request('GET', `/reports/pnl${q ? '?' + q : ''}`);
+  }
+
   // ── Batch import ────────────────────────────────────────────
 
   async function importTransactions(txList) {
@@ -254,5 +267,6 @@ export const Api = (() => {
     getDescMappings, saveDescMapping, deleteDescMapping,
     importTransactions, getImportHistory, deleteImportBatch, checkImportDuplicates,
     getSplitRules, createSplitRule, updateSplitRule, deleteSplitRule,
+    getPnlReport,
   };
 })();

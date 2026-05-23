@@ -114,6 +114,10 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
   margin-bottom: 1.25rem;
 }
 
+#rep-metrics {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .metric {
   background: var(--bg);
   border: 0.5px solid var(--border);
@@ -697,4 +701,24 @@ textarea { resize: vertical; min-height: 70px; }
   .form-grid .span-2 { grid-column: span 1; }
   header       { gap: 1rem; padding: 0 1rem; }
   main         { padding: 1rem; }
+}
+
+/* ── Print ─────────────────────────────────────────────────── */
+
+@media print {
+  header, nav, .filter-bar, #rep-currency-btn,
+  .datatable-controls, .datatable-footer,
+  .col-vis-toggle, .btn { display: none !important; }
+
+  body  { background: #fff; color: #000; font-size: 11pt; }
+  main  { padding: 0; }
+
+  #page-reports { display: block !important; }
+
+  .card { border: 0.5px solid #ccc; box-shadow: none; break-inside: avoid; }
+
+  #rep-metrics { grid-template-columns: repeat(3, 1fr); }
+
+  .amount-cell.positive { color: #1a7a3c; }
+  .amount-cell.negative { color: #b33; }
 }
