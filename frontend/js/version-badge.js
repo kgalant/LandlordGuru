@@ -118,8 +118,7 @@ export function initVersionBadge() {
         <button id="vb-close" style="border:none;background:none;cursor:pointer;font-size:15px;color:#8a8a85;padding:0;line-height:1">&#x2715;</button>
       </div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px">
-        ${_row('Frontend',    `${_frontend.version} <span style="font-family:monospace;color:#8a8a85">${_frontend.commit}</span>`)}
-        ${_row('Backend',     `${_backend.version} <span style="font-family:monospace;color:#8a8a85">${_backend.commit}</span>`)}
+        ${_row('Version',     `${_frontend.version} <span style="font-family:monospace;color:#8a8a85">${_frontend.commit}</span>`)}
         ${_row('Environment', _backend.environment)}
         ${_row('User',        payload ? `${_esc(payload.name || '?')} &lt;${_esc(payload.email || '?')}&gt;` : 'unknown')}
         ${_row('Workspace',   _esc(String(payload?.workspace_id ?? 'unknown')))}
