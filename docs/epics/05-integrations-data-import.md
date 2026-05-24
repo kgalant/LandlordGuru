@@ -477,6 +477,50 @@ Add an **Account** column to the import preview table. Each row is pre-populated
 
 ---
 
+### F5-17 Auto-categorisation rule edit view and enable/disable toggle `[Backlog]`
+**Status:** Backlog
+
+Auto-categorisation rules (F5-3) currently only support a flat list with drag-to-reorder. There is no way to edit an existing rule's fields in-place, and rules cannot be suspended without deleting them.
+
+This feature adds a dedicated edit view for individual rules — consistent with the transaction edit modal and split-rule editing patterns — and a per-rule enabled/disabled toggle matching the split-rule on/off behaviour.
+
+**Acceptance criteria:**
+
+**Edit view:**
+- Each rule row in the rules table has an **Edit** action (pencil icon or row-level button)
+- Clicking Edit opens an inline expanded row or a modal (follow whichever pattern split-rule editing uses) showing all editable rule fields:
+  - Keyword
+  - Category
+  - Bank profile (optional, "Any bank" if unset)
+  - Property (optional)
+  - Sort order (read-only display; drag-to-reorder remains the primary mechanism)
+- Changes are saved via `PATCH /api/rules/:id` on confirmation; cancelling leaves the rule unchanged
+- Validation mirrors `POST /api/rules` (keyword and category required)
+- The Add rule form (currently inline) should use the same layout/component as the edit view for visual consistency
+
+**Enable/disable toggle:**
+- Each rule row displays a toggle (checkbox or switch, matching the split-rule pattern) indicating whether the rule is active
+- Toggling calls `PATCH /api/rules/:id` with `{ enabled: true/false }`
+- Disabled rules are visually dimmed in the list (same treatment as disabled split rules) and are excluded from the matching pipeline in `applyRules()` in `frontend/js/importer.js`
+- Backend `GET /api/rules` returns `enabled` on each rule; the matching function skips rules where `enabled === false`
+
+**Backend changes:**
+- Add `enabled` column (boolean, default `true`) to the `rules` table via a new migration
+- `GET /api/rules` — include `enabled` in the response
+- `PATCH /api/rules/:id` — accept and persist `enabled`
+- `POST /api/rules` — accept optional `enabled`; defaults to `true`
+
+**Frontend files likely affected:**
+- `frontend/index.html` — rule row template; add toggle and edit action
+- `frontend/js/app.js` — `renderRules()`, `openRuleEditView()`, `saveRule()`, `toggleRule()`; update `applyRules()` call (or pass `enabled` filter to `importer.js`)
+- `frontend/js/importer.js` — `applyRules()` skips rules where `enabled === false`
+- `backend/src/routes/rules.js` — handle `enabled` in GET/POST/PATCH
+- `backend/migrations/` — new migration adding `enabled` column
+
+**Dependencies:** F5-3 (rules API and rules list UI, both done).
+
+---
+
 ### F5-8 Direct bank connection `[Future]`
 **Status:** Future
 
