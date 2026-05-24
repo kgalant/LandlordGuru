@@ -4,19 +4,10 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const VALID_CATEGORIES = {
-  income:   ['rent', 'heating_aconto', 'heating_settlement'],
-  expense:  ['maintenance_repair', 'property_tax', 'insurance', 'utilities',
-             'management_fee', 'advertising', 'professional_fees', 'bank_charges', 'other_expense'],
-  deposit:  ['deposit_received', 'deposit_returned'],
-  transfer: ['inter_account'],
-};
-
-// Flatten all valid categories for quick lookup
-const ALL_VALID_CATEGORIES = Object.values(VALID_CATEGORIES).flat();
-
-// Validate fields shared by POST and PATCH
-function validateFields(body, requireAll) {
+// Validate fields shared by POST and PATCH.
+// Category validity is checked against workspace_enum_values (DB) rather than
+// a hardcoded list so that workspace-specific and custom categories are accepted.
+async function validateFields(body, requireAll, workspaceId) {
   const errors = [];
 
   if (requireAll || body.keyword !== undefined) {
@@ -26,8 +17,20 @@ function validateFields(body, requireAll) {
   }
 
   if (requireAll || body.category !== undefined) {
-    if (!body.category || !ALL_VALID_CATEGORIES.includes(body.category)) {
-      errors.push(`category must be one of: ${ALL_VALID_CATEGORIES.join(', ')}`);
+    if (!body.category) {
+      errors.push('category is required');
+    } else {
+      const valid = await db('workspace_enum_values')
+        .where('enum_type', 'transaction_category')
+        .where('value', body.category)
+        .where('is_active', true)
+        .where(function () {
+          this.whereNull('workspace_id').orWhere('workspace_id', workspaceId);
+        })
+        .first();
+      if (!valid) {
+        errors.push(`category "${body.category}" is not a recognised transaction category`);
+      }
     }
   }
 
@@ -82,7 +85,7 @@ router.get('/', requireAuth, async (req, res) => {
 
 // POST /api/rules
 router.post('/', requireAuth, async (req, res) => {
-  const errors = validateFields(req.body, true);
+  const errors = await validateFields(req.body, true, req.workspace_id);
   if (errors.length) {
     return res.status(400).json({ error: errors.join('; ') });
   }
@@ -147,7 +150,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Rule not found' });
   }
 
-  const errors = validateFields(req.body, false);
+  const errors = await validateFields(req.body, false, req.workspace_id);
   if (errors.length) {
     return res.status(400).json({ error: errors.join('; ') });
   }

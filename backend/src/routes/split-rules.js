@@ -5,13 +5,6 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 const VALID_TYPES = ['income', 'expense', 'deposit', 'transfer'];
-const VALID_CATEGORIES = {
-  income:   ['rent', 'heating_aconto', 'heating_settlement'],
-  expense:  ['maintenance_repair', 'property_tax', 'insurance', 'utilities',
-             'management_fee', 'advertising', 'professional_fees', 'bank_charges', 'other_expense'],
-  deposit:  ['deposit_received', 'deposit_returned'],
-  transfer: ['inter_account'],
-};
 const CONDITION_FIELDS = ['account_id', 'property_id', 'amount', 'description'];
 const CONDITION_OPS = {
   account_id:  ['in'],
@@ -51,7 +44,7 @@ function validateConditions(conditions) {
   return errors;
 }
 
-function validateTemplate(template) {
+async function validateTemplate(template, workspaceId) {
   const errors = [];
   if (!Array.isArray(template) || template.length < 2) {
     errors.push('template must be an array with at least 2 rows');
@@ -68,12 +61,26 @@ function validateTemplate(template) {
     return errors;
   }
 
-  template.forEach((r, i) => {
+  await Promise.all(template.map(async (r, i) => {
     if (!VALID_TYPES.includes(r.type)) {
       errors.push(`template[${i}].type must be one of: ${VALID_TYPES.join(', ')}`);
+      return;
+    }
+    if (!r.category) {
+      errors.push(`template[${i}].category is required`);
     } else {
-      const validCats = VALID_CATEGORIES[r.type] || [];
-      if (!r.category || !validCats.includes(r.category)) {
+      // Validate against workspace_enum_values — same pattern as transactions.js,
+      // so workspace-specific and custom categories (F1-9a) are accepted.
+      const valid = await db('workspace_enum_values')
+        .where('enum_type', 'transaction_category')
+        .where('type_bucket', r.type)
+        .where('value', r.category)
+        .where('is_active', true)
+        .where(function () {
+          this.whereNull('workspace_id').orWhere('workspace_id', workspaceId);
+        })
+        .first();
+      if (!valid) {
         errors.push(`template[${i}].category "${r.category}" is not valid for type "${r.type}"`);
       }
     }
@@ -81,7 +88,7 @@ function validateTemplate(template) {
     if (isNaN(val) || val <= 0) {
       errors.push(`template[${i}].amount_value must be a positive number`);
     }
-  });
+  }));
 
   if (errors.length === 0 && modes[0] === 'percent') {
     const total = template.reduce((s, r) => s + parseFloat(r.amount_value), 0);
@@ -93,7 +100,7 @@ function validateTemplate(template) {
   return errors;
 }
 
-function validateRule(body, requireAll) {
+async function validateRule(body, requireAll, workspaceId) {
   const errors = [];
   if (requireAll || body.name !== undefined) {
     if (!body.name || typeof body.name !== 'string' || !body.name.trim()) {
@@ -104,7 +111,7 @@ function validateRule(body, requireAll) {
     errors.push(...validateConditions(body.conditions));
   }
   if (requireAll || body.template !== undefined) {
-    errors.push(...validateTemplate(body.template));
+    errors.push(...await validateTemplate(body.template, workspaceId));
   }
   if (body.enabled !== undefined && typeof body.enabled !== 'boolean') {
     errors.push('enabled must be a boolean');
@@ -144,7 +151,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 // POST /api/split-rules
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const errors = validateRule(req.body, true);
+    const errors = await validateRule(req.body, true, req.workspace_id);
     if (errors.length) {
       await req.logger.info('split_rule.create.validation_failed', { errors });
       return res.status(422).json({ errors });
@@ -177,7 +184,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .first();
     if (!existing) return res.status(404).json({ error: 'Split rule not found' });
 
-    const errors = validateRule(req.body, false);
+    const errors = await validateRule(req.body, false, req.workspace_id);
     if (errors.length) {
       await req.logger.info('split_rule.update.validation_failed', { id: req.params.id, errors });
       return res.status(422).json({ errors });
