@@ -518,6 +518,49 @@ When a user triggers a server-side operation that affects more than 3 transactio
 
 ---
 
+### F3-21 Bulk move transactions between accounts `[MVP]`
+**Status:** Backlog
+
+Allow users to reassign one or more transactions to a different account in a single operation. Two surfaces: a bulk action in the transaction list (primary) and a "Move all" shortcut on the account linked-items view (secondary).
+
+**Backend — new endpoint:**
+- `PATCH /api/transactions/bulk` — body: `{ ids: [<id>, …], account_id: <id> }`
+  - Validates all `ids` belong to the current workspace
+  - Validates target account is active and in the same workspace
+  - Atomically updates `account_id` on all matched rows
+  - Returns `{ updated: N }`
+  - Owner or editor role required
+
+**Primary surface — transaction list bulk action bar (F3-2):**
+- A **"Move to account…"** button appears in the bulk action bar when one or more rows are selected, alongside the existing "Delete selected" button
+- Clicking opens an inline picker: *"Move [N] transactions to: [account dropdown] [Move] [Cancel]"*
+- The account dropdown lists all active workspace accounts
+- On confirm, calls `PATCH /api/transactions/bulk`; the transaction list refreshes
+- F3-20 progress overlay fires if N > 3
+- Hidden when `multi_accounts_enabled = false` (F1-13)
+
+**Secondary surface — account linked-items view (F2-7):**
+- A **"Move all transactions to…"** action appears at the top of the transactions section in an account's linked-items view
+- Pre-selects all transactions for that account and opens the same inline picker
+- Useful for draining an account before archiving it (complements the existing delete-with-reassign flow in F2-4)
+- Hidden when `multi_accounts_enabled = false` (F1-13)
+
+**Constraints:**
+- Split children (F3-17) cannot be moved independently — if any selected transaction is a split child, the operation is rejected with a clear error; the user must move the parent instead (which carries all children)
+- Split parents can be moved; all children follow automatically (same `account_id` update)
+- Reconciled transactions can be moved; reconciliation flag is preserved
+
+**Files affected:**
+- `backend/src/routes/transactions.js` — new `PATCH /api/transactions/bulk` handler
+- `backend/tests/transactions.test.js` — tests for bulk move (workspace scoping, inactive account rejection, split-child rejection)
+- `frontend/js/app.js` — bulk bar "Move to account" button and picker; account linked-items "Move all" action
+- `frontend/index.html` — bulk bar markup
+- `frontend/js/api.js` — `bulkMoveTransactions(ids, accountId)`
+
+**Dependencies:** F3-2 (transaction list and bulk bar host), F2-7 (account linked-items host), F3-17 (split parent/child constraints), F1-13 (visibility gate)
+
+---
+
 ### F3-7 Tenant linking on transactions `[Future]`
 **Status:** Future
 

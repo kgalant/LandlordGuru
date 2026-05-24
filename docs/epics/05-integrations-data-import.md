@@ -436,6 +436,47 @@ F5-4 (description_mappings reference bank_profile keys).
 
 ---
 
+### F5-16 Per-row account selection in import preview `[MVP]`
+**Status:** Backlog
+
+Add an **Account** column to the import preview table. Each row is pre-populated with the account linked to its selected property. The user can override per-row before submitting. The column participates in all existing bulk-update behaviours. Hidden when `multi_accounts_enabled = false` (F1-13).
+
+**Column appearance and population:**
+- When `multi_accounts_enabled = true`, an Account column appears in the import preview table, positioned after the Property column
+- Dropdown lists all active workspace accounts
+- On initial population: account is set to the property's linked account (same as today's automatic resolution)
+- If no property is set on the row, account defaults to the workspace default account
+- Column participates in F5-10 sort (sortable header)
+
+**Auto-update on property change:**
+- When the user changes the property on a row, the account auto-resets to the new property's linked account — unless the user has already manually overridden the account on that row, tracked by a new `_userPickedAccount` flag (mirrors `_userPickedCategory` and `_userPickedProperty`)
+- If `_userPickedAccount = true`, a property change does not touch the account field
+
+**Multi-row bulk update (all existing patterns apply):**
+- Changing account on a row with selected peers triggers the same "Update all selected rows?" prompt as category/property changes
+- "Select all with same description" applies the same account update to matching rows
+- Locked rows (F5-9) are excluded from bulk account updates
+
+**Section classification (F5-13 grouping):**
+- A row with `_userPickedAccount = true` qualifies as **Reviewed** in the group-by-status sections, even if category and property are auto-matched
+
+**Submit behaviour:**
+- Each row's `account_id` is read directly from the Account dropdown value
+- Replaces the current post-hoc `prop?.account_id` resolution in `submitImport()`; backend `POST /api/transactions/import` is unchanged
+
+**Column visibility:**
+- When `multi_accounts_enabled = false`, the column is entirely absent; account is resolved at submit time using: property's linked account → workspace default account
+
+**Files affected:**
+- `frontend/js/app.js` — account dropdown rendering, `_userPickedAccount` flag, auto-update on property change, bulk-update integration, submit resolution
+- `frontend/index.html` — Account column header
+
+**No backend changes required.**
+
+**Dependencies:** F5-5 (import preview host), F1-13 (visibility gate)
+
+---
+
 ### F5-8 Direct bank connection `[Future]`
 **Status:** Future
 

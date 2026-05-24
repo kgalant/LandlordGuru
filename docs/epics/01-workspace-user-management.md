@@ -578,6 +578,57 @@ Allow users to choose how dates are displayed throughout the app. The setting is
 
 ---
 
+### F1-13 Multi-account mode toggle `[MVP]`
+**Status:** Backlog
+
+A workspace-level boolean setting that switches the app between **multi-account mode** (default) and **single-account mode**. In single-account mode all account-selection UI is hidden and account resolution is fully automatic, giving simpler workspaces a cleaner experience.
+
+**Backend:**
+- New column `multi_accounts_enabled` (boolean, not null, default `true`) on the workspace settings row
+- New migration; existing rows backfilled to `true` (no behaviour change)
+- `GET /api/workspace/settings` returns `multi_accounts_enabled`
+- `PATCH /api/workspace/settings` accepts `multi_accounts_enabled`; owner-only
+
+**Settings UI:**
+- A toggle labelled **"Allow multiple accounts"** in the Accounts section of the workspace settings page (F1-6)
+- When toggled off, a description reads: *"Transactions are automatically assigned to the property account, or the workspace default account if no property is set."*
+
+**When `multi_accounts_enabled = true` (default):**
+No behaviour change from today; all account-related UI is visible and the account column in the transaction list participates normally in F3-12 column management (`defaultVisible: true`).
+
+**When `multi_accounts_enabled = false` (single-account mode):**
+
+| Surface | Behaviour |
+|---|---|
+| Import preview account column (F5-16) | Hidden; account resolved automatically at submit |
+| Import account resolution | Property set → property's linked account; no property → workspace default account |
+| Accounts page (F2-6) | Navigation entry hidden from sidebar |
+| Transaction entry modal (F3-10) | Account field hidden; resolved automatically |
+| Transaction list account column (F3-12) | Forcibly hidden; removed from column management panel regardless of saved config |
+| Transaction list account filter (F3-2) | Account filter control hidden |
+| Bulk move action (F3-21) | Hidden |
+| Reports account filter (F4-x) | Hidden |
+
+**Account resolution order in single-account mode (applies everywhere):**
+1. Transaction/row has a property → use that property's linked account
+2. No property → workspace default account (`is_default = true`)
+
+**Constraints:**
+- The workspace default account always exists regardless of this setting
+- The Accounts page remains accessible by direct URL; it shows a banner indicating multi-account mode is disabled
+- Disabling multi-account mode does not alter or delete any accounts
+
+**Files affected:**
+- New migration (next available number) — add `multi_accounts_enabled` column
+- `backend/src/routes/workspace.js` — expose in GET/PATCH settings
+- `frontend/js/app.js` — read `State.settings.multi_accounts_enabled`; gate conditional rendering throughout
+- `frontend/index.html` — settings toggle
+- `frontend/js/api.js` — no new calls needed; setting arrives with existing `getSettings()`
+
+**Dependencies:** F1-6 (workspace settings — done)
+
+---
+
 ## Bugs
 
 None recorded.
