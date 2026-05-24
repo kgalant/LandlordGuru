@@ -93,8 +93,8 @@ F2-11 done. Choose next feature — consult `docs/roadmap.md`.
 
 ## Automation log (latest only)
 
-- 2026-05-24 [F2-11 full country list + select height fix]
+- 2026-05-24 [session: F2-11 + CSS fixes + deploy infra]
   - branch: main
-  - last_commit: TBD (pending commit)
-  - changed_files: frontend/js/strings.js, frontend/js/app.js, frontend/index.html, frontend/css/style.css, version.json, AI_STATE.md
-  - git_status: M frontend/js/strings.js, M frontend/js/app.js, M frontend/index.html, M frontend/css/style.css, M version.json, M AI_STATE.md
+  - last_commit: 8f8fd09
+  - changed_files: frontend/js/strings.js, frontend/js/app.js, frontend/js/version-badge.js, frontend/index.html, frontend/css/style.css, frontend/css/datatable.css, frontend/version.json, backend/src/routes/version.js, backend/.env.example, deploy-prod.sh, deploy-test.sh, scripts/prod-deploy.sh, PROJECT_LANDLORDGURU.md, AI_STATE.md
+  - git_status: clean
