@@ -43,6 +43,7 @@ router.get('/pnl', requireAuth, async (req, res) => {
         't.workspace_id = ?',
         `t.account_id IN (SELECT id FROM account_tree)`,
         `t.type != 'transfer'`,
+        `NOT EXISTS (SELECT 1 FROM transactions c WHERE c.parent_transaction_id = t.id AND c.workspace_id = t.workspace_id)`,
       ];
       if (property_id) { conditions.push(PROP_FILTER); params.push(property_id, property_id); }
       if (from)        { conditions.push('t.date >= ?'); params.push(from); }
@@ -65,7 +66,11 @@ router.get('/pnl', requireAuth, async (req, res) => {
       rows = result.rows;
     } else {
       const params = [workspaceId];
-      const conditions = [`t.workspace_id = ?`, `t.type != 'transfer'`];
+      const conditions = [
+        `t.workspace_id = ?`,
+        `t.type != 'transfer'`,
+        `NOT EXISTS (SELECT 1 FROM transactions c WHERE c.parent_transaction_id = t.id AND c.workspace_id = t.workspace_id)`,
+      ];
       if (account_id)  { conditions.push('t.account_id = ?');  params.push(account_id); }
       if (property_id) { conditions.push(PROP_FILTER);          params.push(property_id, property_id); }
       if (from)        { conditions.push('t.date >= ?');         params.push(from); }

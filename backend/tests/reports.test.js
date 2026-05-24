@@ -263,6 +263,39 @@ describe('GET /api/reports/pnl', () => {
     expect(res.body.income[0].amount).toBe(8000);
   });
 
+  it('excludes split parent transactions — only counts children to avoid double-counting', async () => {
+    // Parent: income/rent 1000 DKK (has children → must be excluded)
+    const [parent] = await db('transactions').insert(
+      tx({ amount: 1000, type: 'income', category: 'rent' })
+    ).returning('*');
+
+    // Two children that together sum to 1000
+    await db('transactions').insert([
+      tx({ amount: 700, type: 'income',  category: 'rent',          parent_transaction_id: parent.id }),
+      tx({ amount: 300, type: 'expense', category: 'bank_charges',  parent_transaction_id: parent.id }),
+    ]);
+
+    // Also insert an unsplit transaction so we know non-split rows still appear
+    await db('transactions').insert(tx({ amount: 500, type: 'income', category: 'rent' }));
+
+    const res = await request(app)
+      .get('/api/reports/pnl')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+
+    // Parent (1000 rent) must NOT appear — only its children do
+    const incomeRent = res.body.income.find(r => r.category === 'rent');
+    // rent: 700 (child) + 500 (unsplit) = 1200, NOT 1000+700+500=2200
+    expect(incomeRent).toBeDefined();
+    expect(incomeRent.amount).toBeCloseTo(1200, 2);
+
+    // bank_charges child (300) must appear
+    const expBankCharges = res.body.expenses.find(r => r.category === 'bank_charges');
+    expect(expBankCharges).toBeDefined();
+    expect(expBankCharges.amount).toBeCloseTo(300, 2);
+  });
+
   it('returns from, to, and filters fields in response', async () => {
     const res = await request(app)
       .get('/api/reports/pnl?from=2026-01-01&to=2026-12-31')
