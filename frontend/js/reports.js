@@ -123,13 +123,16 @@ export const Reports = (() => {
     }).format(amount);
   }
 
-  // fmtSingle: 0–2 decimal places — use for standalone figures (cards, metrics)
-  // Shows decimals only when the value has a non-zero fractional part
+  // fmtSingle: whole numbers show no decimals; fractional values always show
+  // exactly 2 decimal places so 50.9 → 50.90, 1000 → 1,000.
   function fmtSingle(amount, currency) {
+    const n = parseFloat(amount);
+    const hasCents = Math.round(n * 100) % 100 !== 0;
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency: currency || 'DKK',
-      minimumFractionDigits: 0, maximumFractionDigits: 2,
-    }).format(amount);
+      minimumFractionDigits: hasCents ? 2 : 0,
+      maximumFractionDigits: hasCents ? 2 : 0,
+    }).format(n);
   }
 
   function fmtDKK(amount) { return fmtSingle(amount, 'DKK'); }

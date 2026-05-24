@@ -130,9 +130,21 @@ main { flex: 1; padding: 1.5rem clamp(1.5rem, 3vw, 3rem); width: 100%; }
 
 /* ── Apt cards ────────────────────────────────────────────── */
 
-.apt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+/* Horizontal carousel — cards size to content, scroll if they overflow */
+.apt-grid {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px; /* breathing room for scrollbar */
+}
 
 .apt-card {
+  flex: 0 0 auto;         /* never shrink */
+  width: max-content;     /* exactly as wide as content needs */
+  min-width: 220px;       /* floor so very short content isn't too narrow */
+  scroll-snap-align: start;
   background: var(--bg);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-lg);
@@ -141,9 +153,9 @@ main { flex: 1; padding: 1.5rem clamp(1.5rem, 3vw, 3rem); width: 100%; }
 
 .apt-card .apt-name  { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
 .apt-card .apt-addr  { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
-.apt-card .apt-stats { display: flex; gap: 1.5rem; }
+.apt-card .apt-stats { display: flex; gap: 1.5rem; white-space: nowrap; }
 .apt-card .stat      { font-size: 12px; color: var(--text3); }
-.apt-card .stat strong { display: block; font-size: 14px; font-weight: 500; color: var(--text); }
+.apt-card .stat strong { display: block; font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; }
 
 /* ── Badges ───────────────────────────────────────────────── */
 
