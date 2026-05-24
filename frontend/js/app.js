@@ -1288,7 +1288,7 @@ function _buildRowHtml(row, i) {
   const ignClass  = row._ignored     ? ' preview-row-ignored' : '';
   const lockClass = locked           ? ' preview-row-locked' : '';
   const amtSign   = row.type === 'expense' ? '-' : '';
-  const amtCls    = row.type === 'expense' ? 'negative' : 'positive';
+  const amtCls    = row.type === 'income' ? 'positive' : row.type === 'expense' ? 'negative' : '';
   const skipNotes = document.getElementById('import-skip-notes-toggle')?.checked;
   const notesBg   = !skipNotes && !locked && row.category === 'other_expense' && !(row.notes || '').trim() ? ';background:var(--error-bg,#ffeaea)' : '';
   return `<tr data-row="${i}" class="${warnClass}${dupClass}${ignClass}${lockClass}">
