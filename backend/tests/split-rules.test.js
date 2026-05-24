@@ -450,6 +450,30 @@ describe('POST /api/transactions/import — split rule evaluation', () => {
     expect(amounts[1]).toBe(300);
   });
 
+  it('does not auto-split when fixed rule amounts do not sum to row amount (balance guard)', async () => {
+    // Fixed rule: 700 + 400 = 1100, but row amount = 1000 → would be unbalanced → skip
+    const unbalancedRule = {
+      name: 'Unbalanced fixed rule',
+      enabled: true,
+      conditions: [{ field: 'amount', operator: 'equals', value: '1000' }],
+      template: [
+        { type: 'income', category: 'rent',      description: 'A', amount_type: 'fixed', amount_value: 700 },
+        { type: 'income', category: 'rent',      description: 'B', amount_type: 'fixed', amount_value: 400 },
+      ],
+    };
+    await request(app).post('/api/split-rules').set('Authorization', `Bearer ${token}`).send(unbalancedRule);
+
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([VALID_IMPORT_ROW]); // amount = 1000, matches rule but 700+400 ≠ 1000
+
+    expect(res.status).toBe(201);
+    expect(res.body.auto_split_count).toBe(0); // rule skipped
+    const all = await db('transactions').where('workspace_id', WORKSPACE_ID);
+    expect(all).toHaveLength(1); // no children created
+  });
+
   it('does not split rows that do not match any rule', async () => {
     await request(app).post('/api/split-rules').set('Authorization', `Bearer ${token}`).send(PERCENT_RULE);
 

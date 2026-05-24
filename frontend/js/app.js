@@ -80,6 +80,21 @@ function _buildMatchTag(row) {
 }
 
 // Evaluates enabled split rules against each row (client-side mirror of server logic for preview).
+// Returns true if applying the split rule to a transaction of the given amount
+// would produce a balanced split (children sum = parent amount).
+// Percent rules must sum to 100%; fixed rules must sum to rowAmount.
+function _splitRuleWouldBalance(rule, rowAmount) {
+  const template = Array.isArray(rule.template) ? rule.template : [];
+  if (!template.length) return false;
+  const mode = template[0].amount_type;
+  if (mode === 'percent') {
+    const pctSum = template.reduce((s, r) => s + parseFloat(r.amount_value), 0);
+    return Math.abs(pctSum - 100) < 0.001;
+  }
+  const fixedSum = template.reduce((s, r) => s + parseFloat(r.amount_value), 0);
+  return Math.abs(fixedSum - parseFloat(rowAmount)) < 0.005;
+}
+
 function _markAutoSplitRows(rows) {
   const rules = (State.splitRules || []).filter(r => r.enabled);
   rows.forEach(row => {
@@ -107,8 +122,10 @@ function _markAutoSplitRows(rows) {
       }
       return false;
     }));
-    row._autoSplit         = !!match;
-    row._autoSplitRuleName = match ? match.name : null;
+    // Only mark as auto-split if the rule would produce a balanced split
+    const willBalance = match && _splitRuleWouldBalance(match, row.amount);
+    row._autoSplit         = !!willBalance;
+    row._autoSplitRuleName = willBalance ? match.name : null;
   });
 }
 
@@ -3383,6 +3400,14 @@ async function applyToSimilar() {
   const rows = State._lastSavedSplitRows || [];
   if (!tx || !rows.length) return;
 
+  // Guard: refuse if the template itself is unbalanced
+  const childSum = rows.reduce((s, r) => s + parseFloat(r.amount), 0);
+  if (Math.abs(childSum - parseFloat(tx.amount)) > 0.005) {
+    toast(t('tx.split.applyUnbalanced'), 'error');
+    return;
+  }
+
+  // Similar transactions have the same amount, so the split will balance transitively
   const similar = State.transactions.filter(s =>
     s.id !== tx.id &&
     s.account_id === tx.account_id &&

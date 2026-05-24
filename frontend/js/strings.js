@@ -157,6 +157,7 @@ export const I18n = (() => {
           expandAll:        'Expand all splits',
           postSaveHint:     'Apply this split to other transactions:',
           applyToSimilar:   'Apply to similar',
+          applyUnbalanced:  'Cannot apply: split is unbalanced — children do not sum to parent amount.',
           saveAsRule:       'Save as split rule',
         },
         selected:           '{count} selected',

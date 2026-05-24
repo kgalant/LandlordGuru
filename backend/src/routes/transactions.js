@@ -32,6 +32,21 @@ function matchesRule(row, rule) {
   });
 }
 
+// Returns true if applying this split rule to a row of the given amount would
+// produce a balanced split (children sum = parent amount).
+// Percent rules must sum to 100%; fixed rules must sum to row.amount.
+function wouldBalance(row, rule) {
+  const template = Array.isArray(rule.template) ? rule.template : [];
+  if (!template.length) return false;
+  const mode = template[0].amount_type;
+  if (mode === 'percent') {
+    const pctSum = template.reduce((s, r) => s + parseFloat(r.amount_value), 0);
+    return Math.abs(pctSum - 100) < 0.001;
+  }
+  const fixedSum = template.reduce((s, r) => s + parseFloat(r.amount_value), 0);
+  return Math.abs(fixedSum - parseFloat(row.amount)) < 0.005;
+}
+
 // Computes child transaction rows for a matched rule.
 // Percent mode: amounts rounded to 2dp; any rounding remainder added to the last child.
 function computeChildren(parentRow, parentId, rule, importBatch, userId, workspaceId) {
@@ -431,8 +446,12 @@ router.post('/import', requireAuth, async (req, res) => {
     .where({ workspace_id, enabled: true })
     .orderBy('created_at', 'asc');
 
-  // Pair each row with the first matching split rule (null if no match).
-  const rowRules = rows.map(row => splitRules.find(r => matchesRule(row, r)) || null);
+  // Pair each row with the first matching split rule that would produce a balanced
+  // split (null if no match or if the rule would create a mismatch).
+  const rowRules = rows.map(row => {
+    const match = splitRules.find(r => matchesRule(row, r));
+    return (match && wouldBalance(row, match)) ? match : null;
+  });
   const autoSplitCount = rowRules.filter(Boolean).length;
 
   try {
