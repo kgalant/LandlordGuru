@@ -17,7 +17,7 @@ echo "=== LandlordGuru Deploy → PRODUCTION ==="
 echo ""
 
 echo "[1/3] Pulling latest changes..."
-git pull origin main
+git fetch origin main && git reset --hard origin/main
 GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 echo "{\"git_commit\":\"$GIT_COMMIT\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > frontend/build.json
 echo "  -> Pull successful (commit: $GIT_COMMIT)"

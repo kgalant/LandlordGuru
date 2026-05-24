@@ -10,6 +10,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
+app.set('trust proxy', 1); // Trust X-Forwarded-* headers from nginx
 const FRONTEND_DIR = path.join(__dirname, '../../frontend');
 
 app.use(cors({
