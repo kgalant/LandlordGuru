@@ -492,6 +492,7 @@ function initTxTable() {
       return { data: grouped, total: result.total ?? 0 };
     },
     renderRow: (tx) => txRow(tx),
+    clearFiltersLabel: t('tx.filter.clearFilters'),
     pagination: {
       enabled: true,
       defaultLimit: 50,

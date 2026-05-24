@@ -93,6 +93,7 @@ export const I18n = (() => {
           allYears:       'All years',
           allTypes:       'All types',
           allCats:        'All categories',
+          clearFilters:   'Clear filters',
           unreconciled:   'Unreconciled only',
         },
         col: {

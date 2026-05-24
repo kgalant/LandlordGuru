@@ -153,9 +153,13 @@ const DataTable = (() => {
       if (!hasFilters) return `<div class="dt-filter-bar dt-hidden" id="${containerId}-filter-bar"></div>`;
       const mainControls   = cols.filter(c => c.filter && c.filter.type !== 'toggle').map(c => _buildFilterControl(c)).join('');
       const toggleControls = cols.filter(c => c.filter && c.filter.type === 'toggle').map(c => _buildFilterControl(c)).join('');
+      const clearBtn = config.clearFiltersLabel
+        ? `<button class="btn btn-sm btn-secondary" data-dt-clear-filters style="white-space:nowrap">${config.clearFiltersLabel}</button>`
+        : '';
       return `<div class="dt-filter-bar" id="${containerId}-filter-bar">
         ${mainControls   ? `<div class="dt-filter-main">${mainControls}</div>` : ''}
         ${toggleControls ? `<div class="dt-filter-toggles">${toggleControls}</div>` : ''}
+        ${clearBtn}
       </div>`;
     }
 
@@ -477,6 +481,13 @@ const DataTable = (() => {
         if (visBtn) {
           const dd = document.getElementById(`${containerId}-col-vis-dd`);
           if (dd) dd.classList.toggle('dt-open');
+          return;
+        }
+
+        // Clear all filters
+        const clearBtn = e.target.closest('[data-dt-clear-filters]');
+        if (clearBtn && clearBtn.closest(`#${containerId}`)) {
+          instance.reset();
           return;
         }
 
