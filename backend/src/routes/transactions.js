@@ -553,8 +553,12 @@ router.post('/import/check', requireAuth, async (req, res) => {
         .where('t.workspace_id', req.workspace_id)
         .whereRaw('COALESCE(t.property_id, ap.property_id) = ?', [property_id])
         .where('t.date', date)
-        .whereRaw('LOWER(t.raw_description) = LOWER(?)', [description])
+        // COALESCE handles split parents where raw_description may be NULL —
+        // fall back to description so NULL does not silently break the match.
+        .whereRaw('LOWER(COALESCE(t.raw_description, t.description)) = LOWER(?)', [description])
         .where('t.amount', parseFloat(amount))
+        // Only match original transactions, not split children
+        .whereNull('t.parent_transaction_id')
         .select('t.id', 't.date', 't.description', 't.amount', 't.created_at', 't.import_batch')
         .orderBy('t.created_at', 'desc')
         .first();
