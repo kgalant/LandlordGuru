@@ -506,11 +506,24 @@ function initTxTable() {
 
       data.filter(tx => (tx.split_count || 0) > 0).forEach(parent => {
         _updateChevron(parent.id, _splitExpanded[parent.id] !== false);
+        if (_splitMismatch(parent.id, parent.amount)) {
+          const row = document.querySelector(`#tx-table-wrap-body tr[data-split-parent="${parent.id}"]`);
+          if (row) row.classList.add('split-mismatch');
+        }
       });
 
       _updateToggleAllBtn();
     },
   });
+}
+
+// Returns true if a split parent's children don't sum to its amount (within 0.5 cent tolerance).
+// Uses State.transactions which is loaded in full (limit 10000) on every refresh.
+function _splitMismatch(parentId, parentAmount) {
+  const children = State.transactions.filter(c => c.parent_transaction_id === parentId);
+  if (!children.length) return false;
+  const childSum = children.reduce((s, c) => s + parseFloat(c.amount), 0);
+  return Math.abs(childSum - parseFloat(parentAmount)) > 0.005;
 }
 
 function dashTxRow(tx) {
@@ -523,7 +536,8 @@ function dashTxRow(tx) {
     const parent = State.transactions.find(p => p.id === tx.parent_transaction_id);
     desc = parent?.description ? `${parent.description} (Split)` : '(Split)';
   }
-  return `<tr class="clickable-row" onclick="openTxModal('${tx.id}')">
+  const mismatch = (tx.split_count || 0) > 0 && _splitMismatch(tx.id, tx.amount);
+  return `<tr class="clickable-row${mismatch ? ' split-mismatch' : ''}" onclick="openTxModal('${tx.id}')">
     <td>${fmtDate(tx.date)}</td>
     <td>${prop ? prop.name : '<span class="muted">—</span>'}</td>
     <td>${desc || ''}</td>

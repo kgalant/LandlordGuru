@@ -220,6 +220,8 @@ tr:hover td { background: var(--bg2); }
 .amount-cell { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
 .positive { color: var(--green); }
 .negative { color: var(--red); }
+/* Split mismatch: children don't sum to parent amount */
+tr.split-mismatch td { background-color: var(--red-bg) !important; }
 .muted { color: var(--text3); }
 .sortable { cursor: pointer; user-select: none; }
 .sortable:hover { color: var(--accent); }
