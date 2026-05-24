@@ -6,6 +6,7 @@
   <title>LandlordGuru</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/datatable.css">
+  <link rel="stylesheet" href="/ui-config.css">
 </head>
 <body>
 
@@ -528,7 +529,7 @@
 
 <!-- Transaction modal -->
 <div id="modal-tx" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center">
-  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto">
+  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:fit-content;min-width:400px;max-width:92vw;max-height:90vh;overflow-y:auto">
     <div class="card-header">
       <span class="card-title" id="tx-modal-title"></span>
       <button class="btn btn-sm btn-secondary" onclick="closeTxModal()">✕</button>
@@ -626,7 +627,7 @@
 
 <!-- Property modal -->
 <div id="modal-apt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;align-items:center;justify-content:center">
-  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto">
+  <div style="background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem;width:fit-content;min-width:400px;max-width:92vw;max-height:90vh;overflow-y:auto">
     <div class="card-header">
       <span class="card-title" id="apt-modal-title"></span>
       <button class="btn btn-sm btn-secondary" onclick="closePropertyModal()">✕</button>

@@ -245,7 +245,9 @@ input[type="radio"] {
 }
 
 /* Remove native select appearance so padding controls height consistently
-   across browsers; replace the system arrow with a custom chevron */
+   across browsers; replace the system arrow with a custom chevron.
+   --select-char-width defaults to 25ch; override via APP_SELECT_CHAR_WIDTH env var
+   (served dynamically by /ui-config.css, loaded after this sheet). */
 select {
   -webkit-appearance: none;
   appearance: none;
@@ -254,6 +256,9 @@ select {
   background-position: right 10px center;
   background-size: 10px 6px;
   padding-right: 2rem;
+  /* Ensure the visible text area is at least --select-char-width wide;
+     2.5rem covers left padding (10px) + right padding (2rem) + a small buffer */
+  min-width: calc(var(--select-char-width, 25ch) + 2.5rem);
 }
 
 input:focus, select:focus, textarea:focus {

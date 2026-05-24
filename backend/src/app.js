@@ -45,6 +45,14 @@ app.use('/api/currency-rates',  require('./routes/currency-rates'));
 app.use('/api/reports',         require('./routes/reports'));
 app.use('/api/version',         require('./routes/version'));
 
+// UI config CSS — exposes env-controlled CSS custom properties to the frontend
+app.get('/ui-config.css', (req, res) => {
+  const chars = Math.max(10, parseInt(process.env.APP_SELECT_CHAR_WIDTH) || 25);
+  res.set('Cache-Control', 'no-cache');
+  res.type('text/css');
+  res.send(`:root { --select-char-width: ${chars}ch; }\n`);
+});
+
 // Static files
 app.use(express.static(FRONTEND_DIR));
 
