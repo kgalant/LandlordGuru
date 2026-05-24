@@ -2628,7 +2628,7 @@ async function openLinkedItemsModal(id) {
       <button class="modal-close" onclick="closeAccountModal()">&times;</button>
     </div>`;
 
-  modalEl.innerHTML = `<div class="modal-content" style="min-width:400px;max-width:660px">
+  modalEl.innerHTML = `<div class="modal-content" style="min-width:400px">
     ${header}
     <div class="modal-body"><p style="color:var(--text3)">${t('common.loading')}</p></div>
   </div>`;
@@ -2655,7 +2655,7 @@ async function openLinkedItemsModal(id) {
           </tr>`).join('')
       : `<tr><td colspan="2" style="color:var(--text3);font-style:italic">${t('accounts.linkedItems.noProps')}</td></tr>`;
 
-    modalEl.innerHTML = `<div class="modal-content" style="min-width:400px;max-width:660px">
+    modalEl.innerHTML = `<div class="modal-content" style="min-width:400px">
       ${header}
       <div class="modal-body">
         <p style="font-size:13px;color:var(--text3);margin-bottom:1.25rem">
