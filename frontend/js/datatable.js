@@ -210,7 +210,7 @@ const DataTable = (() => {
       if (!hdr) return;
 
       let html = hasBulk
-        ? `<th style="width:2rem"><input type="checkbox" id="${containerId}-check-all"></th>`
+        ? `<th style="width:2rem"><label style="display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="${containerId}-check-all"><span id="${containerId}-sel-count" style="font-size:10px;color:var(--text3);white-space:nowrap"></span></label></th>`
         : '';
 
       columns.forEach(c => {
@@ -672,6 +672,9 @@ const DataTable = (() => {
       bar.classList.toggle('dt-visible', n > 0);
       const countEl = document.getElementById(`${containerId}-bulk-count`);
       if (countEl) countEl.textContent = `${n} row${n !== 1 ? 's' : ''} selected`;
+      // Show count next to the header checkbox
+      const selCount = document.getElementById(`${containerId}-sel-count`);
+      if (selCount) selCount.textContent = n > 0 ? `(${n})` : '';
     }
 
     function _esc(str) {

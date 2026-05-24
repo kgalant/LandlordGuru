@@ -1200,6 +1200,11 @@ function onRowSelect(i) {
     hdr.checked       = allSelected;
     hdr.indeterminate = anySelected && !allSelected;
   }
+  const selCount = document.getElementById('import-sel-count');
+  if (selCount) {
+    const n = State.importRows.filter(r => r._selected).length;
+    selCount.textContent = n > 0 ? `(${n})` : '';
+  }
   _updateLockBtn();
   _rerenderIfGrouped();
 }

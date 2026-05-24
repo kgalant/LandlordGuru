@@ -235,7 +235,7 @@
             <table>
               <thead><tr>
                 <th style="width:52px"></th>
-                <th style="width:28px"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll(this)"></th>
+                <th style="width:28px"><label style="display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll(this)"><span id="import-sel-count" style="font-size:10px;color:var(--text3);white-space:nowrap"></span></label></th>
                 <th class="import-sortable" onclick="sortImportCol('date')"><span data-i18n="import.col.date"></span><span class="import-sort-ind" id="import-sort-ind-date"></span></th>
                 <th class="import-sortable" onclick="sortImportCol('description')"><span data-i18n="import.col.description"></span><span class="import-sort-ind" id="import-sort-ind-description"></span></th>
                 <th class="import-sortable" onclick="sortImportCol('property')"><span data-i18n="import.col.property"></span><span class="import-sort-ind" id="import-sort-ind-property"></span></th>
