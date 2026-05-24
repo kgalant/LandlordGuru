@@ -16,6 +16,22 @@ At the start of every session, determine the session type:
   No code will be touched this session.
 - **Implementation session** — everything else. Default when in doubt.
 
+### Mandatory session-type declaration
+
+**At the start of every session**, and **any time the user requests a session-type change**,
+you must — before doing anything else — state out loud in your first response:
+
+> **Session type: [Requirements | Implementation]**
+> _(one sentence explaining why you classified it this way)_
+
+Then explicitly restate the rules that govern that session type (the protocol section below),
+so both you and the user can confirm you are operating under the correct constraints.
+
+Only after this declaration may you proceed with any reading, planning, or work.
+
+If the user asks to switch session type mid-session, repeat the declaration for the new type
+and apply the new rules from that point forward.
+
 Follow the appropriate protocol below.
 
 ---
