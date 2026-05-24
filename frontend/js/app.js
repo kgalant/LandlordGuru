@@ -3184,7 +3184,8 @@ async function saveSplitRuleModal() {
     closeSplitRuleModal();
     toast(t('splitRules.toast.saved'), 'success');
   } catch(e) {
-    toast(t('splitRules.toast.saveFailed', { error: e.message }), 'error');
+    const detail = Array.isArray(e.rowErrors) ? e.rowErrors.join('; ') : e.message;
+    toast(t('splitRules.toast.saveFailed', { error: detail }), 'error');
   }
 }
 

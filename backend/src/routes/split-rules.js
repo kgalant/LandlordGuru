@@ -145,7 +145,10 @@ router.get('/:id', requireAuth, async (req, res) => {
 router.post('/', requireAuth, async (req, res) => {
   try {
     const errors = validateRule(req.body, true);
-    if (errors.length) return res.status(422).json({ errors });
+    if (errors.length) {
+      await req.logger.warn('split_rule.create.validation_failed', { errors });
+      return res.status(422).json({ errors });
+    }
 
     await req.logger.info('split_rule.create.started', { name: req.body.name });
     const [rule] = await db('split_rules')
@@ -175,7 +178,10 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Split rule not found' });
 
     const errors = validateRule(req.body, false);
-    if (errors.length) return res.status(422).json({ errors });
+    if (errors.length) {
+      await req.logger.warn('split_rule.update.validation_failed', { id: req.params.id, errors });
+      return res.status(422).json({ errors });
+    }
 
     await req.logger.info('split_rule.update.started', { id: req.params.id });
     const updates = {};
