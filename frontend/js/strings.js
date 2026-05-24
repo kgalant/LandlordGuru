@@ -53,6 +53,7 @@ export const I18n = (() => {
         search:      'Search…',
         monthly:     'monthly',
         totalIncome: 'total income',
+        noProperty:  '— no property —',
       },
       status: {
         connecting:  'Connecting to Google Sheets…',
@@ -288,7 +289,8 @@ export const I18n = (() => {
         allTime:       'All time',
         incomeByCat:   'Income by category',
         expensesByCat: 'Expenses by category',
-        pnlByProperty: 'P&L by property',
+        pnlByProperty:            'P&L by property',
+        transfersByPropertyCat:   'Transfers by property & category',
         noIncome:      'No income',
         noExpenses:    'No expenses',
         col: {

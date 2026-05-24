@@ -2152,12 +2152,14 @@ async function confirmUndoImport() {
 
 // ── Reports ───────────────────────────────────────────────
 
-let repIncomeTable  = null;
-let repExpenseTable = null;
-let repPnlTable     = null;
-let _repIncCats   = [];
-let _repExpCats   = [];
-let _repPnlRows   = [];
+let repIncomeTable     = null;
+let repExpenseTable    = null;
+let repPnlTable        = null;
+let repTransfersTable  = null;
+let _repIncCats        = [];
+let _repExpCats        = [];
+let _repPnlRows        = [];
+let _repTransferRows   = [];
 let _repShowNative = false;
 
 function initReportTables() {
@@ -2214,6 +2216,23 @@ function initReportTables() {
       <td data-col="net"      class="amount-cell ${d.net >= 0 ? 'positive' : 'negative'}">${Reports.fmt(d.net, d.currency)}</td>
     </tr>`,
     columnVisibility: { enabled: true, storageKey: 'datatable-rep-pnl' },
+  });
+
+  repTransfersTable = DataTable.create({
+    containerId: 'rep-transfers-table-wrap',
+    title: t('reports.transfersByPropertyCat'),
+    columns: [
+      { key: 'property', label: t('reports.col.property'), sortable: true },
+      { key: 'category', label: t('reports.col.category'), sortable: true },
+      { key: 'amount',   label: t('reports.col.amount'),   sortable: true, align: 'right' },
+    ],
+    fetchData: async () => ({ data: _repTransferRows, total: _repTransferRows.length }),
+    renderRow: (d) => `<tr>
+      <td data-col="property">${d.property}</td>
+      <td data-col="category"><span class="tag tag-transfer">${catLabel(d.category)}</span></td>
+      <td data-col="amount" class="amount-cell">${Reports.fmt(d.amount, d.currency)}</td>
+    </tr>`,
+    columnVisibility: { enabled: true, storageKey: 'datatable-rep-transfers' },
   });
 }
 
@@ -2317,14 +2336,29 @@ async function renderReports() {
     _repExpCats = [];
   }
 
-  // P&L by Property stays client-side (F4-3 scope)
+  // P&L by Property and Transfers stay client-side (F4-3 scope)
   const filtered     = Reports.filter(State.transactions, { property_id: propId, date_from: dateFrom, date_to: dateTo });
   const visibleProps = propId !== 'all' ? State.properties.filter(p => p.id === propId) : State.properties;
   _repPnlRows = Object.values(Reports.pnl(filtered, visibleProps).byProperty);
 
+  // Transfers: group by property + category + currency, sum amounts
+  const transferMap = {};
+  filtered.filter(tx => tx.type === 'transfer').forEach(tx => {
+    const prop = State.properties.find(p => p.id === tx.property_id);
+    const propName = prop ? prop.name : t('common.noProperty');
+    const key = `${tx.property_id || ''}|${tx.category}|${tx.currency}`;
+    if (!transferMap[key]) {
+      transferMap[key] = { property: propName, category: tx.category, amount: 0, currency: tx.currency };
+    }
+    transferMap[key].amount += tx.amount;
+  });
+  _repTransferRows = Object.values(transferMap)
+    .sort((a, b) => a.property.localeCompare(b.property) || a.category.localeCompare(b.category));
+
   repIncomeTable.refresh();
   repExpenseTable.refresh();
   repPnlTable.refresh();
+  repTransfersTable.refresh();
 }
 
 // ── Properties ────────────────────────────────────────────
