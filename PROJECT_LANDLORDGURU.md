@@ -35,7 +35,7 @@ Three environments, all databases on `homedev`:
 |-------------|----------|----------|------|-----------|
 | Local dev | Local machine | `landlordguru_dev` | 3000 | n/a |
 | Test | `homedev:~/dev/landlordguru-test` | `landlordguru_test` | 3001 | `deploy-test.sh` / `deploy-test.ps1` |
-| Production | `homedev:~/dev/landlordguru` | `landlordguru_prod` | 3000 | `scripts/prod-deploy.sh` (on homedev only) |
+| Production | `homedev:~/dev/landlordguru` | `landlordguru_prod` | 3002 | `deploy-prod.sh` |
 
 ---
 
@@ -93,16 +93,15 @@ Steps: push to origin → pull on homedev → run migrations → restart PM2.
 
 ## Production deployment
 
-Production runs at `homedev:~/dev/landlordguru` (PM2: `landlordguru`, port 3000).
-
-Production deploys are intentionally manual — SSH in first, then run:
+Production runs at `homedev:~/dev/landlordguru` (PM2: `landlordguru`, port 3002).
 
 ```bash
-ssh kim@homedev
-bash ~/dev/landlordguru/scripts/prod-deploy.sh
+./deploy-prod.sh
 ```
 
-Steps: pull from origin → run migrations → restart PM2.
+Steps: push to origin → pull on homedev → run migrations → restart PM2.
+
+For emergency deploys directly on homedev, `scripts/prod-deploy.sh` remains as a fallback (run on homedev only).
 
 ---
 

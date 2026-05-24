@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Production deploy — run on homedev only.
-# Usage: SSH into homedev, then: bash ~/dev/landlordguru/scripts/prod-deploy.sh
-# Do NOT run this from a local machine.
+# Production deploy — emergency fallback, run on homedev only.
+# Normal usage: run ./deploy-prod.sh from your local machine instead.
+# Usage (emergency): SSH into homedev, then: bash ~/dev/landlordguru/scripts/prod-deploy.sh
+# Do NOT run this from a local machine (hostname check will block it).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

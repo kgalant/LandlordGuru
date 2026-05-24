@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
-# Deploy to test server: push locally, pull on homedev, migrate, restart PM2.
-# Usage: ./deploy-test.sh
-# Deploys to ~/dev/landlordguru-test (PM2: landlordguru-test, port 3001).
-# For production deployment, run: ./deploy-prod.sh
+# Deploy to production server: push locally, pull on homedev, migrate, restart PM2.
+# Usage: ./deploy-prod.sh
+# Deploys to ~/dev/landlordguru (PM2: landlordguru, port 3002).
 
 set -euo pipefail
 
 step_errors=()
 
-echo "=== LandlordGuru Deploy → TEST SERVER ==="
+echo "=== LandlordGuru Deploy → PRODUCTION ==="
+echo ""
+
+# Confirm before proceeding
+read -r -p "Deploy to PRODUCTION on homedev:3000? [y/N] " confirm
+if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "Aborted."
+    exit 0
+fi
 echo ""
 
 # Step 1: Push locally (always — ensures changes are in the remote)
@@ -26,7 +33,7 @@ remote_script='
 set +e
 source ~/.nvm/nvm.sh
 
-cd ~/dev/landlordguru-test
+cd ~/dev/landlordguru
 echo "[2/4] Pulling latest changes..."
 git fetch origin main && git reset --hard origin/main
 GIT_PULL_EXIT=$?
@@ -39,7 +46,7 @@ npm run migrate
 MIGRATE_EXIT=$?
 
 echo "[4/4] Restarting PM2 (commit: $GIT_COMMIT)..."
-GIT_COMMIT=$GIT_COMMIT pm2 restart landlordguru-test --update-env
+GIT_COMMIT=$GIT_COMMIT pm2 restart landlordguru --update-env
 PM2_EXIT=$?
 
 printf "\n__DEPLOY_RESULTS__ git_pull=%d migrate=%d pm2=%d\n" $GIT_PULL_EXIT $MIGRATE_EXIT $PM2_EXIT
@@ -96,7 +103,7 @@ deployed_commit=$(echo "$remote_output" | grep -o 'commit: [a-f0-9]*' | tail -1 
 
 if [[ ${#step_errors[@]} -eq 0 ]]; then
     echo "Deployment complete — all steps succeeded."
-    echo "Your changes are live on the test server (homedev:3001)."
+    echo "Production is live on homedev:3002."
     [[ -n "$deployed_commit" ]] && echo "Server is running commit: $deployed_commit"
 else
     echo "Deployment finished with ${#step_errors[@]} error(s):"
