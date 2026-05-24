@@ -59,7 +59,7 @@ Relevant epic docs:
 
 ## Next step
 
-S1: Add `countryDisplayName(code)` helper + static ISO 3166-1 alpha-2 array + `COUNTRY_CURRENCIES` map to `frontend/js/strings.js`.
+F2-11 done. Choose next feature — consult `docs/roadmap.md`.
 
 ---
 
@@ -78,8 +78,10 @@ S1: Add `countryDisplayName(code)` helper + static ISO 3166-1 alpha-2 array + `C
 ## Files touched this session
 
 - `AI_STATE.md`
-- `frontend/index.html`
-- `frontend/css/style.css`
+- `frontend/js/strings.js` (ISO codes, COUNTRY_CURRENCIES, countryDisplayName)
+- `frontend/js/app.js` (dynamic country dropdown, onAptCountryChange, dashboard tile)
+- `frontend/index.html` (remove hardcoded country options, properties header fix)
+- `frontend/css/style.css` (checkbox width fix, select appearance fix)
 - `version.json`
 - `deploy-prod.sh` (new)
 - `deploy-test.sh`
@@ -91,8 +93,8 @@ S1: Add `countryDisplayName(code)` helper + static ISO 3166-1 alpha-2 array + `C
 
 ## Automation log (latest only)
 
-- 2026-05-24 [fix + deploy infra: checkbox width + deploy-prod.sh]
+- 2026-05-24 [F2-11 full country list + select height fix]
   - branch: main
-  - last_commit: 0e7c8d0
-  - changed_files: frontend/index.html, frontend/css/style.css, version.json, deploy-prod.sh, deploy-test.sh, scripts/prod-deploy.sh, PROJECT_LANDLORDGURU.md, backend/.env.example, AI_STATE.md
-  - git_status: clean
+  - last_commit: TBD (pending commit)
+  - changed_files: frontend/js/strings.js, frontend/js/app.js, frontend/index.html, frontend/css/style.css, version.json, AI_STATE.md
+  - git_status: M frontend/js/strings.js, M frontend/js/app.js, M frontend/index.html, M frontend/css/style.css, M version.json, M AI_STATE.md

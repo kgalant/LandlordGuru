@@ -752,5 +752,13 @@
     "last_commit": "4707104",
     "changed_files": "frontend/index.html, frontend/css/style.css, version.json, AI_STATE.md, docs/ai_state_archive.json",
     "git_status": "clean"
+  },
+  {
+    "timestamp": "2026-05-24",
+    "label": "fix + deploy infra: checkbox width + deploy-prod.sh",
+    "branch": "main",
+    "last_commit": "0e7c8d0",
+    "changed_files": "frontend/index.html, frontend/css/style.css, version.json, deploy-prod.sh, deploy-test.sh, scripts/prod-deploy.sh, PROJECT_LANDLORDGURU.md, backend/.env.example, AI_STATE.md, docs/ai_state_archive.json",
+    "git_status": "clean"
   }
 ]
