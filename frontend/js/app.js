@@ -726,6 +726,17 @@ async function openSplitEditor() {
       for (const child of children) {
         _addSplitRowEl(child.type, child.category, child.description || '', child.amount);
       }
+      // Populate split state so "Save as rule" and "Apply to similar" work
+      // for already-split transactions, not only after a fresh save.
+      State._lastSavedSplitRows = children.map(c => ({
+        type:        c.type,
+        category:    c.category || null,
+        description: c.description || '',
+        amount:      parseFloat(c.amount),
+      }));
+      State._lastSavedSplitTxId = tx.id;
+      const postActions = document.getElementById('tx-m-post-split-actions');
+      if (postActions) postActions.style.display = 'block';
     } catch (e) {
       // Fallback: 2 blank rows
       _addSplitRowEl(tx.type, tx.category, '', '');
