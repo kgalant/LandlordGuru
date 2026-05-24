@@ -548,15 +548,12 @@ router.post('/import/check', requireAuth, async (req, res) => {
       const { property_id, date, description, amount } = row;
       if (!property_id || !date || description == null || amount == null) return null;
 
-      const absAmount = Math.abs(parseFloat(amount));
       const base = () => db('transactions as t')
         .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
         .where('t.workspace_id', req.workspace_id)
         .whereRaw('COALESCE(t.property_id, ap.property_id) = ?', [property_id])
         .where('t.date', date)
-        // Compare absolute values so signed transfers (new behaviour) still match
-        // positively-stored transactions (legacy) and vice versa.
-        .whereRaw('ABS(t.amount) = ?', [absAmount])
+        .where('t.amount', parseFloat(amount))
         .whereNull('t.parent_transaction_id')
         .select('t.id', 't.date', 't.description', 't.amount', 't.created_at', 't.import_batch')
         .orderBy('t.created_at', 'desc');
