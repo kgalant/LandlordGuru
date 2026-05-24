@@ -551,28 +551,18 @@ router.post('/import/check', requireAuth, async (req, res) => {
       const { property_id, date, description, amount } = row;
       if (!property_id || !date || description == null || amount == null) return null;
 
-      const base = () => db('transactions as t')
+      const match = await db('transactions as t')
         .leftJoin('account_properties as ap', 'ap.account_id', 't.account_id')
         .where('t.workspace_id', req.workspace_id)
         .whereRaw('COALESCE(t.property_id, ap.property_id) = ?', [property_id])
         .where('t.date', date)
         .where('t.amount', parseFloat(amount))
+        // COALESCE: fall back to description when raw_description is NULL
+        .whereRaw('LOWER(COALESCE(t.raw_description, t.description)) = LOWER(?)', [description])
         .whereNull('t.parent_transaction_id')
         .select('t.id', 't.date', 't.description', 't.amount', 't.created_at', 't.import_batch')
-        .orderBy('t.created_at', 'desc');
-
-      // Pass 1: exact description match (COALESCE handles null raw_description)
-      let match = await base()
-        .whereRaw('LOWER(COALESCE(t.raw_description, t.description)) = LOWER(?)', [description])
+        .orderBy('t.created_at', 'desc')
         .first();
-
-      // Pass 2: if column mapping changed between imports the description may differ —
-      // fall back to date + amount + property alone (no description filter).
-      // This catches the common case where the same CSV is re-imported with a
-      // different column mapping.
-      if (!match) {
-        match = await base().first();
-      }
 
       if (!match) return null;
       return formatDate(match);
