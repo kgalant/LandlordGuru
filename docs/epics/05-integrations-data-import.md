@@ -385,6 +385,57 @@ A "＋ New category…" option at the bottom of every category dropdown in the i
 
 ---
 
+### F5-15 Workspace-managed bank profiles `[Backlog]`
+**Status:** backlog
+
+Bank import profiles (Jyske Bank, Nordea, mBank, Generic CSV) are currently
+hardcoded as static `<option>` tags in `index.html` and derive their parsing
+config from `BANK_PROFILES` in `frontend/config.js`. They appear in every
+new workspace unconditionally, which looks like pre-loaded test data to any
+user who doesn't use those specific banks.
+
+Bank profiles should be workspace-scoped and start empty, with users opting
+into preset profiles or defining their own — the same pattern as default
+auto-categorisation rules (F5-3 "Load defaults" button).
+
+**Acceptance criteria:**
+- A new workspace has **no bank profiles** enabled by default; the import
+  profile dropdown shows only a placeholder ("Add a profile to get started")
+- A **Manage profiles** action (in Settings or the Import section) lets the
+  user:
+  - Enable one or more built-in preset profiles (Jyske Bank, Nordea, mBank,
+    Generic CSV) — rendered as a list of templates to add with one click
+  - Add a **custom profile**: name, delimiter, date format, date column,
+    description column, amount column, decimal separator, rows to skip,
+    default currency
+  - Edit or delete any non-preset profile
+  - Enable/disable preset profiles without losing their config
+- Enabled profiles are stored in the database per workspace
+  (`workspace_bank_profiles` table or as a JSONB column on `workspaces`)
+- The import dropdown and the rules modal bank-profile selector are both
+  built dynamically from the workspace's active profiles
+- The hardcoded `<option>` tags in `index.html` are removed; `config.js`
+  `BANK_PROFILES` becomes the source of preset template definitions only
+- `GET /api/bank-profiles` — returns active profiles for the workspace
+- `POST /api/bank-profiles` — adds a profile (preset key or custom config)
+- `PATCH /api/bank-profiles/:id` — updates a custom profile
+- `DELETE /api/bank-profiles/:id` — removes a profile; blocked if any
+  existing rules or description mappings reference it (or offers to
+  reassign them to "Any bank")
+
+**Implementation notes:**
+- Existing workspaces (pre-migration) should have their four current
+  profiles auto-migrated as enabled presets so import history and rules
+  that reference `jyske_bank` / `nordea_dk` / `mbank_pl` / `generic_csv`
+  remain valid
+- `loadDefaultRules()` should be reviewed alongside this — its preset rules
+  reference specific profile keys and should remain valid after migration
+
+**Dependencies:** F5-1, F5-2, F5-3 (rules reference bank_profile keys),
+F5-4 (description_mappings reference bank_profile keys).
+
+---
+
 ### F5-8 Direct bank connection `[Future]`
 **Status:** Future
 
