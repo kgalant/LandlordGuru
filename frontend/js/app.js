@@ -142,12 +142,11 @@ async function refreshAll() {
   setLoading(true, t('status.loadingData'));
   try {
     // v2 mode: data from backend API
-    const [props, txs, rules, splitRules, descMappings, wsSettings, rates, txCategories] = await Promise.all([
+    const [props, txs, rules, splitRules, wsSettings, rates, txCategories] = await Promise.all([
       Api.getProperties(),
       Api.getTransactions({ limit: 10000 }),
       Api.getRules(),
       Api.getSplitRules(),
-      Api.getDescMappings(),
       Api.getWorkspaceSettings(),
       Api.getCurrencyRates(),
       Api.getTransactionCategories(),
@@ -156,7 +155,6 @@ async function refreshAll() {
     State.transactions           = (txs.data ?? txs).map(tx => ({ ...tx, amount: parseFloat(tx.amount) }));
     State.rules                  = rules;
     State.splitRules             = splitRules;
-    State.descMappings           = descMappings;
     State.workspaceSettings      = wsSettings;
     State.currencyRates          = rates;
     State.transactionCategories  = txCategories;
@@ -1093,10 +1091,21 @@ async function saveDescMappingsForRows(rows, profileKey) {
   for (const row of toStore) {
     const keyword = (row.raw_description || row.description || '').trim();
     if (!keyword) continue;
-    await Api.saveDescMapping({ bank_profile: profileKey, keyword, category: row.category, scope: 'global' });
+    try {
+      await Api.createRule({
+        keyword,
+        category:     row.category,
+        bank_profile: profileKey || null,
+        property_id:  row.property_id || null,
+      });
+    } catch (_) {
+      // Silently skip duplicates or validation failures — the import should not be blocked
+    }
   }
   if (toStore.length) {
-    State.descMappings = await Api.getDescMappings();
+    // Refresh rules so the Rules page and future imports pick up the new entries
+    State.rules = await Api.getRules();
+    if (rulesTable) rulesTable.refresh();
   }
 }
 
@@ -1722,9 +1731,6 @@ async function runImportPreview() {
     toast(t('import.toast.parseError', { error: e.message }), 'error');
     return;
   }
-
-  // Apply description mappings (highest priority — overrides rule matches)
-  applyDescMappings(result.rows, profileKey);
 
   // Mark rows that would be auto-split by an enabled split rule (preview badge only; actual split happens server-side on import)
   _markAutoSplitRows(result.rows);
