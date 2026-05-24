@@ -61,7 +61,7 @@ Relevant epic docs:
 
 ## Next step
 
-Choose next MVP feature from candidates. Consult `docs/roadmap.md`. F4-1+F4-2 is done — F4-3 (per-property P&L breakdown), F3-8, F3-12, F3-13, F5-7 remain.
+Choose next MVP feature from candidates. Consult `docs/roadmap.md`. F4-1+F4-2 is done — F4-3 (per-property P&L breakdown), F3-8, F3-12, F3-13, F5-7 remain. (Session also fixed a CSS bug: checkbox `width:100%` override causing overlap in Properties header.)
 
 ---
 
@@ -79,23 +79,16 @@ Choose next MVP feature from candidates. Consult `docs/roadmap.md`. F4-1+F4-2 is
 ## Files touched this session
 
 - `AI_STATE.md`
-- `backend/src/routes/reports.js` (new)
-- `backend/src/app.js`
-- `backend/tests/reports.test.js` (new)
-- `frontend/js/api.js`
-- `frontend/js/app.js`
-- `frontend/js/strings.js`
-- `frontend/index.html`
-- `frontend/css/style.css`
+- `frontend/index.html` (properties header layout fix)
+- `frontend/css/style.css` (checkbox width fix + debug class cleanup)
 - `version.json`
-- `deploy-test.sh`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-23 [F4-1+F4-2 committed + deployed to test]
+- 2026-05-24 [fix: checkbox width override + properties header cleanup]
   - branch: main
-  - last_commit: 791325f
-  - changed_files: backend/src/routes/reports.js, backend/src/app.js, backend/tests/reports.test.js, frontend/js/api.js, frontend/js/app.js, frontend/js/strings.js, frontend/index.html, frontend/css/style.css, version.json, deploy-test.sh, AI_STATE.md, docs/ai_state_archive.json
-  - git_status: clean
+  - last_commit: TBD (pending commit)
+  - changed_files: frontend/index.html, frontend/css/style.css, version.json, AI_STATE.md
+  - git_status: M frontend/css/style.css, M frontend/index.html, M version.json, M AI_STATE.md

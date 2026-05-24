@@ -1,9 +1,9 @@
 {
-  "version": "2.24.0",
+  "version": "2.24.1",
   "name": "LandlordGuru",
   "description": "Property portfolio management system",
   "build": {
-    "timestamp": "2026-05-19T00:00:00",
+    "timestamp": "2026-05-24T00:00:00",
     "git_commit": "TBD"
   }
 }

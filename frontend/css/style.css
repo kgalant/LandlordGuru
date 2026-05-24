@@ -237,6 +237,13 @@ input, select, textarea {
   transition: border-color 0.15s;
 }
 
+/* Checkboxes and radios must not inherit the full-width rule above */
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  padding: 0;
+}
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
