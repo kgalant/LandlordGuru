@@ -339,6 +339,8 @@ one property in the workspace are floated to the top of the list with a
 visual divider.
 
 **Acceptance criteria:**
+
+*Add Property dropdown:*
 - All ISO 3166-1 alpha-2 countries are available in the dropdown, sorted
   alphabetically by display name
 - Countries already used by existing workspace properties appear above a
@@ -355,13 +357,29 @@ visual divider.
 - No backend changes required — the country field already stores a 2-char
   ISO code
 
+*Dashboard "Active properties" tile:*
+- The sub-line currently hardcodes `X DK · X PL` regardless of which
+  countries the workspace actually uses; it must be replaced with a dynamic
+  breakdown derived from active property data
+- Show one `count NAME` segment per country that has at least one active
+  property, sorted alphabetically by display name, separated by ` · `
+- Country display names use `Intl.DisplayNames` (same helper as the
+  dropdown, so a single shared utility covers both)
+- Workspaces with properties in zero countries (empty portfolio) show no
+  sub-line or a neutral placeholder
+- No backend changes required — country codes are already on each property
+  row returned by `GET /api/properties`
+
 **Implementation notes:**
 - Country list built via `Intl.DisplayNames([locale], { type: 'region' })`;
   iterate over a static array of all ISO 3166-1 alpha-2 codes
 - Used countries derived from already-loaded properties data (no extra API
-  call needed)
+  call needed) — the same `props` array drives both the dashboard tile and
+  the dropdown priority list
 - Existing `strings.js` `country.*` entries (DK, PL) remain as optional
   explicit overrides; the Intl fallback handles everything else
+- Extract a shared `countryDisplayName(code)` helper so the dropdown and
+  the dashboard tile use identical rendering logic
 
 **Dependencies:** F2-1, F2-2 (properties loaded in UI state).
 
