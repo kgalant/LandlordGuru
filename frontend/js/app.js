@@ -2014,16 +2014,15 @@ async function doImport(saveMappings) {
   }
 
   setLoading(true, t('status.importing'));
+  const toSave = activeRows.map(row => {
+    const prop = State.properties.find(p => p.id === row.property_id);
+    return {
+      ...row,
+      account_id: prop?.account_id ?? null,
+    };
+  });
   try {
     if (saveMappings) await saveDescMappingsForRows(activeRows, profileKey);
-    const toSave = activeRows.map(row => {
-      const prop = State.properties.find(p => p.id === row.property_id);
-      return {
-        ...row,
-        account_id: prop?.account_id ?? null,
-        // property_id kept from row — backend stores it directly
-      };
-    });
     const result = await Api.importTransactions(toSave);
     const batchId = result.import_batch;
     toast(t('import.toast.done', { count: result.inserted, batchId }), 'success');

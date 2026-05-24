@@ -166,8 +166,11 @@ async function validateFields(body, workspaceId, requireAll) {
 
   if (requireAll || body.amount !== undefined) {
     const amt = parseFloat(body.amount);
-    if (isNaN(amt) || amt <= 0) {
-      errors.push('amount must be a positive number');
+    // Transfers and deposits may have negative amounts (sign indicates direction).
+    // Income and expense are always stored as positive values.
+    const allowNegative = body.type === 'transfer' || body.type === 'deposit';
+    if (isNaN(amt) || amt === 0 || (!allowNegative && amt < 0)) {
+      errors.push('amount must be a non-zero number (negative allowed for transfers and deposits)');
     }
   }
 
