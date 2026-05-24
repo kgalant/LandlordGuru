@@ -122,8 +122,8 @@ For emergency deploys directly on homedev, `scripts/prod-deploy.sh` remains as a
 
 ## Versioning
 
-- `version.json` is at the project root and is served by a `version.html` endpoint
-- Update `version.json` in the **same commit** as any change that affects behaviour
+- `frontend/version.json` is the single version file — served statically and read by the backend health endpoint
+- Update `frontend/version.json` in the **same commit** as any change that affects behaviour
 - Semver:
   - Patch (x.y.Z): bug fixes, small tweaks to existing features
   - Minor (x.Y.0): new features — closing out an F-epic-number item from an epic doc; confirm explicitly before bumping

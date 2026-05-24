@@ -82,7 +82,7 @@ F2-11 done. Choose next feature — consult `docs/roadmap.md`.
 - `frontend/js/app.js` (dynamic country dropdown, onAptCountryChange, dashboard tile)
 - `frontend/index.html` (remove hardcoded country options, properties header fix)
 - `frontend/css/style.css` (checkbox width fix, select appearance fix)
-- `version.json`
+- `frontend/version.json`
 - `deploy-prod.sh` (new)
 - `deploy-test.sh`
 - `scripts/prod-deploy.sh`
