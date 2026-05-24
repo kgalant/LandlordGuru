@@ -109,6 +109,75 @@
   border-radius: 3px;
 }
 
+/* ── Multi-select filter ───────────────────── */
+
+.dt-ms-wrap {
+  position: relative;
+}
+
+.dt-ms-btn {
+  font-size: 0.85rem;
+  padding: 0.2rem 1.8rem 0.2rem 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+  /* chevron */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 8px 5px;
+}
+
+.dt-ms-btn.dt-ms-active {
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+.dt-ms-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 300;
+  background: var(--bg);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 6px;
+  min-width: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.dt-ms-dropdown.dt-open { display: block; }
+
+.dt-ms-actions {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.dt-ms-dropdown label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--text);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.dt-ms-dropdown label:hover { background: var(--bg2); }
+
 /* ── Column headers table ──────────────────── */
 .dt-col-headers {
   border-bottom: 2px solid #dee2e6;

@@ -14,7 +14,7 @@ const DataTable = (() => {
 
     // ── State ─────────────────────────────────────────────────────
     const sortState = { col: null, dir: 'asc' };
-    const filterState = {};      // key → value
+    const filterState = {};      // key → value (string) or array (multi-select)
     let page        = 1;
     let limit       = (pagination.enabled && pagination.defaultLimit) || 50;
     let selectedIds = new Set();
@@ -38,7 +38,9 @@ const DataTable = (() => {
         page = 1;
         sortState.col = null;
         sortState.dir = 'asc';
-        Object.keys(filterState).forEach(k => { filterState[k] = ''; });
+        Object.keys(filterState).forEach(k => {
+          filterState[k] = Array.isArray(filterState[k]) ? [] : '';
+        });
         _syncFilterInputs();
         _load();
       },
@@ -159,6 +161,13 @@ const DataTable = (() => {
 
     function _buildFilterControl(col) {
       const f = col.filter;
+      if (f.type === 'multi-select') {
+        filterState[col.key] = [];
+        return `<div class="dt-filter-control dt-ms-wrap" data-col="${col.key}">
+          <button class="dt-ms-btn" data-ms-key="${col.key}">${_esc(f.placeholder || col.label)}</button>
+          <div class="dt-ms-dropdown" id="${containerId}-ms-${col.key}"></div>
+        </div>`;
+      }
       filterState[col.key] = '';
       if (f.type === 'select') {
         return `<div class="dt-filter-control" data-col="${col.key}">
@@ -256,6 +265,17 @@ const DataTable = (() => {
               else el.value = '';
               filterState[el.dataset.filterKey] = '';
             });
+            // reset multi-select if present
+            const msKey = col.key;
+            if (Array.isArray(filterState[msKey])) {
+              filterState[msKey] = [];
+              const dd = document.getElementById(`${containerId}-ms-${msKey}`);
+              if (dd) {
+                dd.classList.remove('dt-open');
+                dd.querySelectorAll('[data-ms-val]').forEach(cb => { cb.checked = false; });
+              }
+              _updateMsLabel(col);
+            }
           }
         }
       });
@@ -286,6 +306,7 @@ const DataTable = (() => {
 
       _renderColHeaders();
       _populateSelectOptions();
+      _populateMultiSelectOptions();
       _renderBody(data);
       _renderPager(total);
       _applyColVisibility();
@@ -309,6 +330,55 @@ const DataTable = (() => {
         ).join('');
         sel.innerHTML = `<option value="">${col.filter.placeholder || col.label}</option>${opts}`;
       });
+    }
+
+    function _populateMultiSelectOptions() {
+      columns.forEach(col => {
+        if (!col.filter || col.filter.type !== 'multi-select' || !col.filter.options) return;
+        const dd = document.getElementById(`${containerId}-ms-${col.key}`);
+        if (!dd) return;
+        const selected = filterState[col.key] || [];
+        const rawOpts  = typeof col.filter.options === 'function'
+          ? col.filter.options(filterState)
+          : col.filter.options;
+        const items = rawOpts.map(o => {
+          const val   = typeof o === 'object' ? o.value : o;
+          const label = typeof o === 'object' ? o.label : o;
+          const chk   = selected.includes(val) ? ' checked' : '';
+          return `<label><input type="checkbox" data-ms-key="${col.key}" data-ms-val="${_esc(val)}"${chk}>${_esc(label)}</label>`;
+        }).join('');
+        dd.innerHTML = `
+          <div class="dt-ms-actions">
+            <button class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:11px" data-ms-key="${col.key}" data-ms-action="all">All</button>
+            <button class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:11px" data-ms-key="${col.key}" data-ms-action="none">Clear</button>
+          </div>
+          ${items}`;
+      });
+    }
+
+    function _updateMsLabel(col) {
+      const btn = container.querySelector(`.dt-ms-btn[data-ms-key="${col.key}"]`);
+      if (!btn) return;
+      const selected = filterState[col.key] || [];
+      if (!selected.length) {
+        btn.textContent = col.filter.placeholder || col.label;
+        btn.classList.remove('dt-ms-active');
+        return;
+      }
+      btn.classList.add('dt-ms-active');
+      if (selected.length <= 2) {
+        const rawOpts = typeof col.filter.options === 'function'
+          ? col.filter.options(filterState)
+          : (col.filter.options || []);
+        const names = selected.map(v => {
+          const opt = rawOpts.find(o => (typeof o === 'object' ? o.value : o) === v);
+          return opt ? (typeof opt === 'object' ? opt.label : opt) : v;
+        });
+        const joined = names.join(', ');
+        btn.textContent = joined.length <= 22 ? joined : `${col.filter.placeholder || col.label} (${selected.length})`;
+      } else {
+        btn.textContent = `${col.filter.placeholder || col.label} (${selected.length})`;
+      }
     }
 
     function _renderBody(data) {
@@ -410,11 +480,71 @@ const DataTable = (() => {
           return;
         }
 
+        // Multi-select: toggle dropdown
+        const msBtn = e.target.closest(`.dt-ms-btn`);
+        if (msBtn && msBtn.closest(`#${containerId}`)) {
+          const key = msBtn.dataset.msKey;
+          const dd  = document.getElementById(`${containerId}-ms-${key}`);
+          if (dd) {
+            // close all other open ms dropdowns first
+            container.querySelectorAll('.dt-ms-dropdown.dt-open').forEach(d => {
+              if (d !== dd) d.classList.remove('dt-open');
+            });
+            dd.classList.toggle('dt-open');
+          }
+          return;
+        }
+
+        // Multi-select: Select all / Clear actions
+        const msAction = e.target.closest('[data-ms-action]');
+        if (msAction && msAction.closest(`#${containerId}`)) {
+          e.stopPropagation();
+          const key    = msAction.dataset.msKey;
+          const action = msAction.dataset.msAction;
+          const col    = columns.find(c => c.key === key);
+          if (col) {
+            const dd      = document.getElementById(`${containerId}-ms-${key}`);
+            const rawOpts = typeof col.filter.options === 'function'
+              ? col.filter.options(filterState) : (col.filter.options || []);
+            if (action === 'all') {
+              filterState[key] = rawOpts.map(o => typeof o === 'object' ? o.value : o);
+            } else {
+              filterState[key] = [];
+            }
+            if (dd) dd.querySelectorAll('[data-ms-val]').forEach(cb => {
+              cb.checked = filterState[key].includes(cb.dataset.msVal);
+            });
+            _updateMsLabel(col);
+            page = 1;
+            _load();
+          }
+          return;
+        }
+
         // Close col-vis dropdown on outside click — handled in document listener
       });
 
       // Filter changes
       container.addEventListener('change', e => {
+        // Multi-select checkbox
+        const msVal = e.target.dataset.msVal;
+        const msKey = e.target.dataset.msKey;
+        if (msVal !== undefined && msKey && e.target.closest(`#${containerId}`)) {
+          const arr = filterState[msKey] || [];
+          if (e.target.checked) {
+            if (!arr.includes(msVal)) arr.push(msVal);
+          } else {
+            const idx = arr.indexOf(msVal);
+            if (idx !== -1) arr.splice(idx, 1);
+          }
+          filterState[msKey] = arr;
+          const col = columns.find(c => c.key === msKey);
+          if (col) _updateMsLabel(col);
+          page = 1;
+          _load();
+          return;
+        }
+
         const fk = e.target.dataset.filterKey;
         if (fk) {
           const col = columns.find(c => c.filter && c.key === fk);
@@ -494,13 +624,20 @@ const DataTable = (() => {
         }
       });
 
-      // Close col-vis dropdown on outside click
+      // Close col-vis and multi-select dropdowns on outside click
       document.addEventListener('click', e => {
         const btn = document.getElementById(`${containerId}-col-vis-btn`);
         const dd  = document.getElementById(`${containerId}-col-vis-dd`);
         if (dd && btn && !btn.contains(e.target) && !dd.contains(e.target)) {
           dd.classList.remove('dt-open');
         }
+        // Close any open multi-select dropdown not being interacted with
+        container.querySelectorAll('.dt-ms-dropdown.dt-open').forEach(msDd => {
+          const wrap = msDd.closest('.dt-ms-wrap');
+          if (wrap && !wrap.contains(e.target)) {
+            msDd.classList.remove('dt-open');
+          }
+        });
       });
     }
 
@@ -509,6 +646,14 @@ const DataTable = (() => {
         const key = el.dataset.filterKey;
         if (el.type === 'checkbox') el.checked = !!filterState[key];
         else el.value = filterState[key] || '';
+      });
+      // Sync multi-select checkboxes and labels
+      columns.forEach(col => {
+        if (!col.filter || col.filter.type !== 'multi-select') return;
+        filterState[col.key] = [];
+        const dd = document.getElementById(`${containerId}-ms-${col.key}`);
+        if (dd) dd.querySelectorAll('[data-ms-val]').forEach(cb => { cb.checked = false; });
+        _updateMsLabel(col);
       });
     }
 

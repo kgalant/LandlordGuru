@@ -317,6 +317,77 @@ describe('GET /api/transactions', () => {
     expect(res.body.data[0].description).toBe('Reconciled tx');
   });
 
+  // ── Multi-value filter tests (F3-15) ─────────────────────────────────────
+
+  it('filters by multiple types (comma-separated)', async () => {
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'income',   category: 'rent' });
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'expense',  category: 'insurance' });
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'deposit',  category: 'deposit_received' });
+
+    const res = await request(app)
+      .get('/api/transactions?type=income,expense')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(2);
+    const types = res.body.data.map(t => t.type).sort();
+    expect(types).toEqual(['expense', 'income']);
+  });
+
+  it('filters by multiple categories (comma-separated)', async () => {
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'income',  category: 'rent' });
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'income',  category: 'heating_aconto' });
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'expense', category: 'insurance' });
+
+    const res = await request(app)
+      .get('/api/transactions?category=rent,insurance')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(2);
+    const cats = res.body.data.map(t => t.category).sort();
+    expect(cats).toEqual(['insurance', 'rent']);
+  });
+
+  it('combined multi-type + single-category filter returns intersection', async () => {
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'income',  category: 'rent' });
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'expense', category: 'insurance' });
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'expense', category: 'utilities' });
+
+    // income OR expense, AND category = insurance → only the expense/insurance row
+    const res = await request(app)
+      .get('/api/transactions?type=income,expense&category=insurance')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(1);
+    expect(res.body.data[0].category).toBe('insurance');
+  });
+
+  it('single-value type filter remains backward-compatible', async () => {
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'income',  category: 'rent' });
+    await request(app).post('/api/transactions').set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_TX, type: 'expense', category: 'insurance' });
+
+    const res = await request(app)
+      .get('/api/transactions?type=income')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(1);
+    expect(res.body.data[0].type).toBe('income');
+  });
+
   it('sorts by property name alphabetically (F7-B1 regression)', async () => {
     const PROP_A = '00000000-0000-0000-0000-000000000081';
     const PROP_Z = '00000000-0000-0000-0000-000000000082';

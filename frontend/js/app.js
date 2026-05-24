@@ -362,7 +362,7 @@ function initTxTable() {
       {
         key: 'property', label: t('tx.col.property'), sortable: true, defaultVisible: true,
         filter: {
-          type: 'select',
+          type: 'multi-select',
           placeholder: t('tx.filter.allProperties'),
           options: () => State.properties.map(p => ({ value: String(p.id), label: p.name })),
         },
@@ -386,7 +386,7 @@ function initTxTable() {
       {
         key: 'type', label: t('tx.col.type'), sortable: true, defaultVisible: true, width: '6rem',
         filter: {
-          type: 'select',
+          type: 'multi-select',
           placeholder: t('tx.filter.allTypes'),
           options: [
             { value: 'income',   label: t('categories.income') },
@@ -399,12 +399,17 @@ function initTxTable() {
       {
         key: 'category', label: t('tx.col.category'), sortable: true, defaultVisible: true, width: '9rem',
         filter: {
-          type: 'select',
+          type: 'multi-select',
           placeholder: t('tx.filter.allCats'),
           options: (filterState) => {
-            const type = filterState.type || '';
-            if (type && CATEGORIES[type]) {
-              return Object.keys(CATEGORIES[type].items).map(k => ({ value: k, label: t('categories.items.' + k) }));
+            const selectedTypes = Array.isArray(filterState.type) ? filterState.type : [];
+            if (selectedTypes.length === 1 && CATEGORIES[selectedTypes[0]]) {
+              return Object.keys(CATEGORIES[selectedTypes[0]].items).map(k => ({ value: k, label: t('categories.items.' + k) }));
+            }
+            if (selectedTypes.length > 1) {
+              return selectedTypes.flatMap(tp =>
+                CATEGORIES[tp] ? Object.keys(CATEGORIES[tp].items).map(k => ({ value: k, label: t('categories.items.' + k) })) : []
+              );
             }
             return Object.entries(CATEGORIES).flatMap(([, group]) =>
               Object.keys(group.items).map(k => ({ value: k, label: t('categories.items.' + k) }))
@@ -428,9 +433,13 @@ function initTxTable() {
     fetchData: async (params) => {
       const filters = { page: params.page, limit: params.limit, exclude_children: 1 };
       if (params.sort_col) { filters.sort_col = params.sort_col; filters.sort_dir = params.sort_dir; }
-      if (params.property)   filters.property_id = params.property;
-      if (params.type)       filters.type        = params.type;
-      if (params.category)   filters.category    = params.category;
+      // multi-select params are arrays — join as comma-separated for the API
+      const propArr = params.property || [];
+      const typeArr = params.type     || [];
+      const catArr  = params.category || [];
+      if (propArr.length) filters.property_id = propArr.join(',');
+      if (typeArr.length) filters.type        = typeArr.join(',');
+      if (catArr.length)  filters.category    = catArr.join(',');
       const dateFrom = parseDateToISO(params['date-from'] || '');
       const dateTo   = parseDateToISO(params['date-to']   || '');
       if (dateFrom) filters.from = dateFrom;

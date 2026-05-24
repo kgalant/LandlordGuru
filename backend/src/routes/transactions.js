@@ -176,25 +176,48 @@ async function validateFields(body, workspaceId, requireAll) {
 // Returns transactions for the workspace, newest first.
 // Each transaction includes property_id (via account_properties join).
 // Optional query params: account_id, property_id, type, category, from, to, search, import_batch, page, limit
+// type, category, property_id accept a single value OR comma-separated multi-values (e.g. type=income,expense)
+
+// Normalise a query param to an array of non-empty strings.
+// Accepts: undefined → [], 'income' → ['income'], 'income,expense' → ['income','expense']
+function parseMulti(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(v => v.trim()).filter(Boolean);
+  return val.split(',').map(v => v.trim()).filter(Boolean);
+}
+
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { account_id, property_id, type, category, from, to, search, sort_col, sort_dir, import_batch, reconciled, exclude_children } = req.query;
+    const { account_id, from, to, search, sort_col, sort_dir, import_batch, reconciled, exclude_children } = req.query;
+    const types      = parseMulti(req.query.type);
+    const categories = parseMulti(req.query.category);
+    const propIds    = parseMulti(req.query.property_id);
     let page = parseInt(req.query.page, 10) || 1;
     let limit = parseInt(req.query.limit, 10) || DEFAULT_PAGE_LIMIT;
     if (page < 1) page = 1;
     if (limit < 1 || limit > MAX_PAGE_LIMIT) limit = DEFAULT_PAGE_LIMIT;
 
     await req.logger.info('transaction.list.started', {
-      filters: { account_id: account_id || null, property_id: property_id || null, type: type || null, category: category || null, from: from || null, to: to || null, search: search || null, import_batch: import_batch || null },
+      filters: { account_id: account_id || null, property_id: propIds, type: types, category: categories, from: from || null, to: to || null, search: search || null, import_batch: import_batch || null },
       page,
       limit,
     });
 
     function applyFilters(q) {
-      if (account_id)    q = q.where('t.account_id', account_id);
-      if (property_id)   q = q.where(function () { this.where('t.property_id', property_id).orWhere('ap.property_id', property_id); });
-      if (type)          q = q.where('t.type', type);
-      if (category)      q = q.where('t.category', category);
+      if (account_id) q = q.where('t.account_id', account_id);
+
+      // property_id: single → equality with OR on ap; multi → whereIn on both
+      if (propIds.length === 1)
+        q = q.where(function () { this.where('t.property_id', propIds[0]).orWhere('ap.property_id', propIds[0]); });
+      else if (propIds.length > 1)
+        q = q.where(function () { this.whereIn('t.property_id', propIds).orWhereIn('ap.property_id', propIds); });
+
+      if (types.length === 1)      q = q.where('t.type', types[0]);
+      else if (types.length > 1)   q = q.whereIn('t.type', types);
+
+      if (categories.length === 1)    q = q.where('t.category', categories[0]);
+      else if (categories.length > 1) q = q.whereIn('t.category', categories);
+
       if (from)          q = q.where('t.date', '>=', from);
       if (to)            q = q.where('t.date', '<=', to);
       if (search)        q = q.whereILike('t.description', `%${search}%`);
