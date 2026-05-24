@@ -117,7 +117,8 @@ export const Reports = (() => {
 
   function fmt(amount, currency) {
     return new Intl.NumberFormat('en-US', {
-      style: 'currency', currency: currency || 'DKK', maximumFractionDigits: 0
+      style: 'currency', currency: currency || 'DKK',
+      minimumFractionDigits: 2, maximumFractionDigits: 2,
     }).format(amount);
   }
 

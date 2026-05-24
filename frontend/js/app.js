@@ -71,7 +71,7 @@ function _buildMatchTag(row) {
     const importedOn = m.created_at
       ? fmtDateTime(m.created_at).slice(0, 10)
       : '?';
-    return `<span class="dup-badge"><span class="tag tag-dup">Duplicate</span><div class="dup-badge-tip">${escHtml(fmtDate(m.date))} &bull; ${escHtml(m.description || '—')} &bull; ${parseFloat(m.amount).toLocaleString()}<br>Imported on ${escHtml(importedOn)}</div></span> `;
+    return `<span class="dup-badge"><span class="tag tag-dup">Duplicate</span><div class="dup-badge-tip">${escHtml(fmtDate(m.date))} &bull; ${escHtml(m.description || '—')} &bull; ${parseFloat(m.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}<br>Imported on ${escHtml(importedOn)}</div></span> `;
   }
   if (row._autoSplit)          return `<span class="tag tag-split" title="${escHtml(row._autoSplitRuleName || 'Split rule')}">Auto-split</span> `;
   if (row._descMappingMatched) return '<span class="tag tag-mapping">mapped</span> ';
@@ -660,7 +660,7 @@ function openTxModal(txId) {
     delBtn.style.display = 'inline-block';
 
     _hint('tx-m-original-date',   tx.original_date   ? t('tx.modal.originalValue', { value: fmtDate(tx.original_date) }) : '');
-    _hint('tx-m-original-amount', tx.original_amount != null ? t('tx.modal.originalValue', { value: parseFloat(tx.original_amount).toLocaleString() }) : '');
+    _hint('tx-m-original-amount', tx.original_amount != null ? t('tx.modal.originalValue', { value: parseFloat(tx.original_amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) }) : '');
     const rawDescDiffers = tx.raw_description && tx.raw_description !== tx.description;
     _hint('tx-m-original-desc',   rawDescDiffers ? t('tx.modal.originalValue', { value: tx.raw_description }) : '');
   } else {
@@ -701,7 +701,7 @@ function closeTxModal() {
 let _splitEditorActive = false;
 
 function _fmtSplitAmt(n) {
-  return parseFloat(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+  return parseFloat(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 async function openSplitEditor() {
@@ -1238,7 +1238,7 @@ function _buildRowHtml(row, i) {
     <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"${dis}><option value="">—</option>${propOpts}</select></td>
     <td><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)"${dis}>${catOpts}</select></td>
     <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${notesBg}" placeholder="notes…" value="${escHtml(row.notes || '')}" oninput="onRowFieldChange(${i},'notes',this.value)"${dis}></td>
-    <td class="amount-cell ${amtCls}">${amtSign}${row.amount.toLocaleString()} ${_importCurrency}</td>
+    <td class="amount-cell ${amtCls}">${amtSign}${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${_importCurrency}</td>
     <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"${row._ignored ? ' checked' : ''}${dis}></td>
     <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"${row._storeMapping ? ' checked' : ''}${dis}></td>
   </tr>`;
@@ -1804,7 +1804,7 @@ function goToStaticPreview() {
     const typeCount   = allTypeRows.length;
     const currencies  = [...new Set(allTypeRows.map(r => r.currency))];
     const typeMeta    = currencies.length === 1
-      ? `${typeCount} transactions · ${allTypeRows.reduce((s, r) => s + r.amount, 0).toLocaleString()} ${currencies[0]}`
+      ? `${typeCount} transactions · ${allTypeRows.reduce((s, r) => s + r.amount, 0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${currencies[0]}`
       : `${typeCount} transactions`;
 
     html += `<div class="tree-group">
@@ -1819,7 +1819,7 @@ function goToStaticPreview() {
       const catCount = rows.length;
       const catCurs  = [...new Set(rows.map(r => r.currency))];
       const catMeta  = catCurs.length === 1
-        ? `${catCount} rows · ${rows.reduce((s, r) => s + r.amount, 0).toLocaleString()} ${catCurs[0]}`
+        ? `${catCount} rows · ${rows.reduce((s, r) => s + r.amount, 0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${catCurs[0]}`
         : `${catCount} rows`;
 
       html += `<div class="tree-cat">
@@ -1844,7 +1844,7 @@ function goToStaticPreview() {
                 <td style="font-size:12px;max-width:200px">${row.description}</td>
                 <td style="font-size:12px">${prop ? prop.name : '—'}</td>
                 <td style="font-size:12px">${row.notes || '—'}</td>
-                <td class="amount-cell">${row.amount.toLocaleString()} ${row.currency}</td>
+                <td class="amount-cell">${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${row.currency}</td>
               </tr>`;
             }).join('')}</tbody>
           </table>
@@ -1978,7 +1978,7 @@ async function doImport(saveMappings) {
       errMsg = e.rowErrors.map(re => {
         const row = toSave[re.row];
         const id = row
-          ? `${fmtDate(row.date)}, ${parseFloat(row.amount).toLocaleString()} ${row.currency || ''}${row.description ? ` "${row.description.slice(0, 30)}"` : ''}`
+          ? `${fmtDate(row.date)}, ${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${row.currency || ''}${row.description ? ` "${row.description.slice(0, 30)}"` : ''}`
           : `row ${re.row + 1}`;
         const errs = Array.isArray(re.errors) ? re.errors.join(', ') : re.errors;
         return `${id}: ${errs}`;

@@ -81,7 +81,7 @@ nav button.active { background: var(--bg3); color: var(--text); font-weight: 500
 
 #sync-status { font-size: 12px; color: var(--text3); }
 
-main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+main { flex: 1; padding: 1.5rem clamp(1.5rem, 3vw, 3rem); width: 100%; }
 
 .page { display: none; }
 .page.active { display: block; }
@@ -130,7 +130,7 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 
 /* ── Apt cards ────────────────────────────────────────────── */
 
-.apt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+.apt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
 
 .apt-card {
   background: var(--bg);
@@ -721,7 +721,7 @@ textarea { resize: vertical; min-height: 70px; }
 
 @media (max-width: 700px) {
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
-  .apt-grid    { grid-template-columns: 1fr; }
+  /* apt-grid uses auto-fill/minmax so handles narrow screens automatically */
   .form-grid   { grid-template-columns: 1fr; }
   .form-grid .span-2 { grid-column: span 1; }
   header       { gap: 1rem; padding: 0 1rem; }
