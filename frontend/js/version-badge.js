@@ -3,12 +3,13 @@
 // authenticated page. Clicking it opens a debug panel; Escape closes it.
 
 import { decodeToken } from './auth.js';
+import { t } from './strings.js';
 
 export function initVersionBadge() {
   if (!window.AUTH_TOKEN) return;
 
   let _frontend = { version: '…', commit: '…' };
-  let _backend  = { version: '…', environment: '…', commit: '…' };
+  let _backend  = { version: '…', environment: '…', title_suffix: '', commit: '…' };
   let _apiMs    = null;
   let _panel    = null;
 
@@ -21,8 +22,11 @@ export function initVersionBadge() {
       _pingApi(),
     ]);
     _frontend = { version: vj.version || '?', commit: bj.git_commit || vj.build?.git_commit || '?' };
-    _backend  = { version: api.version || '?', environment: api.environment || '?', commit: api.commit || '?' };
+    _backend  = { version: api.version || '?', environment: api.environment || '?', title_suffix: api.title_suffix || '', commit: api.commit || '?' };
     _label.textContent = _labelText();
+    if (_backend.title_suffix) {
+      document.title = t('app.title') + _backend.title_suffix;
+    }
   }
 
   async function _pingApi() {
