@@ -1211,6 +1211,29 @@ function onRowSelect(i) {
 
 // ── Bulk field change ─────────────────────────────────────
 
+// Adjusts row.amount sign when type changes to/from transfer or deposit.
+// Transfers/deposits preserve the original CSV sign (_sign='debit' → negative).
+// Income/expense are always stored as positive absolute values.
+function _applyAmountSign(row) {
+  const signed = row.type === 'transfer' || row.type === 'deposit';
+  if (signed && row._sign === 'debit') {
+    row.amount = -Math.abs(row.amount);
+  } else {
+    row.amount = Math.abs(row.amount);
+  }
+}
+
+function _updateAmountDOM(i) {
+  const row = State.importRows[i];
+  const td = document.getElementById('row-amt-' + i);
+  if (!td) return;
+  const amtCls = row.type === 'income' ? 'positive' : row.type === 'expense' ? 'negative' : '';
+  const amtSign = row.type === 'expense' ? '-' : '';
+  td.className = `amount-cell ${amtCls}`;
+  const span = td.querySelector('span');
+  if (span) span.textContent = `${amtSign}${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${_importCurrency}`;
+}
+
 function onRowFieldChange(i, field, value) {
   if (field === 'category' && value === '__new__') {
     const el = document.getElementById('row-cat-' + i);
@@ -1222,6 +1245,8 @@ function onRowFieldChange(i, field, value) {
   if (field === 'category') {
     State.importRows[i].type = Importer.categoryToType(value, State.transactionCategories);
     State.importRows[i]._userPickedCategory = true;
+    _applyAmountSign(State.importRows[i]);
+    _updateAmountDOM(i);
   }
   if (field === '_ignored')     State.importRows[i]._userPickedIgnore = true;
   if (field === 'property_id') State.importRows[i]._userPickedProperty = true;
@@ -1236,6 +1261,8 @@ function onRowFieldChange(i, field, value) {
       if (field === 'category') {
         row.type = Importer.categoryToType(value, State.transactionCategories);
         row._userPickedCategory = true;
+        _applyAmountSign(row);
+        _updateAmountDOM(j);
       }
       _syncRowDOM(j, field, value);
       _applyRowStyle(j);
@@ -1299,7 +1326,7 @@ function _buildRowHtml(row, i) {
     <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"${dis}><option value="">—</option>${propOpts}</select></td>
     <td><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)"${dis}>${catOpts}</select></td>
     <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${notesBg}" placeholder="notes…" value="${escHtml(row.notes || '')}" oninput="onRowFieldChange(${i},'notes',this.value)"${dis}></td>
-    <td class="amount-cell ${amtCls}"><span title="${row._rawAmount ? 'Source: ' + row._rawAmount : ''}" style="${row._rawAmount ? 'cursor:help' : ''}">${amtSign}${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${_importCurrency}</span></td>
+    <td id="row-amt-${i}" class="amount-cell ${amtCls}"><span title="${row._rawAmount ? 'Source: ' + row._rawAmount : ''}" style="${row._rawAmount ? 'cursor:help' : ''}">${amtSign}${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${_importCurrency}</span></td>
     <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"${row._ignored ? ' checked' : ''}${dis}></td>
     <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"${row._storeMapping ? ' checked' : ''}${dis}></td>
   </tr>`;
