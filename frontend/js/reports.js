@@ -115,6 +115,7 @@ export const Reports = (() => {
 
   // ── Format helpers ────────────────────────────────────────
 
+  // fmt: always 2 decimal places — use in table columns for alignment
   function fmt(amount, currency) {
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency: currency || 'DKK',
@@ -122,7 +123,16 @@ export const Reports = (() => {
     }).format(amount);
   }
 
-  function fmtDKK(amount) { return fmt(amount, 'DKK'); }
+  // fmtSingle: 0–2 decimal places — use for standalone figures (cards, metrics)
+  // Shows decimals only when the value has a non-zero fractional part
+  function fmtSingle(amount, currency) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: currency || 'DKK',
+      minimumFractionDigits: 0, maximumFractionDigits: 2,
+    }).format(amount);
+  }
+
+  function fmtDKK(amount) { return fmtSingle(amount, 'DKK'); }
 
   // apiCategories: optional flat array from State.transactionCategories (all buckets merged)
   function categoryLabel(catKey, apiCategories) {
@@ -144,5 +154,5 @@ export const Reports = (() => {
     return CATEGORIES[typeKey]?.label || typeKey || '—';
   }
 
-  return { filter, groupSum, pnl, monthlyIncome, categoryBreakdown, fmt, fmtDKK, categoryLabel, typeLabel };
+  return { filter, groupSum, pnl, monthlyIncome, categoryBreakdown, fmt, fmtSingle, fmtDKK, categoryLabel, typeLabel };
 })();

@@ -315,8 +315,8 @@ function renderDashboard() {
           <div class="apt-name">${p.name}</div>
           <div class="apt-addr">${addr}</div>
           <div class="apt-stats">
-            <div class="stat"><strong>${monthly > 0 ? Reports.fmt(monthly, p.currency) : '—'}</strong>${t('common.monthly')}</div>
-            <div class="stat"><strong>${income  ? Reports.fmt(income,  p.currency) : '—'}</strong>${t('common.totalIncome')}</div>
+            <div class="stat"><strong>${monthly > 0 ? Reports.fmtSingle(monthly, p.currency) : '—'}</strong>${t('common.monthly')}</div>
+            <div class="stat"><strong>${income  ? Reports.fmtSingle(income,  p.currency) : '—'}</strong>${t('common.totalIncome')}</div>
             <div class="stat"><strong>${p.tenant || '—'}</strong>${t('property.metric.tenant')}</div>
           </div>
         </div>`;
@@ -2254,9 +2254,9 @@ async function renderReports() {
     const net           = totalIncome - totalExpenses;
 
     document.getElementById('rep-metrics').innerHTML = `
-      <div class="metric"><div class="m-label">${t('reports.metrics.totalIncome')}</div><div class="m-value positive">${Reports.fmt(totalIncome, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
-      <div class="metric"><div class="m-label">${t('reports.metrics.totalExpenses')}</div><div class="m-value negative">${Reports.fmt(totalExpenses, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
-      <div class="metric"><div class="m-label">${t('reports.metrics.net')}</div><div class="m-value ${net >= 0 ? 'positive' : 'negative'}">${Reports.fmt(net, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
+      <div class="metric"><div class="m-label">${t('reports.metrics.totalIncome')}</div><div class="m-value positive">${Reports.fmtSingle(totalIncome, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
+      <div class="metric"><div class="m-label">${t('reports.metrics.totalExpenses')}</div><div class="m-value negative">${Reports.fmtSingle(totalExpenses, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
+      <div class="metric"><div class="m-label">${t('reports.metrics.net')}</div><div class="m-value ${net >= 0 ? 'positive' : 'negative'}">${Reports.fmtSingle(net, reportingCurrency)}</div><div class="m-sub">${reportingCurrency} ${t('reports.metrics.equiv')}</div></div>
     `;
   } catch (e) {
     toast(t('reports.loadFailed', { error: e.message }), 'error');
@@ -2313,9 +2313,9 @@ function renderPropertyList() {
         </div>
       </div>
       <div class="metric-grid" style="margin-top:1rem;margin-bottom:0">
-        <div class="metric"><div class="m-label">${t('property.metric.rent')}</div><div class="m-value" style="font-size:16px">${rent   ? Reports.fmt(rent, p.currency) : '—'}</div></div>
-        <div class="metric"><div class="m-label">${t('property.metric.aconto')}</div><div class="m-value" style="font-size:16px">${aconto ? Reports.fmt(aconto, p.currency) : '—'}</div></div>
-        <div class="metric"><div class="m-label">${t('property.metric.totalMonthly')}</div><div class="m-value" style="font-size:16px">${total  ? Reports.fmt(total, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.rent')}</div><div class="m-value" style="font-size:16px">${rent   ? Reports.fmtSingle(rent, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.aconto')}</div><div class="m-value" style="font-size:16px">${aconto ? Reports.fmtSingle(aconto, p.currency) : '—'}</div></div>
+        <div class="metric"><div class="m-label">${t('property.metric.totalMonthly')}</div><div class="m-value" style="font-size:16px">${total  ? Reports.fmtSingle(total, p.currency) : '—'}</div></div>
         <div class="metric"><div class="m-label">${t('property.metric.tenant')}</div><div class="m-value" style="font-size:13px;margin-top:4px">${p.tenant || '—'}</div></div>
       </div>
     </div>
