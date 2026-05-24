@@ -66,7 +66,11 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (userId, done) => {
   try {
     const user = await db('users').where('id', userId).first();
-    console.log('[deserializeUser] Fetched user:', { id: user?.id, email: user?.email, primary_workspace_id: user?.primary_workspace_id });
+    if (!user) {
+      // Session references a user that no longer exists — treat as logged out
+      return done(null, false);
+    }
+    console.log('[deserializeUser] Fetched user:', { id: user.id, email: user.email, primary_workspace_id: user.primary_workspace_id });
     done(null, user);
   } catch (err) {
     console.error('[deserializeUser] Error:', err.message);
