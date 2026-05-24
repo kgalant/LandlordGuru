@@ -219,7 +219,6 @@ export const Importer = (() => {
 
       const match = applyRules(rawDesc, profileKey, rules);
 
-      const absAmount  = Math.abs(amount);
       let autoCategory = match ? match.category : '';
       let autoPropId   = (match && match.property_id) ? match.property_id : propertyId;
 
@@ -229,12 +228,20 @@ export const Importer = (() => {
 
       const type = categoryToType(autoCategory);
 
+      // Transfers and deposits keep their original sign so that paired
+      // transactions (debit in one account, credit in another) net to zero
+      // in the transfers report. Income and expense always use absolute value
+      // since their direction is already encoded in the type.
+      const storedAmount = (type === 'transfer' || type === 'deposit')
+        ? amount
+        : Math.abs(amount);
+
       rows.push({
         date,
         property_id:     autoPropId || '',
         type,
         category:        autoCategory,
-        amount:          absAmount,
+        amount:          storedAmount,
         currency,
         description:     rawDesc.replace(/^"|"$/g, ''),
         raw_description: rawDesc.replace(/^"|"$/g, ''),
