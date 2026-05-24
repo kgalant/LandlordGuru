@@ -350,6 +350,148 @@ Enhance the transaction category management UI (F1-9a) with:
 
 ---
 
+### F1-9c Transaction type management `[Backlog]`
+**Status:** Backlog
+
+Allow workspace owners to manage transaction types — the top-level grouping
+that categories belong to. Mirrors the category management UI (F1-9a/F1-9b)
+and extends the same `workspace_enum_values` / `workspace_enum_overrides`
+infrastructure. Deleting a type that still owns categories requires
+reassigning those categories to a different type first, preventing orphaned
+data.
+
+**Background:**
+
+Transaction types (`income`, `expense`, `deposit`, `transfer`) are currently
+hardcoded in the backend (`VALID_TYPES` array in `routes/transactions.js`)
+and the frontend (`typeOpts` array in `app.js`). They are not stored in
+`workspace_enum_values`, are not per-workspace-configurable, and have no
+management UI. Categories reference their type via the `type_bucket` column,
+which currently stores a raw string matched against the hardcoded list.
+
+**Reporting bucket:**
+
+Each type must declare a `reporting_bucket` that tells the P&L report how
+to treat transactions of that type. Valid values:
+
+| reporting_bucket | Meaning |
+|-----------------|---------|
+| `income` | Counted as revenue in the P&L |
+| `expense` | Counted as a cost in the P&L |
+| `deposit` | Balance-sheet item — excluded from P&L |
+| `excluded` | Omitted from all reports (e.g. inter-account transfers) |
+
+Built-in types have their `reporting_bucket` fixed at migration time and
+cannot be changed. Custom types must declare their `reporting_bucket` at
+creation time (required field in the create form).
+
+**Schema change (new migration):**
+
+Seed the 4 built-in types into `workspace_enum_values` with
+`enum_type = 'transaction_type'` and a new `reporting_bucket` column
+(varchar 20, not null):
+
+| value | label | reporting_bucket | is_builtin |
+|-------|-------|-----------------|------------|
+| income | Income | income | true |
+| expense | Expense | expense | true |
+| deposit | Deposit | deposit | true |
+| transfer | Transfer | excluded | true |
+
+Add `reporting_bucket` column to `workspace_enum_values` (nullable for rows
+where `enum_type` is not `transaction_type`; not-null enforced at application
+level for type rows).
+
+The `type_bucket` column on category rows already stores the type value
+string — it becomes a soft FK once types are in the same table. No data
+migration needed.
+
+**Backend:**
+
+- `GET /api/workspace/enums/transaction-types` — returns all active types
+  for the workspace (built-in + custom), ordered; includes `reporting_bucket`
+- `POST /api/workspace/enums/transaction-types` — creates a custom type;
+  required: `label`, `code`, `reporting_bucket`; `code` must be unique
+  within the workspace; `is_builtin` always false for client-created entries;
+  owner only
+- `PATCH /api/workspace/enums/:enum_type/:id` — existing generic endpoint;
+  for built-in types: label and `is_active` override via
+  `workspace_enum_overrides`; `reporting_bucket` is immutable on built-ins;
+  for custom types: direct update; `reporting_bucket` is editable; owner only
+- `DELETE /api/workspace/enums/transaction-types/:id` — owner only; blocked
+  if built-in; if any `workspace_enum_values` category rows have
+  `type_bucket = this type's code`, the request **must** include
+  `{ reassign_to: <type_id> }` in the body — atomic operation: update all
+  those categories' `type_bucket` to the target type's code, then delete the
+  type; if no categories reference it, deletes directly; returns 409 with
+  category count if `reassign_to` is missing and categories exist
+- Replace hardcoded `VALID_TYPES` array in `transactions.js` with a DB-backed
+  lookup of active types for the workspace (same pattern as category
+  validation in F3-3)
+- P&L report uses `reporting_bucket` (resolved at query time via a join on
+  `workspace_enum_values`) instead of the hardcoded type list
+
+**Frontend:**
+
+- New "Transaction types" section in workspace settings, rendered **above**
+  the categories section (categories are grouped by type, so types must be
+  visible first)
+- Lists all types with their label, code, and `reporting_bucket`; built-ins
+  show lock icon; no delete on built-ins
+- "Add type" inline form: label, code (slug), reporting bucket (dropdown:
+  Income / Expense / Deposit / Excluded); same UX as add category
+- Edit: label and `reporting_bucket` editable on custom types; label only
+  on built-ins (same as category override behaviour)
+- Delete: if the type has categories, show a confirmation dialog with a
+  "Move categories to" type picker before proceeding — mirrors the account
+  deletion reassignment flow (F2-4)
+- After any type change, refresh the category section (grouped by type) and
+  all transaction type dropdowns
+
+**Acceptance criteria:**
+- Workspace owners can add, edit, deactivate, and delete custom transaction
+  types from the settings page
+- Built-in types (income, expense, deposit, transfer) show a lock icon; their
+  labels can be overridden per-workspace but they cannot be deleted or have
+  their `reporting_bucket` changed
+- Each type shows its `reporting_bucket` in the settings list
+- Deleting a type that has categories assigned to it opens a reassignment
+  picker; the operation is atomic
+- Deleting a type with no categories requires no extra confirmation beyond
+  the standard "are you sure" prompt
+- `VALID_TYPES` is no longer a hardcoded array; transaction create/update
+  validation queries the DB for active types in the workspace
+- The P&L report resolves income/expense classification via `reporting_bucket`
+  on the type, not a hardcoded switch
+- Non-owner users see the type list as read-only
+- `categoryToType()` in `importer.js` uses the API-fetched type list rather
+  than the hardcoded `CATEGORIES` from `config.js`
+
+**Files affected:**
+- New migration `024_transaction_types.js` (or next available number) —
+  add `reporting_bucket` column; seed 4 built-in types
+- `backend/src/routes/workspace.js` — add GET/POST/DELETE handlers for
+  `/api/workspace/enums/transaction-types`; update PATCH to handle type rows
+- `backend/src/routes/transactions.js` — replace `VALID_TYPES` with DB lookup
+- `backend/src/routes/reports.js` — use `reporting_bucket` join instead of
+  hardcoded type list
+- `backend/tests/workspace.test.js` — tests for type CRUD and delete
+  reassignment
+- `frontend/index.html` — add types section to settings page
+- `frontend/js/app.js` — `renderTransactionTypes()`, delete confirmation
+  with reassign picker, refresh on change
+- `frontend/js/api.js` — `getTransactionTypes()`, `createTransactionType()`,
+  `deleteTransactionType()` methods
+- `frontend/js/importer.js` — `categoryToType()` uses DB response
+
+**Dependencies:**
+- F1-9a, F1-9b (done — provides `workspace_enum_values` /
+  `workspace_enum_overrides` infrastructure and the generic PATCH endpoint)
+- F3-3 (done — category validation pattern to follow)
+- F4-1+F4-2 (done — P&L report to be updated to use `reporting_bucket`)
+
+---
+
 ### F1-10 Workspace currency dropdown with labels `[Future]`
 **Status:** Backlog
 
