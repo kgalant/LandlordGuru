@@ -14,6 +14,8 @@ beforeAll(() => {
 afterEach(async () => {
   await db('split_rules').where('workspace_id', WORKSPACE_ID).del();
   await db('transactions').where('workspace_id', WORKSPACE_ID).del();
+  // Remove any workspace-specific enum values added by tests; leave global builtins intact
+  await db('workspace_enum_values').where('workspace_id', WORKSPACE_ID).del();
 });
 
 // ---------------------------------------------------------------------------
@@ -197,6 +199,117 @@ describe('POST /api/split-rules', () => {
   it('returns 401 without auth', async () => {
     const res = await request(app).post('/api/split-rules').send(PERCENT_RULE);
     expect(res.status).toBe(401);
+  });
+
+  // ── Category validation against workspace_enum_values ──────────────────────
+
+  it('returns 422 when a template category does not exist in workspace_enum_values', async () => {
+    const bad = {
+      ...PERCENT_RULE,
+      template: [
+        { type: 'income',  category: 'completely_unknown_cat', description: 'A', amount_type: 'percent', amount_value: 60 },
+        { type: 'expense', category: 'utilities',              description: 'B', amount_type: 'percent', amount_value: 40 },
+      ],
+    };
+    const res = await request(app)
+      .post('/api/split-rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send(bad);
+
+    expect(res.status).toBe(422);
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([expect.stringMatching(/completely_unknown_cat.*not valid/)])
+    );
+  });
+
+  it('returns 422 when a template category is valid but used with the wrong type', async () => {
+    // "rent" is an income category — using it under type "expense" should fail
+    const bad = {
+      ...PERCENT_RULE,
+      template: [
+        { type: 'expense', category: 'rent',      description: 'Wrong bucket', amount_type: 'percent', amount_value: 60 },
+        { type: 'expense', category: 'utilities', description: 'Utils',        amount_type: 'percent', amount_value: 40 },
+      ],
+    };
+    const res = await request(app)
+      .post('/api/split-rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send(bad);
+
+    expect(res.status).toBe(422);
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([expect.stringMatching(/rent.*not valid.*expense/)])
+    );
+  });
+
+  it('accepts a workspace-specific custom category not in the built-in list', async () => {
+    // Seed a custom category for this workspace
+    await db('workspace_enum_values').insert({
+      workspace_id: WORKSPACE_ID,
+      enum_type:    'transaction_category',
+      type_bucket:  'transfer',
+      value:        'custom_transfer_cat',
+      label:        'Custom Transfer Category',
+      is_builtin:   false,
+      is_active:    true,
+    });
+
+    const rule = {
+      name: 'Custom category split',
+      enabled: true,
+      conditions: [{ field: 'amount', operator: 'equals', value: '500' }],
+      template: [
+        { type: 'transfer', category: 'custom_transfer_cat', description: 'Custom', amount_type: 'fixed', amount_value: 300 },
+        { type: 'transfer', category: 'inter_account',        description: 'Inter',  amount_type: 'fixed', amount_value: 200 },
+      ],
+    };
+
+    const res = await request(app)
+      .post('/api/split-rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send(rule);
+
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('Custom category split');
+  });
+
+  it('rejects a workspace-specific category that belongs to a different workspace', async () => {
+    // Seed the custom category under a different workspace — should NOT be visible to WORKSPACE_ID
+    const otherWorkspaceId = '00000000-0000-0000-0000-000000000099';
+    await db('workspaces').insert({ id: otherWorkspaceId, name: 'Other Workspace' });
+    await db('workspace_enum_values').insert({
+      workspace_id: otherWorkspaceId,
+      enum_type:    'transaction_category',
+      type_bucket:  'transfer',
+      value:        'other_workspace_cat',
+      label:        'Other Workspace Category',
+      is_builtin:   false,
+      is_active:    true,
+    });
+
+    const rule = {
+      name: 'Other workspace category',
+      enabled: true,
+      conditions: [{ field: 'amount', operator: 'equals', value: '500' }],
+      template: [
+        { type: 'transfer', category: 'other_workspace_cat', description: 'A', amount_type: 'fixed', amount_value: 300 },
+        { type: 'transfer', category: 'inter_account',        description: 'B', amount_type: 'fixed', amount_value: 200 },
+      ],
+    };
+
+    const res = await request(app)
+      .post('/api/split-rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send(rule);
+
+    expect(res.status).toBe(422);
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([expect.stringMatching(/other_workspace_cat.*not valid/)])
+    );
+
+    // Cleanup (FK order: enum values first, then workspace)
+    await db('workspace_enum_values').where({ workspace_id: otherWorkspaceId }).del();
+    await db('workspaces').where('id', otherWorkspaceId).del();
   });
 });
 
@@ -391,6 +504,43 @@ describe('POST /api/transactions/import — split rule evaluation', () => {
     const amounts = children.map(c => parseFloat(c.amount)).sort((a, b) => b - a);
     expect(amounts[0]).toBeCloseTo(800, 2);
     expect(amounts[1]).toBeCloseTo(200, 2);
+  });
+
+  it('auto-splits using a workspace-specific custom category', async () => {
+    // Seed a custom income category for this workspace
+    await db('workspace_enum_values').insert({
+      workspace_id: WORKSPACE_ID,
+      enum_type:    'transaction_category',
+      type_bucket:  'income',
+      value:        'custom_income_type',
+      label:        'Custom Income Type',
+      is_builtin:   false,
+      is_active:    true,
+    });
+
+    const rule = {
+      name: 'Custom category split',
+      enabled: true,
+      conditions: [{ field: 'amount', operator: 'equals', value: '1000' }],
+      template: [
+        { type: 'income', category: 'custom_income_type', description: 'Custom', amount_type: 'percent', amount_value: 70 },
+        { type: 'income', category: 'rent',               description: 'Rent',   amount_type: 'percent', amount_value: 30 },
+      ],
+    };
+    await request(app).post('/api/split-rules').set('Authorization', `Bearer ${token}`).send(rule);
+
+    const res = await request(app)
+      .post('/api/transactions/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send([VALID_IMPORT_ROW]);
+
+    expect(res.status).toBe(201);
+    expect(res.body.auto_split_count).toBe(1);
+    const children = await db('transactions').where('workspace_id', WORKSPACE_ID).whereNotNull('parent_transaction_id');
+    expect(children).toHaveLength(2);
+    const customChild = children.find(c => c.category === 'custom_income_type');
+    expect(customChild).toBeDefined();
+    expect(parseFloat(customChild.amount)).toBeCloseTo(700, 2);
   });
 
   it('handles rounding in percent mode (remainder goes to last child)', async () => {
