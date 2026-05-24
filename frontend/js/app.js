@@ -3,7 +3,7 @@
 // ============================================================
 
 import { CONFIG, CATEGORIES, BANK_PROFILES } from '../config.js';
-import { t } from './strings.js';
+import { t, countryDisplayName, ISO_COUNTRY_CODES, COUNTRY_CURRENCIES } from './strings.js';
 import { Api } from './api.js';
 import { Importer } from './importer.js';
 import { Reports } from './reports.js';
@@ -272,7 +272,14 @@ function renderDashboard() {
     <div class="metric">
       <div class="m-label">${t('dashboard.metrics.activeProperties')}</div>
       <div class="m-value">${props.filter(p => p.active).length}</div>
-      <div class="m-sub">${props.filter(p => p.country==='DK').length} DK · ${props.filter(p => p.country==='PL').length} PL</div>
+      <div class="m-sub">${(() => {
+        const active = props.filter(p => p.active);
+        const counts = {};
+        active.forEach(p => { if (p.country) counts[p.country] = (counts[p.country] || 0) + 1; });
+        const parts = Object.keys(counts).sort((a, b) => countryDisplayName(a).localeCompare(countryDisplayName(b)))
+          .map(c => `${counts[c]} ${countryDisplayName(c)}`);
+        return parts.join(' · ');
+      })()}</div>
     </div>
     <div class="metric">
       <div class="m-label">${t('dashboard.metrics.ytdIncome')}</div>
@@ -2299,6 +2306,25 @@ function renderPropertyList() {
   }).join('');
 }
 
+function _buildCountryDropdown(selectedCode) {
+  const sel = document.getElementById('apt-m-country');
+  const usedCodes = [...new Set(State.properties.map(p => p.country).filter(Boolean))].sort((a, b) =>
+    countryDisplayName(a).localeCompare(countryDisplayName(b)));
+  const allSorted = ISO_COUNTRY_CODES.slice().sort((a, b) =>
+    countryDisplayName(a).localeCompare(countryDisplayName(b)));
+
+  let html = '';
+  if (usedCodes.length) {
+    html += usedCodes.map(c =>
+      `<option value="${c}">${countryDisplayName(c)}</option>`).join('');
+    html += `<option disabled>─────────────</option>`;
+  }
+  html += allSorted.map(c =>
+    `<option value="${c}">${countryDisplayName(c)}</option>`).join('');
+  sel.innerHTML = html;
+  sel.value = selectedCode || usedCodes[0] || 'DK';
+}
+
 function openPropertyModal(propId) {
   State.editingAptId = propId || null;
   populateAllDropdowns();
@@ -2307,7 +2333,6 @@ function openPropertyModal(propId) {
     if (!p) return;
     document.getElementById('apt-modal-title').textContent  = t('property.modal.editTitle');
     document.getElementById('apt-m-name').value     = p.name;
-    document.getElementById('apt-m-country').value  = p.country;
     document.getElementById('apt-m-addr').value     = p.address;
     document.getElementById('apt-m-currency').value = p.currency;
     document.getElementById('apt-m-model').value    = p.model || 'longterm';
@@ -2316,19 +2341,20 @@ function openPropertyModal(propId) {
     document.getElementById('apt-m-tenant').value   = p.tenant;
     document.getElementById('apt-m-lease').value    = p.lease_start;
     document.getElementById('apt-m-notes').value    = p.notes;
+    _buildCountryDropdown(p.country);
   } else {
     document.getElementById('apt-modal-title').textContent = t('property.modal.addTitle');
     ['apt-m-name','apt-m-addr','apt-m-currency','apt-m-rent','apt-m-aconto','apt-m-tenant','apt-m-lease','apt-m-notes']
       .forEach(id => document.getElementById(id).value = '');
-    document.getElementById('apt-m-country').value  = 'DK';
-    document.getElementById('apt-m-currency').value = 'DKK';
+    _buildCountryDropdown(null);
+    onAptCountryChange();
   }
   document.getElementById('modal-apt').style.display = 'flex';
 }
 
 function onAptCountryChange() {
   const country = document.getElementById('apt-m-country').value;
-  document.getElementById('apt-m-currency').value = country === 'DK' ? 'DKK' : country === 'PL' ? 'PLN' : '';
+  document.getElementById('apt-m-currency').value = COUNTRY_CURRENCIES[country] || '';
 }
 
 function closePropertyModal() { document.getElementById('modal-apt').style.display = 'none'; }

@@ -595,3 +595,73 @@ export const I18n = (() => {
 
 // Global shorthand — safe to call before initStrings(); falls back to hardcoded defaults
 export function t(key, vars) { return I18n.translate(key, vars); }
+
+// ── Country utilities ─────────────────────────────────────────────────────────
+
+// All ISO 3166-1 alpha-2 codes.
+export const ISO_COUNTRY_CODES = [
+  'AD','AE','AF','AG','AI','AL','AM','AO','AQ','AR','AS','AT','AU','AW','AX',
+  'AZ','BA','BB','BD','BE','BF','BG','BH','BI','BJ','BL','BM','BN','BO','BQ',
+  'BR','BS','BT','BV','BW','BY','BZ','CA','CC','CD','CF','CG','CH','CI','CK',
+  'CL','CM','CN','CO','CR','CU','CV','CW','CX','CY','CZ','DE','DJ','DK','DM',
+  'DO','DZ','EC','EE','EG','EH','ER','ES','ET','FI','FJ','FK','FM','FO','FR',
+  'GA','GB','GD','GE','GF','GG','GH','GI','GL','GM','GN','GP','GQ','GR','GS',
+  'GT','GU','GW','GY','HK','HM','HN','HR','HT','HU','ID','IE','IL','IM','IN',
+  'IO','IQ','IR','IS','IT','JE','JM','JO','JP','KE','KG','KH','KI','KM','KN',
+  'KP','KR','KW','KY','KZ','LA','LB','LC','LI','LK','LR','LS','LT','LU','LV',
+  'LY','MA','MC','MD','ME','MF','MG','MH','MK','ML','MM','MN','MO','MP','MQ',
+  'MR','MS','MT','MU','MV','MW','MX','MY','MZ','NA','NC','NE','NF','NG','NI',
+  'NL','NO','NP','NR','NU','NZ','OM','PA','PE','PF','PG','PH','PK','PL','PM',
+  'PN','PR','PS','PT','PW','PY','QA','RE','RO','RS','RU','RW','SA','SB','SC',
+  'SD','SE','SG','SH','SI','SJ','SK','SL','SM','SN','SO','SR','SS','ST','SV',
+  'SX','SY','SZ','TC','TD','TF','TG','TH','TJ','TK','TL','TM','TN','TO','TR',
+  'TT','TV','TW','TZ','UA','UG','UM','US','UY','UZ','VA','VC','VE','VG','VI',
+  'VN','VU','WF','WS','YE','YT','ZA','ZM','ZW',
+];
+
+// Returns a localised country display name using the browser Intl API,
+// falling back to the code itself if the runtime doesn't support it.
+const _displayNames = typeof Intl !== 'undefined' && Intl.DisplayNames
+  ? new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' })
+  : null;
+
+export function countryDisplayName(code) {
+  try { return _displayNames ? _displayNames.of(code) : code; }
+  catch { return code; }
+}
+
+// Country code → default ISO 4217 currency.
+// Covers the most common cases; unmapped codes return ''.
+export const COUNTRY_CURRENCIES = {
+  AD:'EUR', AE:'AED', AF:'AFN', AG:'XCD', AL:'ALL', AM:'AMD', AO:'AOA',
+  AR:'ARS', AT:'EUR', AU:'AUD', AW:'AWG', AZ:'AZN', BA:'BAM', BB:'BBD',
+  BD:'BDT', BE:'EUR', BF:'XOF', BG:'BGN', BH:'BHD', BI:'BIF', BJ:'XOF',
+  BM:'BMD', BN:'BND', BO:'BOB', BR:'BRL', BS:'BSD', BT:'BTN', BW:'BWP',
+  BY:'BYN', BZ:'BZD', CA:'CAD', CD:'CDF', CF:'XAF', CG:'XAF', CH:'CHF',
+  CI:'XOF', CL:'CLP', CM:'XAF', CN:'CNY', CO:'COP', CR:'CRC', CU:'CUP',
+  CV:'CVE', CW:'ANG', CY:'EUR', CZ:'CZK', DE:'EUR', DJ:'DJF', DK:'DKK',
+  DM:'XCD', DO:'DOP', DZ:'DZD', EC:'USD', EE:'EUR', EG:'EGP', ER:'ERN',
+  ES:'EUR', ET:'ETB', FI:'EUR', FJ:'FJD', FK:'FKP', FM:'USD', FO:'DKK',
+  FR:'EUR', GA:'XAF', GB:'GBP', GD:'XCD', GE:'GEL', GH:'GHS', GI:'GIP',
+  GL:'DKK', GM:'GMD', GN:'GNF', GQ:'XAF', GR:'EUR', GT:'GTQ', GW:'XOF',
+  GY:'GYD', HK:'HKD', HN:'HNL', HR:'EUR', HT:'HTG', HU:'HUF', ID:'IDR',
+  IE:'EUR', IL:'ILS', IN:'INR', IQ:'IQD', IR:'IRR', IS:'ISK', IT:'EUR',
+  JM:'JMD', JO:'JOD', JP:'JPY', KE:'KES', KG:'KGS', KH:'KHR', KI:'AUD',
+  KM:'KMF', KN:'XCD', KP:'KPW', KR:'KRW', KW:'KWD', KY:'KYD', KZ:'KZT',
+  LA:'LAK', LB:'LBP', LC:'XCD', LI:'CHF', LK:'LRS', LR:'LRD', LS:'LSL',
+  LT:'EUR', LU:'EUR', LV:'EUR', LY:'LYD', MA:'MAD', MC:'EUR', MD:'MDL',
+  ME:'EUR', MG:'MGA', MH:'USD', MK:'MKD', ML:'XOF', MM:'MMK', MN:'MNT',
+  MO:'MOP', MQ:'EUR', MR:'MRU', MT:'EUR', MU:'MUR', MV:'MVR', MW:'MWK',
+  MX:'MXN', MY:'MYR', MZ:'MZN', NA:'NAD', NE:'XOF', NG:'NGN', NI:'NIO',
+  NL:'EUR', NO:'NOK', NP:'NPR', NR:'AUD', NZ:'NZD', OM:'OMR', PA:'PAB',
+  PE:'PEN', PG:'PGK', PH:'PHP', PK:'PKR', PL:'PLN', PR:'USD', PS:'ILS',
+  PT:'EUR', PW:'USD', PY:'PYG', QA:'QAR', RE:'EUR', RO:'RON', RS:'RSD',
+  RU:'RUB', RW:'RWF', SA:'SAR', SB:'SBD', SC:'SCR', SD:'SDG', SE:'SEK',
+  SG:'SGD', SH:'SHP', SI:'EUR', SK:'EUR', SL:'SLE', SM:'EUR', SN:'XOF',
+  SO:'SOS', SR:'SRD', SS:'SSP', ST:'STN', SV:'USD', SX:'ANG', SY:'SYP',
+  SZ:'SZL', TC:'USD', TD:'XAF', TG:'XOF', TH:'THB', TJ:'TJS', TL:'USD',
+  TM:'TMT', TN:'TND', TO:'TOP', TR:'TRY', TT:'TTD', TV:'AUD', TW:'TWD',
+  TZ:'TZS', UA:'UAH', UG:'UGX', US:'USD', UY:'UYU', UZ:'UZS', VC:'XCD',
+  VE:'VES', VG:'USD', VI:'USD', VN:'VND', VU:'VUV', WS:'WST', YE:'YER',
+  ZA:'ZAR', ZM:'ZMW', ZW:'ZWL',
+};

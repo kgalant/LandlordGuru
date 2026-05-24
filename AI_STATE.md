@@ -9,32 +9,30 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: feature
-- Epic: E4 Reporting and Analytics
-- ID: F4-1+F4-2
-- Title: P&L report — backend API + frontend UI
-- Short summary: Done — GET /api/reports/pnl with date/property/account filters, recursive CTE, property via account_properties join. renderReports() replaced with API call; currency toggle; print CSS. Committed + deployed to test.
+- Epic: E2 Account and Property Management
+- ID: F2-11
+- Title: Full country list in Add Property dialog
+- Short summary: Replace hardcoded DK/PL/Other dropdown with full ISO 3166-1 list; used countries float to top; Intl.DisplayNames for localisation; COUNTRY_CURRENCIES map for currency auto-fill; dashboard Active Properties tile shows dynamic country breakdown.
 
 ---
 
 ## Previous focus
 
 - Type: feature
-- Epic: E3 Transaction Management
-- ID: F3-18
-- Title: Split rules (auto-split at import)
-- Short summary: Done — split_rules table + CRUD API, import pipeline rule evaluation, reusable rule form UI, account/property picker popup, "Save as rule" from split editor, auto-split badge in import preview. Committed.
+- Epic: E4 Reporting and Analytics
+- ID: F4-1+F4-2
+- Title: P&L report — backend API + frontend UI
+- Short summary: Done — GET /api/reports/pnl with date/property/account filters, recursive CTE, currency toggle, print CSS. Committed + deployed.
 - State: done
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: Backend — `GET /api/reports/pnl` in `backend/src/routes/reports.js` (date range, property_id, account_id/account_scope filters; recursive CTE for account descendants; group by category+currency; exclude transfers/inter_account)
-- [x] S2: Backend — Register reports route in `backend/src/app.js`
-- [x] S3: Tests — `backend/tests/reports.test.js` (date range, property filter, transfer exclusion, category grouping, account filter exact vs recursive) — 14/14 pass
-- [x] S4: Frontend — Replace `renderReports()` client-side computation with `/api/reports/pnl` API call; map response to DataTable arrays
-- [x] S5: Frontend — Currency toggle (native amounts vs converted to reporting currency)
-- [x] S6: Frontend — Print-friendly CSS (`@media print`)
+- [x] S1: Add `countryDisplayName(code)` helper (Intl.DisplayNames) + static ISO 3166-1 alpha-2 array to `frontend/js/strings.js`; add `COUNTRY_CURRENCIES` map (country code → default ISO 4217 currency)
+- [x] S2: Update `openPropertyModal()` in `frontend/js/app.js` — build country dropdown dynamically: used countries at top with divider, all ISO countries below, auto-fill currency on selection
+- [x] S3: Remove hardcoded `<option>` tags for country from `frontend/index.html`
+- [x] S4: Update dashboard "Active properties" tile — replace hardcoded `X DK · X PL` with dynamic breakdown using `countryDisplayName()`
 
 ---
 
@@ -43,9 +41,9 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 **For the complete MVP feature ordering and dependency graph, see `docs/roadmap.md`.**
 
 - Backlog chores: F6-7 (consolidate version numbering)
-- Backlog features: F1-11, F3-8, F3-12
-- Next MVP candidates: F3-8, F3-12, F3-13, F4-1+F4-2, F5-7
-- Post-MVP backlog: F3-14, F3-15, F3-16, F3-19 (retroactive split rule apply), E6 (tags & rules)
+- Backlog features: F1-11, F3-8, F3-12, F5-15
+- Next MVP candidates: F3-8, F3-12, F3-13, F5-7
+- Post-MVP backlog: F3-14, F3-15, F3-16, F3-19, E6 (tags & rules)
 
 Relevant epic docs:
 
@@ -61,7 +59,7 @@ Relevant epic docs:
 
 ## Next step
 
-Choose next MVP feature from candidates. Consult `docs/roadmap.md`. F4-1+F4-2 is done — F4-3 (per-property P&L breakdown), F3-8, F3-12, F3-13, F5-7 remain. (Session also fixed a CSS bug: checkbox `width:100%` override causing overlap in Properties header.)
+S1: Add `countryDisplayName(code)` helper + static ISO 3166-1 alpha-2 array + `COUNTRY_CURRENCIES` map to `frontend/js/strings.js`.
 
 ---
 
@@ -69,26 +67,32 @@ Choose next MVP feature from candidates. Consult `docs/roadmap.md`. F4-1+F4-2 is
 
 - Commands to run:
   - `cd /Users/kimgalant/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
+  - Manual: open Add Property modal — verify full country list, used countries at top, currency auto-fills
 
 - Last result:
   - Date/time: 2026-05-15
-  - Outcome: All new split tests pass in isolation (10/10). Full suite has pre-existing cascade failures due to SSH tunnel latency. Logic is correct; infrastructure is the bottleneck.
+  - Outcome: All new split tests pass in isolation (10/10). Full suite has pre-existing cascade failures due to SSH tunnel latency.
 
 ---
 
 ## Files touched this session
 
 - `AI_STATE.md`
-- `frontend/index.html` (properties header layout fix)
-- `frontend/css/style.css` (checkbox width fix + debug class cleanup)
+- `frontend/index.html`
+- `frontend/css/style.css`
 - `version.json`
+- `deploy-prod.sh` (new)
+- `deploy-test.sh`
+- `scripts/prod-deploy.sh`
+- `PROJECT_LANDLORDGURU.md`
+- `backend/.env.example`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-24 [fix: checkbox width override + properties header cleanup]
+- 2026-05-24 [fix + deploy infra: checkbox width + deploy-prod.sh]
   - branch: main
-  - last_commit: TBD (pending commit)
-  - changed_files: frontend/index.html, frontend/css/style.css, version.json, AI_STATE.md
-  - git_status: M frontend/css/style.css, M frontend/index.html, M version.json, M AI_STATE.md
+  - last_commit: 0e7c8d0
+  - changed_files: frontend/index.html, frontend/css/style.css, version.json, deploy-prod.sh, deploy-test.sh, scripts/prod-deploy.sh, PROJECT_LANDLORDGURU.md, backend/.env.example, AI_STATE.md
+  - git_status: clean
