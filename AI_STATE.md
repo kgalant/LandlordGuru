@@ -59,7 +59,7 @@ Relevant epic docs:
 
 ## Next step
 
-F2-11 done. Choose next feature — consult `docs/roadmap.md`.
+F2-11 done. Session also delivered several UI/UX fixes (see Files touched). Choose next feature — consult `docs/roadmap.md`.
 
 ---
 
@@ -78,23 +78,19 @@ F2-11 done. Choose next feature — consult `docs/roadmap.md`.
 ## Files touched this session
 
 - `AI_STATE.md`
-- `frontend/js/strings.js` (ISO codes, COUNTRY_CURRENCIES, countryDisplayName)
-- `frontend/js/app.js` (dynamic country dropdown, onAptCountryChange, dashboard tile)
-- `frontend/index.html` (remove hardcoded country options, properties header fix)
-- `frontend/css/style.css` (checkbox width fix, select appearance fix)
+- `frontend/js/strings.js`, `frontend/js/app.js`, `frontend/js/reports.js`, `frontend/js/version-badge.js`
+- `frontend/index.html`, `frontend/css/style.css`, `frontend/css/datatable.css`
 - `frontend/version.json`
-- `deploy-prod.sh` (new)
-- `deploy-test.sh`
-- `scripts/prod-deploy.sh`
-- `PROJECT_LANDLORDGURU.md`
-- `backend/.env.example`
+- `backend/src/app.js`, `backend/src/routes/version.js`, `backend/src/routes/split-rules.js`, `backend/src/routes/rules.js`
+- `backend/tests/split-rules.test.js`
+- `backend/.env.example`, `deploy-prod.sh` (new), `deploy-test.sh`, `scripts/prod-deploy.sh`, `PROJECT_LANDLORDGURU.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-24 [session: F2-11 + CSS fixes + deploy infra]
+- 2026-05-24 [session end: F2-11 + UI fixes + currency 2dp + responsive layout]
   - branch: main
-  - last_commit: 8f8fd09
-  - changed_files: frontend/js/strings.js, frontend/js/app.js, frontend/js/version-badge.js, frontend/index.html, frontend/css/style.css, frontend/css/datatable.css, frontend/version.json, backend/src/routes/version.js, backend/.env.example, deploy-prod.sh, deploy-test.sh, scripts/prod-deploy.sh, PROJECT_LANDLORDGURU.md, AI_STATE.md
+  - last_commit: e6de2c6
+  - changed_files: (many — see Files touched this session)
   - git_status: clean
