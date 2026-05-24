@@ -7,7 +7,44 @@ For all app-specific rules (architecture, coding conventions, testing, versionin
 
 ---
 
-## Core loop (every session)
+## Session type
+
+At the start of every session, determine the session type:
+
+- **Requirements session** — the user says "requirements session", or the opening request is
+  clearly about writing or refining docs only (epic specs, roadmap, design discussions).
+  No code will be touched this session.
+- **Implementation session** — everything else. Default when in doubt.
+
+Follow the appropriate protocol below.
+
+---
+
+## Requirements mode protocol
+
+Skip `AI_STATE.md` entirely — do **not** read it, do **not** update it.
+
+1. Read `PROJECT_LANDLORDGURU.md`.
+2. Ask the user which epic or feature area you are here to work on.
+3. Read the relevant epic doc(s) from `docs/epics/`.
+4. Confirm with the user what you will do this session.
+
+**You may only touch:**
+- `docs/epics/*.md`
+- `docs/roadmap.md`
+- Any other file under `docs/`
+
+**You must not touch:** code files, tests, `AI_STATE.md`, or `version.json`.
+
+No task breakdown, validation, or files-touched list is required.
+Before ending the session, summarise what changed and remind the user to open an
+implementation session to act on any new or updated specs.
+
+---
+
+## Implementation mode protocol (core loop)
+
+**This section applies to implementation sessions only.**
 
 You must follow this loop:
 
@@ -26,7 +63,7 @@ Do **not** invent a new plan before you have read `AI_STATE.md` and confirmed th
 
 ---
 
-## When you are allowed to work
+## When you are allowed to work (implementation sessions only)
 
 You may only change code, tests, or docs if all of this is true:
 

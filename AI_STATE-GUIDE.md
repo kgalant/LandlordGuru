@@ -2,6 +2,7 @@
 
 This file explains how to use `AI_STATE.md`.
 
+- `AI_STATE.md` is only used in **implementation sessions**. Requirements sessions skip it entirely.
 - `AI_STATE.md` contains **only live state** (no examples or long instructions).
 - This guide holds structure, field definitions, and examples.
 
