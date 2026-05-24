@@ -287,7 +287,7 @@ function renderDashboard() {
   const props = State.properties;
   const yr   = new Date().getFullYear();
   const ytd  = txs
-    .filter(tx => tx.date.startsWith(yr) && tx.type === 'income')
+    .filter(tx => tx.date.startsWith(yr) && tx.type === 'income' && !(tx.split_count > 0))
     .reduce((s, tx) => s + tx.amount * (CONFIG.FX_RATES[tx.currency] || 1), 0);
 
   document.getElementById('dash-metrics').innerHTML = `
@@ -327,7 +327,7 @@ function renderDashboard() {
         <button class="btn btn-primary" onclick="openPropertyModal()">${t('property.addBtn')}</button>
       </div>`
     : props.map(p => {
-        const ptxs    = txs.filter(tx => tx.property_id === p.id);
+        const ptxs    = txs.filter(tx => tx.property_id === p.id && !(tx.split_count > 0));
         const income  = ptxs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
         const rent    = parseFloat(p.rent) || 0;
         const aconto  = parseFloat(p.aconto) || 0;
@@ -1294,7 +1294,7 @@ function _buildRowHtml(row, i) {
     <td><select id="row-prop-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'property_id',this.value)"${dis}><option value="">—</option>${propOpts}</select></td>
     <td><select id="row-cat-${i}" style="font-size:12px;padding:4px 6px" onchange="onRowFieldChange(${i},'category',this.value)"${dis}>${catOpts}</select></td>
     <td><input id="row-notes-${i}" style="font-size:12px;padding:4px 6px;width:120px${notesBg}" placeholder="notes…" value="${escHtml(row.notes || '')}" oninput="onRowFieldChange(${i},'notes',this.value)"${dis}></td>
-    <td class="amount-cell ${amtCls}">${amtSign}${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${_importCurrency}</td>
+    <td class="amount-cell ${amtCls}"><span title="${row._rawAmount ? 'Source: ' + row._rawAmount : ''}" style="${row._rawAmount ? 'cursor:help' : ''}">${amtSign}${parseFloat(row.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${_importCurrency}</span></td>
     <td style="text-align:center"><input type="checkbox" id="row-ign-${i}" onchange="onRowFieldChange(${i},'_ignored',this.checked)"${row._ignored ? ' checked' : ''}${dis}></td>
     <td style="text-align:center"><input type="checkbox" id="row-map-${i}" onchange="onRowFieldChange(${i},'_storeMapping',this.checked)"${row._storeMapping ? ' checked' : ''}${dis}></td>
   </tr>`;

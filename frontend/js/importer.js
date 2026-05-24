@@ -243,6 +243,7 @@ export const Importer = (() => {
         notes:           '',
         reconciled:      false,
         _sign:           amount >= 0 ? 'credit' : 'debit',
+        _rawAmount:      rawAmount.trim(),
         _autoMatched:    !!match,
         _rawLine:        line,
       });

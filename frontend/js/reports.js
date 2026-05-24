@@ -13,6 +13,8 @@ export const Reports = (() => {
 
   function filter(txs, opts = {}) {
     return txs.filter(tx => {
+      // Exclude split parents — their children carry the real amounts and categories
+      if ((tx.split_count || 0) > 0) return false;
       if (opts.property_id && opts.property_id !== 'all' && tx.property_id !== opts.property_id) return false;
       if (opts.type        && opts.type        !== 'all' && tx.type        !== opts.type)        return false;
       if (opts.category    && opts.category    !== 'all' && tx.category    !== opts.category)    return false;
