@@ -146,7 +146,7 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     const errors = validateRule(req.body, true);
     if (errors.length) {
-      await req.logger.warn('split_rule.create.validation_failed', { errors });
+      await req.logger.info('split_rule.create.validation_failed', { errors });
       return res.status(422).json({ errors });
     }
 
@@ -179,7 +179,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
     const errors = validateRule(req.body, false);
     if (errors.length) {
-      await req.logger.warn('split_rule.update.validation_failed', { id: req.params.id, errors });
+      await req.logger.info('split_rule.update.validation_failed', { id: req.params.id, errors });
       return res.status(422).json({ errors });
     }
 
