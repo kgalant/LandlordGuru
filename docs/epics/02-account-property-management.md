@@ -330,6 +330,43 @@ from a public data source on a schedule.
 
 ---
 
+### F2-11 Full country list in Add Property dialog `[Backlog]`
+**Status:** backlog
+
+Replace the hardcoded DK / PL / Other dropdown in the Add Property dialog
+with the full ISO 3166-1 country list. Countries that already have at least
+one property in the workspace are floated to the top of the list with a
+visual divider.
+
+**Acceptance criteria:**
+- All ISO 3166-1 alpha-2 countries are available in the dropdown, sorted
+  alphabetically by display name
+- Countries already used by existing workspace properties appear above a
+  divider at the top, also sorted alphabetically
+- Country display names are rendered using the browser `Intl.DisplayNames`
+  API so they localise automatically with the user's locale — no translation
+  table to maintain
+- A `COUNTRY_CURRENCIES` map (country code → default ISO 4217 currency) is
+  added to `strings.js`; selecting a country auto-fills the currency field
+  using this map (empty string for unmapped countries)
+- The "Other" option is removed; users must select a real ISO country
+- The hardcoded `<option>` tags in `index.html` are removed; the dropdown
+  is built dynamically in `openPropertyModal()`
+- No backend changes required — the country field already stores a 2-char
+  ISO code
+
+**Implementation notes:**
+- Country list built via `Intl.DisplayNames([locale], { type: 'region' })`;
+  iterate over a static array of all ISO 3166-1 alpha-2 codes
+- Used countries derived from already-loaded properties data (no extra API
+  call needed)
+- Existing `strings.js` `country.*` entries (DK, PL) remain as optional
+  explicit overrides; the Intl fallback handles everything else
+
+**Dependencies:** F2-1, F2-2 (properties loaded in UI state).
+
+---
+
 ## Bugs
 
 None recorded.
