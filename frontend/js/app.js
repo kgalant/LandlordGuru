@@ -83,9 +83,11 @@ function _buildMatchTag(row) {
 // Returns true if applying the split rule to a transaction of the given amount
 // would produce a balanced split (children sum = parent amount).
 // Percent rules must sum to 100%; fixed rules must sum to rowAmount.
+// Handles template being either a parsed array or a JSON string (jsonb serialisation).
 function _splitRuleWouldBalance(rule, rowAmount) {
-  const template = Array.isArray(rule.template) ? rule.template : [];
-  if (!template.length) return false;
+  let template = rule.template;
+  if (typeof template === 'string') { try { template = JSON.parse(template); } catch { return false; } }
+  if (!Array.isArray(template) || !template.length) return false;
   const mode = template[0].amount_type;
   if (mode === 'percent') {
     const pctSum = template.reduce((s, r) => s + parseFloat(r.amount_value), 0);
@@ -98,7 +100,11 @@ function _splitRuleWouldBalance(rule, rowAmount) {
 function _markAutoSplitRows(rows) {
   const rules = (State.splitRules || []).filter(r => r.enabled);
   rows.forEach(row => {
-    const match = rules.find(rule => rule.conditions.every(c => {
+    const match = rules.find(rule => {
+      let conds = rule.conditions;
+      if (typeof conds === 'string') { try { conds = JSON.parse(conds); } catch { return false; } }
+      if (!Array.isArray(conds)) return false;
+      return conds.every(c => {
       const field = c.field;
       const op    = c.operator;
       const val   = c.value;
@@ -121,7 +127,8 @@ function _markAutoSplitRows(rows) {
         if (op === 'equals')   return desc === String(val).toLowerCase();
       }
       return false;
-    }));
+      }); // end conds.every
+    }); // end rules.find
     // Only mark as auto-split if the rule would produce a balanced split
     const willBalance = match && _splitRuleWouldBalance(match, row.amount);
     row._autoSplit         = !!willBalance;
