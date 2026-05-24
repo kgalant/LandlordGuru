@@ -94,11 +94,17 @@
   gap: 0.25rem;
 }
 
-.dt-filter-bar select,
 .dt-filter-bar input[type="text"],
 .dt-filter-bar input[type="date"] {
   font-size: 0.85rem;
   padding: 0.2rem 0.4rem;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+}
+
+.dt-filter-bar select {
+  font-size: 0.85rem;
+  padding: 0.2rem 2rem 0.2rem 0.4rem;
   border: 1px solid #ced4da;
   border-radius: 3px;
 }
@@ -250,7 +256,7 @@
 .dt-limit-select {
   width: auto;
   flex-shrink: 0;
-  padding: 0.2rem 0.4rem;
+  padding: 0.2rem 2rem 0.2rem 0.4rem;
   border: 1px solid #ced4da;
   border-radius: 3px;
   font-size: inherit;
