@@ -14,7 +14,8 @@
     "testEnvironment": "node",
     "globalSetup": "./tests/globalSetup.js",
     "globalTeardown": "./tests/globalTeardown.js",
-    "forceExit": true
+    "forceExit": true,
+    "maxWorkers": 1
   },
   "dependencies": {
     "cors": "^2.8.5",

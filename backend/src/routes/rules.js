@@ -34,18 +34,6 @@ async function validateFields(body, requireAll, workspaceId) {
     }
   }
 
-  if (body.bank_profile !== undefined && body.bank_profile !== null) {
-    if (typeof body.bank_profile !== 'string' || !body.bank_profile.trim()) {
-      errors.push('bank_profile must be a non-empty string or null');
-    }
-  }
-
-  if (body.property_id !== undefined && body.property_id !== null) {
-    if (typeof body.property_id !== 'string' || !body.property_id.trim()) {
-      errors.push('property_id must be a valid UUID or null');
-    }
-  }
-
   if (body.sort_order !== undefined && body.sort_order !== null) {
     const order = parseInt(body.sort_order, 10);
     if (isNaN(order)) {
@@ -56,26 +44,47 @@ async function validateFields(body, requireAll, workspaceId) {
   return errors;
 }
 
+// Attach property_ids arrays to a list of rules.
+async function attachPropertyIds(rules) {
+  if (!rules.length) return rules;
+  const ruleIds = rules.map(r => r.id);
+  const links = await db('rule_properties').whereIn('rule_id', ruleIds);
+  const byRule = {};
+  links.forEach(l => {
+    if (!byRule[l.rule_id]) byRule[l.rule_id] = [];
+    byRule[l.rule_id].push(l.property_id);
+  });
+  return rules.map(r => ({ ...r, property_ids: byRule[r.id] || [] }));
+}
+
+// Validate that all property_ids belong to the workspace.
+async function validatePropertyIds(propertyIds, workspaceId) {
+  if (!propertyIds || !propertyIds.length) return null;
+  for (const pid of propertyIds) {
+    if (typeof pid !== 'string' || !pid.trim()) {
+      return 'property_ids must be an array of UUIDs';
+    }
+    const prop = await db('properties').where({ id: pid, workspace_id: workspaceId }).first();
+    if (!prop) return `property_id ${pid} not found in this workspace`;
+  }
+  return null;
+}
+
 // GET /api/rules
-// Returns all rules for the workspace, sorted by sort_order
+// Returns all rules for the workspace with their property_ids arrays.
 router.get('/', requireAuth, async (req, res) => {
   try {
-    await req.logger.info('rule.list.started', {
-      bank_profile: req.query.bank_profile || null,
-    });
+    await req.logger.info('rule.list.started', {});
 
-    let query = db('rules')
+    const rules = await db('rules')
       .where('workspace_id', req.workspace_id)
       .orderBy('sort_order', 'asc')
       .orderBy('created_at', 'asc');
 
-    if (req.query.bank_profile) {
-      query = query.where('bank_profile', req.query.bank_profile);
-    }
+    const withProps = await attachPropertyIds(rules);
 
-    const rules = await query;
-    await req.logger.info('rule.list.success', { rule_count: rules.length });
-    res.json(rules);
+    await req.logger.info('rule.list.success', { rule_count: withProps.length });
+    res.json(withProps);
   } catch (err) {
     await req.logger.error('rule.list.failed', { error: err.message });
     console.error('GET /api/rules error:', err.message);
@@ -90,46 +99,46 @@ router.post('/', requireAuth, async (req, res) => {
     return res.status(400).json({ error: errors.join('; ') });
   }
 
-  const { keyword, category, bank_profile, property_id, sort_order } = req.body;
+  const { keyword, category, sort_order, property_ids } = req.body;
   const workspace_id = req.workspace_id;
   const user_id = req.user.id;
+
+  // Validate property_ids
+  const propErr = await validatePropertyIds(property_ids, workspace_id);
+  if (propErr) return res.status(400).json({ error: propErr });
 
   try {
     await req.logger.info('rule.create.started', {
       keyword: keyword.trim(),
       category,
-      bank_profile: bank_profile || null,
+      property_ids: property_ids || [],
     });
-
-    // Verify property_id belongs to this workspace (if provided)
-    if (property_id) {
-      const property = await db('properties')
-        .where({ id: property_id, workspace_id })
-        .first();
-      if (!property) {
-        return res.status(400).json({ error: 'property_id not found in this workspace' });
-      }
-    }
 
     const [rule] = await db('rules')
       .insert({
         workspace_id,
-        keyword: keyword.trim(),
+        keyword:          keyword.trim(),
         category,
-        bank_profile:  bank_profile  ? bank_profile.trim()  : null,
-        property_id:   property_id    ? property_id.trim()   : null,
-        sort_order:    sort_order !== undefined ? parseInt(sort_order, 10) : 0,
-        created_by:    user_id,
+        sort_order:       sort_order !== undefined ? parseInt(sort_order, 10) : 0,
+        created_by:       user_id,
         last_modified_by: user_id,
       })
       .returning('*');
+
+    // Insert property associations
+    if (property_ids && property_ids.length) {
+      await db('rule_properties').insert(
+        property_ids.map(pid => ({ rule_id: rule.id, property_id: pid }))
+      );
+    }
 
     await req.logger.info('rule.create.success', {
       rule_id: rule.id,
       keyword: rule.keyword,
       category: rule.category,
     });
-    res.status(201).json(rule);
+
+    res.status(201).json({ ...rule, property_ids: property_ids || [] });
   } catch (err) {
     await req.logger.error('rule.create.failed', { error: err.message });
     console.error('POST /api/rules error:', err.message);
@@ -155,17 +164,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     return res.status(400).json({ error: errors.join('; ') });
   }
 
-  // Verify property_id belongs to this workspace (if being changed)
-  if (req.body.property_id !== undefined && req.body.property_id !== null) {
-    const property = await db('properties')
-      .where({ id: req.body.property_id, workspace_id: req.workspace_id })
-      .first();
-    if (!property) {
-      return res.status(400).json({ error: 'property_id not found in this workspace' });
-    }
-  }
-
-  const allowed = ['keyword', 'category', 'bank_profile', 'property_id', 'sort_order'];
+  const allowed = ['keyword', 'category', 'sort_order'];
   const updates = {};
   for (const field of allowed) {
     if (req.body[field] !== undefined) {
@@ -178,8 +177,6 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 
   if (updates.keyword) updates.keyword = updates.keyword.trim();
-  if (updates.bank_profile) updates.bank_profile = updates.bank_profile.trim();
-  if (updates.property_id && updates.property_id !== null) updates.property_id = updates.property_id.trim();
   if (updates.sort_order !== undefined && updates.sort_order !== null) {
     updates.sort_order = parseInt(updates.sort_order, 10);
   }
@@ -198,12 +195,14 @@ router.patch('/:id', requireAuth, async (req, res) => {
       .update(updates)
       .returning('*');
 
+    const [withProps] = await attachPropertyIds([updated]);
+
     await req.logger.info('rule.update.success', {
       rule_id: updated.id,
       keyword: updated.keyword,
       category: updated.category,
     });
-    res.json(updated);
+    res.json(withProps);
   } catch (err) {
     await req.logger.error('rule.update.failed', { rule_id: id, error: err.message });
     console.error('PATCH /api/rules/:id error:', err.message);
@@ -211,8 +210,54 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/rules/:id/properties
+// Atomically replace the property associations for a rule.
+router.put('/:id/properties', requireAuth, async (req, res) => {
+  const { id } = req.params;
+
+  const existing = await db('rules')
+    .where({ id, workspace_id: req.workspace_id })
+    .first();
+
+  if (!existing) {
+    await req.logger.debug('rule.setProperties.notfound', { rule_id: id });
+    return res.status(404).json({ error: 'Rule not found' });
+  }
+
+  const { property_ids } = req.body;
+  if (!Array.isArray(property_ids)) {
+    return res.status(400).json({ error: 'property_ids must be an array' });
+  }
+
+  const propErr = await validatePropertyIds(property_ids, req.workspace_id);
+  if (propErr) return res.status(400).json({ error: propErr });
+
+  try {
+    await db.transaction(async (trx) => {
+      await trx('rule_properties').where('rule_id', id).del();
+      if (property_ids.length) {
+        await trx('rule_properties').insert(
+          property_ids.map(pid => ({ rule_id: id, property_id: pid }))
+        );
+      }
+    });
+
+    const [withProps] = await attachPropertyIds([existing]);
+    // Re-fetch property_ids from DB after the transaction
+    const links = await db('rule_properties').where('rule_id', id);
+    withProps.property_ids = links.map(l => l.property_id);
+
+    await req.logger.info('rule.setProperties.success', { rule_id: id, property_ids });
+    res.json(withProps);
+  } catch (err) {
+    await req.logger.error('rule.setProperties.failed', { rule_id: id, error: err.message });
+    console.error('PUT /api/rules/:id/properties error:', err.message);
+    res.status(500).json({ error: 'Failed to update rule properties' });
+  }
+});
+
 // DELETE /api/rules/:id
-// Hard delete — removes the record entirely
+// Hard delete — removes the record entirely (cascade handles rule_properties)
 router.delete('/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
 

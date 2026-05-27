@@ -4,10 +4,6 @@
 //  This file is kept for reference only. v2 uses backend API.
 //  No credentials are stored here — authentication is handled
 //  via Google OAuth at /auth/google.
-//
-//  CATEGORIES and BANK_PROFILES must be defined here for CSV
-//  import UI, since they are not secrets and need to be available
-//  before the backend is fully loaded.
 // ============================================================
 
 export const CONFIG = {
@@ -66,50 +62,3 @@ export const CATEGORIES = {
   }
 };
 
-// ── Bank import profiles ──────────────────────────────────
-export const BANK_PROFILES = {
-  jyske_bank: {
-    label: 'Jyske Bank (DK)',
-    currency: 'DKK',
-    delimiter: ';',
-    date_col: 0,
-    date_format: 'DD.MM.YYYY',
-    description_col: 2,
-    amount_col: 3,
-    amount_decimal: ',',
-    skip_rows: 1,
-  },
-  nordea_dk: {
-    label: 'Nordea (DK)',
-    currency: 'DKK',
-    delimiter: ';',
-    date_col: 0,
-    date_format: 'DD-MM-YYYY',
-    description_col: 3,
-    amount_col: 4,
-    amount_decimal: ',',
-    skip_rows: 1,
-  },
-  mbank_pl: {
-    label: 'mBank (PL)',
-    currency: 'PLN',
-    delimiter: ';',
-    date_col: 0,
-    date_format: 'YYYY-MM-DD',
-    description_col: 3,
-    amount_col: 6,
-    amount_decimal: ',',
-    skip_rows: 1,
-  },
-  generic_csv: {
-    label: 'Generic CSV (date, description, amount)',
-    currency: null,
-    delimiter: ',',
-    date_col: 0,
-    date_format: 'YYYY-MM-DD',
-    description_col: 1,
-    amount_col: 2,
-    amount_decimal: '.',
-    skip_rows: 1,
-  }
-};

@@ -19,9 +19,9 @@ module.exports = async () => {
   await knex.raw('DELETE FROM transactions');
   await knex.raw('DELETE FROM account_properties');
   await knex.raw('DELETE FROM split_rules');
+  await knex.raw('DELETE FROM rule_properties');
   await knex.raw('DELETE FROM rules');
   await knex.raw('DELETE FROM currency_rates');
-  await knex.raw('DELETE FROM description_mappings');
   await knex.raw('DELETE FROM strings');
   await knex.raw('DELETE FROM fx_log');
   await knex.raw('DELETE FROM activity_log');

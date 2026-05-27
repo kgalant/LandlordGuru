@@ -1,5 +1,13 @@
 [
   {
+    "timestamp": "2026-05-27",
+    "phase": "F5-16 implementation complete — awaiting migration",
+    "branch": "main",
+    "last_commit": "eee850a",
+    "changed_files": "backend/src/db/migrations/025_rules_rework.js, backend/src/routes/rules.js, backend/src/app.js, backend/tests/rules.test.js, backend/tests/globalSetup.js, frontend/config.js, frontend/js/importer.js, frontend/js/app.js, frontend/js/api.js, frontend/index.html, frontend/version.json, AI_STATE.md, docs/ai_state_archive.json",
+    "git_status": "M (multiple files, pre-commit — migration needs tunnel to run)"
+  },
+  {
     "timestamp": "2026-05-15 00:00:00",
     "phase": "[F3-17 focus set — session start]",
     "branch": "main",
@@ -768,5 +776,13 @@
     "last_commit": "ed1fece",
     "changed_files": "frontend/js/app.js, frontend/js/reports.js, frontend/css/style.css, + many others (see git log)",
     "git_status": "clean"
+  },
+  {
+    "timestamp": "2026-05-24",
+    "label": "F3-15 started — multi-select filters focus set",
+    "branch": "main",
+    "last_commit": "ed1fece",
+    "changed_files": "AI_STATE.md, docs/ai_state_archive.json",
+    "git_status": "M AI_STATE.md, M docs/ai_state_archive.json"
   }
 ]

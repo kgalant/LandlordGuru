@@ -71,28 +71,11 @@
       <div class="card">
         <div class="card-header"><span class="card-title" data-i18n="import.title"></span></div>
 
-        <div class="form-grid cols-3" style="margin-bottom:1rem">
-          <div class="form-group">
-            <label data-i18n="import.bankProfile"></label>
-            <select id="import-profile" onchange="onProfileChange()">
-              <option value="jyske_bank">Jyske Bank (DK)</option>
-              <option value="nordea_dk">Nordea (DK)</option>
-              <option value="mbank_pl">mBank (PL)</option>
-              <option value="generic_csv">Generic CSV</option>
-            </select>
-          </div>
+        <div class="form-grid cols-2" style="margin-bottom:1rem">
           <div class="form-group">
             <label data-i18n="import.defaultProp"></label>
             <select id="import-apt">
               <option value="" data-i18n="import.autoDetect"></option>
-            </select>
-          </div>
-          <div class="form-group" id="import-currency-group" style="display:none">
-            <label data-i18n="import.currency"></label>
-            <select id="import-currency">
-              <option value="DKK">DKK</option>
-              <option value="PLN">PLN</option>
-              <option value="EUR">EUR</option>
             </select>
           </div>
         </div>
@@ -124,15 +107,6 @@
 
         <!-- Column mapping panel (shown after CSV loaded) -->
         <div id="import-mapping-section" style="display:none;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1rem;background:var(--bg2)">
-
-          <!-- Saved mappings row -->
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:1rem">
-            <label style="font-size:13px;font-weight:500;white-space:nowrap" data-i18n="import.mapping.savedLabel"></label>
-            <select id="mapping-saved-select" style="font-size:13px;flex:1" onchange="loadSavedMapping()">
-              <option value="" data-i18n="import.mapping.noSaved"></option>
-            </select>
-            <button class="btn btn-sm btn-danger" onclick="deleteSavedMapping()" data-i18n="import.mapping.deleteBtn"></button>
-          </div>
 
           <!-- Column assignment table -->
           <div class="table-wrap" style="margin-bottom:1rem">
@@ -180,12 +154,6 @@
             </div>
           </div>
 
-          <!-- Save mapping -->
-          <div style="display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);padding-top:0.75rem">
-            <input id="mapping-name-input" type="text" style="flex:1;font-size:13px"
-              data-i18n-placeholder="import.mapping.namePlaceholder">
-            <button class="btn btn-secondary btn-sm" onclick="saveCurrentMapping()" data-i18n="import.mapping.saveBtn"></button>
-          </div>
         </div>
 
         <div class="btn-row" style="align-items:center">
@@ -377,12 +345,6 @@
         <div class="btn-row" style="margin-top:1rem">
           <button class="btn btn-secondary btn-sm" onclick="saveRules()" data-i18n="rules.saveOrder"></button>
         </div>
-      </div>
-
-      <div class="card" style="margin-top:1rem">
-        <div class="card-header"><span class="card-title" data-i18n="rules.defaultTitle"></span></div>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:1rem" data-i18n="rules.defaultDesc"></p>
-        <button class="btn btn-secondary btn-sm" onclick="loadDefaultRules()" data-i18n="rules.loadDefault"></button>
       </div>
 
       <!-- Split rules section -->
@@ -697,16 +659,6 @@
     </div>
     <div class="form-grid">
       <div class="form-group">
-        <label data-i18n="rules.modal.bankProfile"></label>
-        <select id="rule-m-profile">
-          <option value=""           data-i18n="rules.modal.anyBank"></option>
-          <option value="jyske_bank">Jyske Bank (DK)</option>
-          <option value="nordea_dk">Nordea (DK)</option>
-          <option value="mbank_pl">mBank (PL)</option>
-          <option value="generic_csv">Generic CSV</option>
-        </select>
-      </div>
-      <div class="form-group">
         <label data-i18n="rules.modal.keyword"></label>
         <input type="text" id="rule-m-kw" data-i18n-placeholder="rules.modal.kwPlaceholder">
       </div>
@@ -714,9 +666,9 @@
         <label data-i18n="rules.modal.category"></label>
         <select id="rule-m-cat"><option value="" data-i18n="common.select"></option></select>
       </div>
-      <div class="form-group">
-        <label data-i18n="rules.modal.property"></label>
-        <select id="rule-m-apt"><option value="" data-i18n="rules.modal.anyProperty"></option></select>
+      <div class="form-group span-2">
+        <label data-i18n="rules.modal.properties"></label>
+        <div id="rule-m-properties" style="max-height:140px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px"></div>
       </div>
     </div>
     <div class="btn-row">

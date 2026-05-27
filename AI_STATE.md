@@ -9,30 +9,35 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 ## Current focus
 
 - Type: feature
-- Epic: E3 Transaction Management
-- ID: F3-15
-- Title: Multi-select filters for Property, Category, and Type
-- Short summary: Upgrade the Property, Category, and Type filter dropdowns on the transactions page from single-select to multi-select (checkbox list with compact label). Requires DataTable `multi-select` filter type extension, backend multi-value param support, and wiring the three filter controls.
+- Epic: E5 Integrations & Data Import / E6 Rules
+- ID: F5-16
+- Title: Rules rework + import profile removal
+- Short summary: Replace bank-profile-scoped rules with property-scoped rules (junction table). Remove all import profiles (BANK_PROFILES, localStorage presets, save/load UI). Rules now match by keyword + optional property list. **Complete — committed.**
 
 ---
 
 ## Previous focus
 
 - Type: feature
-- Epic: E2 Account and Property Management
-- ID: F2-11
-- Title: Full country list in Add Property dialog
-- Short summary: Done — ISO 3166-1 dropdown, used countries at top, Intl.DisplayNames, COUNTRY_CURRENCIES auto-fill, dynamic dashboard country breakdown.
+- Epic: E3 Transaction Management
+- ID: F3-15
+- Title: Multi-select filters for Property, Category, and Type
+- Short summary: Done — DataTable multi-select filter type, backend multi-value params, frontend wiring.
 - State: done
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: DataTable extension — add `'multi-select'` filter type to `frontend/js/datatable.js`: checkbox dropdown, compact label ("Type (2)" or "Maintenance, Utilities"), Select all / Clear all, passes array via fetchData params, clears on column hide
-- [x] S2: Backend — update `GET /api/transactions` to accept multi-value params for `type`, `category`, `property_id` (repeated or comma-separated; `WHERE type = ANY(...)`); backward-compatible with single-value
-- [x] S3: Frontend — wire Property, Category, and Type filters in the transaction table definition to use `filter.type: 'multi-select'`; update `fetchData` to pass arrays; update column-hide clear logic
-- [x] S4: Tests — update `backend/tests/transactions.test.js` for multi-value filter params; verify group-by still works with multi-select filters
+- [x] S1: Migration 025 — create rule_properties table, migrate property_id, drop bank_profile + property_id from rules
+- [x] S2: Backend rules.js — property_ids arrays in GET/POST, remove bank_profile, new PUT /:id/properties endpoint
+- [x] S3: Backend app.js — remove description-mappings route; delete description-mappings route/test files
+- [x] S4: Tests — rewrite rules.test.js (no bank_profile, add property_ids + PUT /properties tests); update globalSetup.js
+- [x] S5: Frontend importer.js — applyRules uses propertyId not profileKey; parseCSV removes profileKey param; source hardcoded to 'import'; add applyRulesToRow
+- [x] S6: Frontend app.js — remove BANK_PROFILES, descMappings, profile functions, localStorage mapping fns, loadDefaultRules; update txRow, initRulesTable, saveRuleModal, onRowFieldChange re-evaluation
+- [x] S7: Frontend api.js — remove getDescMappings/saveDescMapping/deleteDescMapping; add setRuleProperties; clean up getRules
+- [x] S8: Frontend index.html — remove profile dropdown, saved mappings row, save mapping UI, loadDefaultRules card; update rule modal to property checklist
+- [x] S9: Run migration + tests (300/300 passing); add maxWorkers:1 to jest config to fix pre-existing parallel test isolation race
 
 ---
 
@@ -59,7 +64,7 @@ Relevant epic docs:
 
 ## Next step
 
-F3-15 done — commit, deploy, then choose next feature from candidates.
+Pick the next feature from `docs/roadmap.md` — top MVP candidates are F3-8, F3-12, F3-13, F5-7. Read the epic doc for the chosen item, propose a task breakdown, and confirm with user before starting.
 
 ---
 
@@ -67,30 +72,39 @@ F3-15 done — commit, deploy, then choose next feature from candidates.
 
 - Commands to run:
   - `cd /Users/kimgalant/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
-  - Manual: transactions page — verify multi-select filters work for Type, Category, Property
+  - Manual: import page (no profile dropdown), rules page (property checklist in modal), import row property change triggers rule re-eval
 
 - Last result:
-  - Date/time: 2026-05-15
-  - Outcome: All new split tests pass in isolation. Full suite has pre-existing cascade failures due to SSH tunnel latency.
+  - Date/time: 2026-05-27
+  - Outcome: 300/300 tests passing (serial, via maxWorkers:1 in jest config).
 
 ---
 
 ## Files touched this session
 
+- `backend/src/db/migrations/025_rules_rework.js` (new)
+- `backend/src/routes/rules.js`
+- `backend/src/app.js`
+- `backend/src/routes/description-mappings.js` (deleted)
+- `backend/tests/rules.test.js`
+- `backend/tests/globalSetup.js`
+- `backend/tests/description-mappings.test.js` (deleted)
+- `backend/package.json`
+- `frontend/config.js`
+- `frontend/js/importer.js`
+- `frontend/js/app.js`
+- `frontend/js/api.js`
+- `frontend/index.html`
+- `frontend/version.json`
 - `AI_STATE.md`
 - `docs/ai_state_archive.json`
-- `frontend/js/datatable.js`
-- `frontend/css/datatable.css`
-- `frontend/js/app.js`
-- `backend/src/routes/transactions.js`
-- `backend/tests/transactions.test.js`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-24 [F3-15 started]
+- 2026-05-27 [F5-16 complete — 300/300 tests passing]
   - branch: main
-  - last_commit: ed1fece
-  - changed_files: AI_STATE.md, docs/ai_state_archive.json
-  - git_status: M AI_STATE.md, M docs/ai_state_archive.json
+  - last_commit: eee850a
+  - changed_files: backend/src/db/migrations/025_rules_rework.js, backend/src/routes/rules.js, backend/src/app.js, backend/tests/rules.test.js, backend/tests/globalSetup.js, backend/package.json, frontend/config.js, frontend/js/importer.js, frontend/js/app.js, frontend/js/api.js, frontend/index.html, frontend/version.json, AI_STATE.md, docs/ai_state_archive.json
+  - git_status: all changes staged, ready to commit

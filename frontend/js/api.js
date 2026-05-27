@@ -95,12 +95,8 @@ export const Api = (() => {
 
   // ── Rules ────────────────────────────────────────────
 
-  async function getRules(filters = {}) {
-    let path = '/rules';
-    const params = new URLSearchParams();
-    if (filters.bank_profile) params.append('bank_profile', filters.bank_profile);
-    if (params.toString()) path += '?' + params.toString();
-    return request('GET', path);
+  async function getRules() {
+    return request('GET', '/rules');
   }
 
   async function createRule(data) {
@@ -109,6 +105,10 @@ export const Api = (() => {
 
   async function updateRule(id, data) {
     return request('PATCH', `/rules/${id}`, data);
+  }
+
+  async function setRuleProperties(id, propertyIds) {
+    return request('PUT', `/rules/${id}/properties`, { property_ids: propertyIds });
   }
 
   async function deleteRule(id) {
@@ -159,20 +159,6 @@ export const Api = (() => {
 
   async function deleteCurrencyRate(id) {
     return request('DELETE', `/currency-rates/${id}`);
-  }
-
-  // ── Description mappings ───────────────────────────────────
-
-  async function getDescMappings() {
-    return request('GET', '/description-mappings');
-  }
-
-  async function saveDescMapping(data) {
-    return request('POST', '/description-mappings', data);
-  }
-
-  async function deleteDescMapping(id) {
-    return request('DELETE', `/description-mappings/${id}`);
   }
 
   // ── Accounts ────────────────────────────────────────────────
@@ -258,13 +244,12 @@ export const Api = (() => {
     getProperties, createProperty, updateProperty, deleteProperty,
     getTransactions, createTransaction, updateTransaction, deleteTransaction,
     getSplits, saveSplits, removeSplits,
-    getRules, createRule, updateRule, deleteRule,
+    getRules, createRule, updateRule, setRuleProperties, deleteRule,
     getWorkspaceSettings, updateWorkspaceSettings,
     getTransactionCategories, getTransactionCategoriesAll,
     createTransactionCategory, updateTransactionCategory, deleteTransactionCategory,
     getAccounts, getAccount, createAccount, updateAccount, deleteAccount, setDefaultAccount, getAccountItems,
     getCurrencyRates, createCurrencyRate, deleteCurrencyRate,
-    getDescMappings, saveDescMapping, deleteDescMapping,
     importTransactions, getImportHistory, deleteImportBatch, checkImportDuplicates,
     getSplitRules, createSplitRule, updateSplitRule, deleteSplitRule,
     getPnlReport,

@@ -2,7 +2,7 @@
 //  APP — main UI controller
 // ============================================================
 
-import { CONFIG, CATEGORIES, BANK_PROFILES } from '../config.js';
+import { CONFIG, CATEGORIES } from '../config.js';
 import { t, countryDisplayName, ISO_COUNTRY_CODES, COUNTRY_CURRENCIES } from './strings.js';
 import { Api } from './api.js';
 import { Importer } from './importer.js';
@@ -18,7 +18,6 @@ let State = {
   transactions:         [],
   rules:                [],
   splitRules:           [],
-  descMappings:         [],
   transactionCategories: {},
   editingTxId:          null,
   editingAptId:         null,
@@ -73,9 +72,8 @@ function _buildMatchTag(row) {
       : '?';
     return `<span class="dup-badge"><span class="tag tag-dup">Duplicate</span><div class="dup-badge-tip">${escHtml(fmtDate(m.date))} &bull; ${escHtml(m.description || '—')} &bull; ${parseFloat(m.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}<br>Imported on ${escHtml(importedOn)}</div></span> `;
   }
-  if (row._autoSplit)          return `<span class="tag tag-split" title="${escHtml(row._autoSplitRuleName || 'Split rule')}">Auto-split</span> `;
-  if (row._descMappingMatched) return '<span class="tag tag-mapping">mapped</span> ';
-  if (row._autoMatched)        return '<span class="tag tag-auto">auto</span> ';
+  if (row._autoSplit)   return `<span class="tag tag-split" title="${escHtml(row._autoSplitRuleName || 'Split rule')}">Auto-split</span> `;
+  if (row._autoMatched) return '<span class="tag tag-auto">auto</span> ';
   return '';
 }
 
@@ -234,14 +232,13 @@ function populateAllDropdowns() {
   const repApt = document.getElementById('rep-apt');
   if (repApt) { const v = repApt.value; repApt.innerHTML = `<option value="all">${t('tx.filter.allProperties')}</option>${propOpts}`; repApt.value = v || 'all'; }
 
-  ['tx-m-apt','import-apt','rule-m-apt'].forEach(id => {
+  ['tx-m-apt','import-apt'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const saved = el.value;
-    let blank;
-    if (id === 'rule-m-apt')  blank = `<option value="">${t('rules.modal.anyProperty')}</option>`;
-    else if (id === 'import-apt') blank = `<option value="">${t('import.autoDetect')}</option>`;
-    else                      blank = `<option value="">${t('common.select')}</option>`;
+    const blank = id === 'import-apt'
+      ? `<option value="">${t('import.autoDetect')}</option>`
+      : `<option value="">${t('common.select')}</option>`;
     el.innerHTML = blank + propOpts;
     if (saved) el.value = saved;
   });
@@ -574,7 +571,7 @@ function dashTxRow(tx) {
 function txRow(tx) {
   const prop   = State.properties.find(p => p.id === tx.property_id);
   const catLbl = catLabel(tx.category);
-  const srcLbl = tx.source === 'manual' ? t('common.manual') : (BANK_PROFILES[tx.source]?.label || tx.source);
+  const srcLbl = tx.source === 'manual' ? t('common.manual') : tx.source;
   const currency = tx.currency || prop?.currency || '';
 
   const isSplitParent = (tx.split_count || 0) > 0;
@@ -1103,38 +1100,9 @@ async function deleteTxWithConfirm(txId) {
 
 // ── Import ────────────────────────────────────────────────
 
-function onProfileChange() {
-  const profileKey = document.getElementById('import-profile').value;
-  const profile    = BANK_PROFILES[profileKey];
-  document.getElementById('import-currency-group').style.display = profile.currency ? 'none' : 'block';
-}
+// ── Save rules from "Remember this mapping" checkboxes ────
 
-// ── Description mappings (backend API) ───────────────────
-// State.descMappings holds all mappings for the current user's workspace:
-// user-specific (user_id = current user) and global (user_id = null).
-// bank_profile = '' means "any profile".
-
-function applyDescMappings(rows, profileKey) {
-  const mappings = State.descMappings;
-  if (!mappings.length) return;
-  rows.forEach(row => {
-    const desc = (row.raw_description || row.description || '').toLowerCase();
-    const profileMatch = m => m.bank_profile === profileKey || m.bank_profile === '';
-    const keywordMatch = m => desc.includes(m.keyword.toLowerCase());
-    // User-specific first, then global (user_id === null)
-    const match =
-      mappings.find(m => m.user_id !== null && profileMatch(m) && keywordMatch(m)) ||
-      mappings.find(m => m.user_id === null && profileMatch(m) && keywordMatch(m));
-    if (match) {
-      row.category           = match.category;
-      row.type               = Importer.categoryToType(match.category, State.transactionCategories);
-      row._descMappingMatched = true;
-      row._autoMatched       = false;
-    }
-  });
-}
-
-async function saveDescMappingsForRows(rows, profileKey) {
+async function saveRulesMappingsForRows(rows) {
   const toStore = rows.filter(r => r._storeMapping && !r._ignored);
   for (const row of toStore) {
     const keyword = (row.raw_description || row.description || '').trim();
@@ -1143,8 +1111,7 @@ async function saveDescMappingsForRows(rows, profileKey) {
       await Api.createRule({
         keyword,
         category:     row.category,
-        bank_profile: profileKey || null,
-        property_id:  row.property_id || null,
+        property_ids: row.property_id ? [row.property_id] : [],
       });
     } catch (_) {
       // Silently skip duplicates or validation failures — the import should not be blocked
@@ -1249,8 +1216,18 @@ function onRowFieldChange(i, field, value) {
     _applyAmountSign(State.importRows[i]);
     _updateAmountDOM(i);
   }
-  if (field === '_ignored')     State.importRows[i]._userPickedIgnore = true;
+  if (field === '_ignored')    State.importRows[i]._userPickedIgnore = true;
   if (field === 'property_id') State.importRows[i]._userPickedProperty = true;
+  if (field === 'property_id' && !State.importRows[i]._userPickedCategory) {
+    const match = Importer.applyRulesToRow(State.importRows[i], State.rules);
+    if (match) {
+      State.importRows[i].type = Importer.categoryToType(
+        State.importRows[i].category, State.transactionCategories);
+      _applyAmountSign(State.importRows[i]);
+      _updateAmountDOM(i);
+      _syncRowDOM(i, 'category', State.importRows[i].category);
+    }
+  }
   if (field === 'property_id' || field === 'description') _checkSingleRowDuplicate(i);
   _applyRowStyle(i);
 
@@ -1264,6 +1241,15 @@ function onRowFieldChange(i, field, value) {
         row._userPickedCategory = true;
         _applyAmountSign(row);
         _updateAmountDOM(j);
+      }
+      if (field === 'property_id' && !row._userPickedCategory) {
+        const match = Importer.applyRulesToRow(row, State.rules);
+        if (match) {
+          row.type = Importer.categoryToType(row.category, State.transactionCategories);
+          _applyAmountSign(row);
+          _updateAmountDOM(j);
+          _syncRowDOM(j, 'category', row.category);
+        }
       }
       _syncRowDOM(j, field, value);
       _applyRowStyle(j);
@@ -1292,7 +1278,7 @@ function _applyRowStyle(i) {
   if (row._isDuplicate) tr.classList.add('preview-row-dup');
   else                  tr.classList.remove('preview-row-dup');
 
-  const warnResolved = row._isDuplicate || row._ignored || row._autoMatched || row._descMappingMatched || row._userPickedCategory;
+  const warnResolved = row._isDuplicate || row._ignored || row._autoMatched || row._userPickedCategory;
   if (warnResolved) tr.classList.remove('preview-row-warn');
   else              tr.classList.add('preview-row-warn');
 
@@ -1311,7 +1297,7 @@ function _buildRowHtml(row, i) {
     `<option value="${p.id}"${p.id === row.property_id ? ' selected' : ''}>${p.name}</option>`
   ).join('');
   const catOpts   = Importer.buildCategoryOptions(row.category, State.transactionCategories);
-  const warnClass = (!row._autoMatched && !row._descMappingMatched && !locked) ? 'preview-row-warn' : '';
+  const warnClass = (!row._autoMatched && !locked) ? 'preview-row-warn' : '';
   const dupClass  = row._isDuplicate ? ' preview-row-dup' : '';
   const ignClass  = row._ignored     ? ' preview-row-ignored' : '';
   const lockClass = locked           ? ' preview-row-locked' : '';
@@ -1337,7 +1323,7 @@ function _rowSection(row) {
   if (row._isDuplicate)                                  return 4;
   if (row._ignored)                                      return 5;
   if (row._userPickedCategory || row._userPickedProperty) return 3;
-  if (row._autoMatched || row._descMappingMatched)        return 2;
+  if (row._autoMatched)  return 2;
   return 1;
 }
 
@@ -1597,7 +1583,7 @@ function _setFileLoaded(text, name) {
   document.getElementById('import-file-name').textContent = name;
   document.getElementById('import-file-name').style.display = 'inline-block';
   document.getElementById('import-zone').querySelector('strong').textContent = '✓ ' + name;
-  showMappingPanel(text, document.getElementById('import-profile').value);
+  showMappingPanel(text);
   _updatePreviewBtnState();
 }
 
@@ -1653,44 +1639,22 @@ function clearImport() {
 
 // ── Column mapping ────────────────────────────────────────
 
-const MAPPING_STORAGE_KEY = 'lg_col_mappings_v1';
-
-function getSavedMappings() {
-  try { return JSON.parse(localStorage.getItem(MAPPING_STORAGE_KEY) || '{}'); }
-  catch(e) { return {}; }
-}
-
-function refreshSavedMappingsDropdown() {
-  const sel     = document.getElementById('mapping-saved-select');
-  const current = sel.value;
-  const names   = Object.keys(getSavedMappings());
-  sel.innerHTML = `<option value="">${t('import.mapping.noSaved')}</option>`
-    + names.map(n => `<option value="${n}"${n === current ? ' selected' : ''}>${n}</option>`).join('');
-}
-
 function _setSelectValue(el, val) {
   for (const opt of el.options) {
     if (opt.value === val) { opt.selected = true; return; }
   }
 }
 
-function showMappingPanel(csvText, profileKey) {
+function showMappingPanel(csvText) {
   const lines = csvText.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 1) return;
 
-  const profile   = BANK_PROFILES[profileKey] || {};
-  const skipRows  = profile.skip_rows ?? 1;
+  const skipRows  = parseInt(document.getElementById('mapping-skip-rows').value, 10) || 1;
   const delimiter = Importer.detectDelimiter(lines[0]);
   const headers   = Importer.splitCSVLine(lines[0], delimiter);
   const sampleIdx = Math.min(skipRows, lines.length - 1);
   const sample    = Importer.splitCSVLine(lines[sampleIdx] || '', delimiter);
-  const detected  = Importer.detectColumns(headers, profile);
-
-  // Seed format selects from profile
-  if (profile.date_format)    _setSelectValue(document.getElementById('mapping-date-format'), profile.date_format);
-  if (profile.amount_decimal) _setSelectValue(document.getElementById('mapping-decimal'),     profile.amount_decimal);
-  if (profile.currency)       _setSelectValue(document.getElementById('mapping-currency-sel'), profile.currency);
-  document.getElementById('mapping-skip-rows').value = skipRows;
+  const detected  = Importer.detectColumns(headers, null);
 
   // Render one row per CSV column
   const roles = ['date', 'description', 'amount', 'ignore'];
@@ -1716,7 +1680,6 @@ function showMappingPanel(csvText, profileKey) {
     </tr>`;
   }).join('');
 
-  refreshSavedMappingsDropdown();
   document.getElementById('import-mapping-section').style.display = 'block';
 }
 
@@ -1743,70 +1706,23 @@ function buildColumnMap() {
   return map;
 }
 
-function applyMappingToUI(saved) {
-  _setSelectValue(document.getElementById('mapping-date-format'),  saved.date_format    || 'YYYY-MM-DD');
-  _setSelectValue(document.getElementById('mapping-decimal'),      saved.amount_decimal || '.');
-  _setSelectValue(document.getElementById('mapping-currency-sel'), saved.currency       || 'DKK');
-  if (saved.skip_rows !== undefined)
-    document.getElementById('mapping-skip-rows').value = saved.skip_rows;
-
-  document.querySelectorAll('.mapping-role-sel').forEach(sel => {
-    const col = parseInt(sel.dataset.col, 10);
-    let role = 'ignore';
-    if      (saved.date_col        === col) role = 'date';
-    else if (saved.description_col === col) role = 'description';
-    else if (saved.amount_col      === col) role = 'amount';
-    _setSelectValue(sel, role);
-  });
-}
-
-function loadSavedMapping() {
-  const name = document.getElementById('mapping-saved-select').value;
-  if (!name) return;
-  const saved = getSavedMappings()[name];
-  if (saved) applyMappingToUI(saved);
-}
-
-function saveCurrentMapping() {
-  const name = document.getElementById('mapping-name-input').value.trim();
-  if (!name) { toast(t('import.mapping.toast.noName'), 'error'); return; }
-  const mappings = getSavedMappings();
-  mappings[name] = buildColumnMap();
-  localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(mappings));
-  refreshSavedMappingsDropdown();
-  document.getElementById('mapping-saved-select').value = name;
-  document.getElementById('mapping-name-input').value   = '';
-  toast(t('import.mapping.toast.saved', { name }), 'success');
-}
-
-function deleteSavedMapping() {
-  const name = document.getElementById('mapping-saved-select').value;
-  if (!name) return;
-  const mappings = getSavedMappings();
-  delete mappings[name];
-  localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(mappings));
-  refreshSavedMappingsDropdown();
-  toast(t('import.mapping.toast.deleted', { name }), 'success');
-}
-
 async function runImportPreview() {
-  const pasteText  = document.getElementById('import-csv').value.trim();
-  const csv        = _importCSVText || pasteText;
-  const profileKey = document.getElementById('import-profile').value;
-  const propId     = document.getElementById('import-apt').value;
+  const pasteText = document.getElementById('import-csv').value.trim();
+  const csv       = _importCSVText || pasteText;
+  const propId    = document.getElementById('import-apt').value;
 
   if (!csv) { toast(t('import.toast.noData'), 'error'); return; }
 
   // Show/refresh mapping panel if not visible
   if (document.getElementById('import-mapping-section').style.display === 'none') {
-    showMappingPanel(csv, profileKey);
+    showMappingPanel(csv);
   }
 
   const colMap = buildColumnMap();
 
   let result;
   try {
-    result = Importer.parseCSV(csv, profileKey, propId, State.rules, colMap);
+    result = Importer.parseCSV(csv, propId, State.rules, colMap);
   } catch(e) {
     toast(t('import.toast.parseError', { error: e.message }), 'error');
     return;
@@ -1830,7 +1746,7 @@ async function runImportPreview() {
   if (floatToggle) floatToggle.checked = false;
 
   document.getElementById('import-preview-title').textContent =
-    `Preview — ${result.rows.length} rows from ${result.profileLabel}`;
+    `Preview — ${result.rows.length} rows`;
 
   renderImportTable();
 
@@ -1867,7 +1783,6 @@ function goToStaticPreview() {
     if (missingNotes.length) { toast(t('import.toast.notesRequired', { count: missingNotes.length }), 'error'); return; }
   }
 
-  const profileKey  = document.getElementById('import-profile').value;
   const hasToStore  = activeRows.some(r => r._storeMapping);
   document.getElementById('static-next-btn').textContent =
     hasToStore ? t('import.staticPreview.nextBtn') : t('import.staticPreview.importBtn');
@@ -1965,20 +1880,19 @@ function backToEditPreview() {
 }
 
 function goToMappingConfirmOrImport() {
-  const profileKey = document.getElementById('import-profile').value;
   const activeRows = State.importRows.filter(r => !r._ignored && !r._locked);
   const toStore    = activeRows.filter(r => r._storeMapping);
 
   if (!toStore.length) { doImport(false); return; }
 
-  // Build mapping confirmation lists
-  const existing = State.descMappings;
+  // Build rule confirmation lists (compare against existing State.rules)
+  const existing = State.rules;
   const toAdd    = [];
   const toUpdate = [];
 
   toStore.forEach(row => {
     const keyword = (row.raw_description || row.description || '').trim();
-    const found   = existing.find(m => m.bank_profile === profileKey && m.user_id === null && m.keyword === keyword);
+    const found   = existing.find(r => r.keyword.toLowerCase() === keyword.toLowerCase());
     if (found) {
       if (found.category !== row.category)
         toUpdate.push({ keyword, oldCat: found.category, newCat: row.category });
@@ -2032,7 +1946,6 @@ function backToStaticPreview() {
 }
 
 async function doImport(saveMappings) {
-  const profileKey = document.getElementById('import-profile').value;
   const activeRows = State.importRows.filter(r => !r._ignored && !r._locked);
   if (!activeRows.length) return;
 
@@ -2050,7 +1963,7 @@ async function doImport(saveMappings) {
     };
   });
   try {
-    if (saveMappings) await saveDescMappingsForRows(activeRows, profileKey);
+    if (saveMappings) await saveRulesMappingsForRows(activeRows);
     const result = await Api.importTransactions(toSave);
     const batchId = result.import_batch;
     toast(t('import.toast.done', { count: result.inserted, batchId }), 'success');
@@ -2880,23 +2793,23 @@ function initRulesTable() {
       { label: t('rules.addBtn'), onclick: 'openRuleModal()' },
     ],
     columns: [
-      { key: 'bank_profile', label: t('rules.col.bankProfile'), sortable: true },
-      { key: 'keyword',      label: t('rules.col.keyword'),     sortable: true },
-      { key: 'category',     label: t('rules.col.category'),    sortable: true },
-      { key: 'property',     label: t('rules.col.property'),    sortable: true },
-      { key: '_actions',     label: '',                         sortable: false, width: '4rem' },
+      { key: 'keyword',    label: t('rules.col.keyword'),    sortable: true },
+      { key: 'category',   label: t('rules.col.category'),   sortable: true },
+      { key: 'properties', label: t('rules.col.properties'), sortable: false },
+      { key: '_actions',   label: '',                        sortable: false, width: '4rem' },
     ],
     fetchData: async () => {
       return { data: State.rules, total: State.rules.length };
     },
     renderRow: (r) => {
-      const prop    = State.properties.find(p => p.id === r.property_id);
-      const profile = BANK_PROFILES[r.bank_profile]?.label || (r.bank_profile ? r.bank_profile : t('rules.modal.anyBank'));
+      const propNames = (r.property_ids || [])
+        .map(pid => State.properties.find(p => p.id === pid)?.name)
+        .filter(Boolean)
+        .join(', ') || t('rules.modal.anyProperty');
       return `<tr>
-        <td data-col="bank_profile" style="font-size:12px">${profile}</td>
         <td data-col="keyword"><code style="font-size:12px;background:var(--bg3);padding:2px 6px;border-radius:4px">${r.keyword}</code></td>
         <td data-col="category"><span class="tag tag-${Importer.categoryToType(r.category, State.transactionCategories)}">${catLabel(r.category)}</span></td>
-        <td data-col="property" style="font-size:12px">${prop ? prop.name : '—'}</td>
+        <td data-col="properties" style="font-size:12px">${propNames}</td>
         <td data-col="_actions"><button class="btn btn-sm btn-danger" onclick="deleteRule(${r.id})">✕</button></td>
       </tr>`;
     },
@@ -2916,9 +2829,29 @@ async function deleteRule(id) {
   }
 }
 
+function _populateRulePropertyChecklist(selectedIds) {
+  const container = document.getElementById('rule-m-properties');
+  if (!container) return;
+  container.innerHTML = State.properties.map(p => {
+    const checked = (selectedIds || []).includes(p.id) ? ' checked' : '';
+    return `<label style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:13px;cursor:pointer">
+      <input type="checkbox" value="${p.id}"${checked} style="width:auto;padding:0">
+      ${p.name}
+    </label>`;
+  }).join('') || `<span style="font-size:12px;color:var(--text3)">${t('property.noProperties')}</span>`;
+}
+
+function _selectedRulePropertyIds() {
+  return [...document.querySelectorAll('#rule-m-properties input[type=checkbox]:checked')]
+    .map(cb => cb.value);
+}
+
 function openRuleModal() {
-  populateAllDropdowns();
-  document.getElementById('rule-m-kw').value = '';
+  _populateRulePropertyChecklist([]);
+  document.getElementById('rule-m-kw').value  = '';
+  // reset category dropdown to empty
+  const catEl = document.getElementById('rule-m-cat');
+  if (catEl) catEl.value = '';
   document.getElementById('modal-rule').style.display = 'flex';
 }
 
@@ -2930,13 +2863,11 @@ async function saveRuleModal() {
   if (!kw || !cat) { toast(t('rules.toast.kwCatReq'), 'error'); return; }
 
   const ruleData = {
-    bank_profile: document.getElementById('rule-m-profile').value,
     keyword:      kw,
     category:     cat,
-    property_id:  document.getElementById('rule-m-apt').value || null,
+    property_ids: _selectedRulePropertyIds(),
   };
 
-  // v2 mode: create via Api.createRule()
   try {
     const rule = await Api.createRule(ruleData);
     State.rules.push(rule);
@@ -2960,41 +2891,6 @@ async function saveRules() {
     toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
   }
   setLoading(false);
-}
-
-async function loadDefaultRules() {
-  const defaults = [
-    { bank_profile: 'jyske_bank', keyword: 'sabumba',      category: 'rent',               property_id: null },
-    { bank_profile: 'jyske_bank', keyword: 'husleje',      category: 'rent',               property_id: null },
-    { bank_profile: 'jyske_bank', keyword: 'varmebidrag',  category: 'heating_aconto',     property_id: null },
-    { bank_profile: 'jyske_bank', keyword: 'vandafregn',   category: 'heating_settlement', property_id: null },
-    { bank_profile: 'jyske_bank', keyword: 'ejendomsskat', category: 'property_tax',       property_id: null },
-    { bank_profile: 'jyske_bank', keyword: 'forsikring',   category: 'insurance',          property_id: null },
-    { bank_profile: 'mbank_pl',   keyword: 'czynsz',       category: 'rent',               property_id: null },
-    { bank_profile: 'mbank_pl',   keyword: 'najem',        category: 'rent',               property_id: null },
-    { bank_profile: '',           keyword: 'bank fee',     category: 'bank_charges',       property_id: null },
-    { bank_profile: '',           keyword: 'gebyr',        category: 'bank_charges',       property_id: null },
-  ];
-
-  if (window.AUTH_TOKEN) {
-    // v2 mode: create new defaults via Api
-    const newDefaults = defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword));
-    try {
-      for (const d of newDefaults) {
-        const rule = await Api.createRule(d);
-        State.rules.push(rule);
-      }
-      if (rulesTable) rulesTable.refresh();
-      toast(t('rules.toast.defaultLoaded'), 'info');
-    } catch(e) {
-      toast(t('rules.toast.saveFailed', { error: e.message }), 'error');
-    }
-  } else {
-    // v1 mode: in-memory only
-    State.rules = [...State.rules, ...defaults.filter(d => !State.rules.some(r => r.keyword === d.keyword))];
-    if (rulesTable) rulesTable.refresh();
-    toast(t('rules.toast.defaultLoaded'), 'info');
-  }
 }
 
 // ── Split rules ───────────────────────────────────────────
@@ -3931,10 +3827,9 @@ Object.assign(window, {
   _fillSplitRemaining, _removeSplitRow, _onSplitTypeChange, _updateSplitRemaining,
   toggleSplitRows, toggleAllSplits,
   toggleReconciled, deleteTxWithConfirm,
-  onProfileChange, onImportFileChange, onImportDragOver, onImportDragLeave, onImportDrop,
+  onImportFileChange, onImportDragOver, onImportDragLeave, onImportDrop,
   toggleImportPaste, clearImport, runImportPreview, renderImportTable, toggleImportSection, _updatePreviewBtnState,
   toggleSelectAll, onRowSelect, onRowFieldChange, onImportLockBtnClick, sortImportCol,
-  refreshSavedMappingsDropdown, loadSavedMapping, saveCurrentMapping, deleteSavedMapping,
   goToStaticPreview, backToEditPreview, goToMappingConfirmOrImport, backToStaticPreview,
   toggleTree, doImport,
   toggleImportHistory, undoImportBatch, closeUndoModal, confirmUndoImport,
@@ -3943,7 +3838,7 @@ Object.assign(window, {
   openPropertyModal, closePropertyModal, savePropertyModal, onAptCountryChange, archiveProperty,
   openAddAccountModal, openEditAccountModal, closeAccountModal, saveAccountModal,
   openLinkedItemsModal, confirmSetDefault, confirmDeleteAccount, executeDeleteAccount,
-  openRuleModal, closeRuleModal, saveRuleModal, saveRules, loadDefaultRules, deleteRule,
+  openRuleModal, closeRuleModal, saveRuleModal, saveRules, deleteRule,
   openSplitRuleModal, openSplitRuleModalFromSplit, closeSplitRuleModal, saveSplitRuleModal, deleteSplitRuleModal,
   addSplitRuleCondition, addSplitRuleTemplateRow, onSplitRuleModeChange,
   toggleSplitRuleEnabled, _onSrCondFieldChange, _onSrTmplTypeChange, _updateSrTemplateSummary,

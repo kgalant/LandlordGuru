@@ -1,11 +1,11 @@
 // ============================================================
 //  CSV IMPORT PARSER
 //  Parses bank statement CSV exports into transaction objects.
-//  Supports hardcoded bank profiles (config.js) plus user-saved
-//  named column mappings stored in localStorage.
+//  Column mapping is provided explicitly via colMap — there are
+//  no built-in bank profiles.
 // ============================================================
 
-import { BANK_PROFILES, CATEGORIES } from '../config.js';
+import { CATEGORIES } from '../config.js';
 import { t } from './strings.js';
 
 export const Importer = (() => {
@@ -112,7 +112,7 @@ export const Importer = (() => {
   function detectColumns(headers, hints) {
     const result = { date_col: -1, description_col: -1, amount_col: -1 };
 
-    // Seed from profile hints so we have a sensible fallback
+    // Seed from hints so we have a sensible fallback
     if (hints) {
       if (hints.date_col        !== undefined) result.date_col        = hints.date_col;
       if (hints.description_col !== undefined) result.description_col = hints.description_col;
@@ -151,15 +151,27 @@ export const Importer = (() => {
 
   // ── Rule matching ─────────────────────────────────────────
 
-  function applyRules(description, profileKey, rules) {
+  function applyRules(description, propertyId, rules) {
     if (!rules || !rules.length) return null;
     const desc = description.toLowerCase();
     const sorted = [...rules].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
     for (const rule of sorted) {
-      if (rule.bank_profile && rule.bank_profile !== profileKey) continue;
+      // Scope check: rule matches if it has no property restriction,
+      // or if the current row's property is in its property_ids list.
+      const scopeMatch =
+        !rule.property_ids || rule.property_ids.length === 0 ||
+        (propertyId && rule.property_ids.includes(propertyId));
+      if (!scopeMatch) continue;
       if (desc.includes(rule.keyword.toLowerCase())) return rule;
     }
     return null;
+  }
+
+  // Re-evaluate rules on a single already-parsed row (used when property changes).
+  function applyRulesToRow(row, rules) {
+    const match = applyRules(row.raw_description || row.description, row.property_id, rules);
+    if (match) { row.category = match.category; row._autoMatched = true; }
+    return match;
   }
 
   // ── Main parse function ───────────────────────────────────
@@ -168,28 +180,23 @@ export const Importer = (() => {
    * Parse a CSV string.
    *
    * @param {string}  csvText     Raw CSV content
-   * @param {string}  profileKey  Key from BANK_PROFILES in config.js
-   * @param {string}  propertyId  Pre-selected property (can be overridden by rules)
+   * @param {string}  propertyId  Pre-selected property UUID (or empty string)
    * @param {Array}   rules       Auto-categorisation rules from Api.getRules()
-   * @param {Object}  [colMap]    Optional explicit column mapping (from mapping panel).
-   *                              If provided, overrides the profile's hardcoded indices.
+   * @param {Object}  colMap      Column mapping from the mapping panel.
    *                              Shape: { date_col, description_col, amount_col,
    *                                       delimiter, date_format, amount_decimal,
    *                                       currency, skip_rows }
-   * @returns {Object} { rows, errors, profileLabel, currency }
+   * @returns {Object} { rows, errors, currency }
    */
-  function parseCSV(csvText, profileKey, propertyId, rules, colMap) {
-    const profile = BANK_PROFILES[profileKey];
-    if (!profile) throw new Error('Unknown bank profile: ' + profileKey);
-
-    const delimiter     = colMap?.delimiter      ?? profile.delimiter;
-    const dateFormat    = colMap?.date_format    ?? profile.date_format;
-    const amountDecimal = colMap?.amount_decimal ?? profile.amount_decimal;
-    const currency      = colMap?.currency       ?? profile.currency ?? '';
-    const skipRows      = colMap?.skip_rows      ?? profile.skip_rows;
-    const dateCol       = colMap?.date_col       ?? profile.date_col;
-    const descCol       = colMap?.description_col ?? profile.description_col;
-    const amtCol        = colMap?.amount_col     ?? profile.amount_col;
+  function parseCSV(csvText, propertyId, rules, colMap) {
+    const delimiter     = colMap?.delimiter      ?? ',';
+    const dateFormat    = colMap?.date_format    ?? 'YYYY-MM-DD';
+    const amountDecimal = colMap?.amount_decimal ?? '.';
+    const currency      = colMap?.currency       ?? '';
+    const skipRows      = colMap?.skip_rows      ?? 1;
+    const dateCol       = colMap?.date_col       ?? 0;
+    const descCol       = colMap?.description_col ?? 1;
+    const amtCol        = colMap?.amount_col     ?? 2;
 
     const lines    = csvText.split(/\r?\n/).filter(l => l.trim());
     const dataRows = lines.slice(skipRows);
@@ -217,10 +224,9 @@ export const Importer = (() => {
         return;
       }
 
-      const match = applyRules(rawDesc, profileKey, rules);
+      const match = applyRules(rawDesc, propertyId, rules);
 
       let autoCategory = match ? match.category : '';
-      let autoPropId   = (match && match.property_id) ? match.property_id : propertyId;
 
       if (!autoCategory) {
         autoCategory = amount > 0 ? 'rent' : 'other_expense';
@@ -238,14 +244,14 @@ export const Importer = (() => {
 
       rows.push({
         date,
-        property_id:     autoPropId || '',
+        property_id:     propertyId || '',
         type,
         category:        autoCategory,
         amount:          storedAmount,
         currency,
         description:     rawDesc.replace(/^"|"$/g, ''),
         raw_description: rawDesc.replace(/^"|"$/g, ''),
-        source:          profileKey,
+        source:          'import',
         import_batch:    '',
         notes:           '',
         reconciled:      false,
@@ -256,8 +262,7 @@ export const Importer = (() => {
       });
     });
 
-    const label = colMap?.name || profile.label;
-    return { rows, errors, profileLabel: label, currency };
+    return { rows, errors, currency };
   }
 
   // ── Helpers ───────────────────────────────────────────────
@@ -311,5 +316,6 @@ export const Importer = (() => {
     splitCSVLine,
     categoryToType,
     buildCategoryOptions,
+    applyRulesToRow,
   };
 })();

@@ -12,14 +12,30 @@ beforeAll(() => {
   setupAppWithDb(app, db);
 });
 
+// A property used for property_ids tests
+const PROPERTY_ID = '00000000-0000-0000-0000-000000000010';
+
+async function seedProperty() {
+  await db('properties').insert({
+    id:               PROPERTY_ID,
+    workspace_id:     WORKSPACE_ID,
+    name:             'Test Property',
+    currency:         'DKK',
+    country:          'DK',
+    created_by:       USER_ID,
+    last_modified_by: USER_ID,
+  }).onConflict('id').ignore();
+}
+
 const VALID_RULE = {
-  keyword:      'tenant rent payment',
-  category:     'rent',
-  bank_profile: 'jyske_bank',
+  keyword:  'tenant rent payment',
+  category: 'rent',
 };
 
 afterEach(async () => {
+  // rule_properties CASCADE from rules, so only need to delete rules + property
   await db('rules').where('workspace_id', WORKSPACE_ID).del();
+  await db('properties').where('id', PROPERTY_ID).del();
 });
 
 // ---------------------------------------------------------------------------
@@ -35,38 +51,22 @@ describe('POST /api/rules', () => {
     expect(res.status).toBe(201);
     expect(res.body.keyword).toBe('tenant rent payment');
     expect(res.body.category).toBe('rent');
-    expect(res.body.bank_profile).toBe('jyske_bank');
     expect(res.body.workspace_id).toBe(WORKSPACE_ID);
     expect(res.body.sort_order).toBe(0); // default
+    expect(res.body.property_ids).toEqual([]);
   });
 
-  it('trims keyword and bank_profile', async () => {
+  it('trims keyword', async () => {
     const res = await request(app)
       .post('/api/rules')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        keyword:      '  tenant rent  ',
-        category:     'rent',
-        bank_profile: '  jyske_bank  ',
+        keyword:  '  tenant rent  ',
+        category: 'rent',
       });
 
     expect(res.status).toBe(201);
     expect(res.body.keyword).toBe('tenant rent');
-    expect(res.body.bank_profile).toBe('jyske_bank');
-  });
-
-  it('allows null bank_profile', async () => {
-    const res = await request(app)
-      .post('/api/rules')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        keyword:  'maintenance',
-        category: 'maintenance_repair',
-        bank_profile: null,
-      });
-
-    expect(res.status).toBe(201);
-    expect(res.body.bank_profile).toBeNull();
   });
 
   it('allows custom sort_order', async () => {
@@ -74,13 +74,38 @@ describe('POST /api/rules', () => {
       .post('/api/rules')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        keyword:     'insurance',
-        category:    'insurance',
-        sort_order:  5,
+        keyword:    'insurance',
+        category:   'insurance',
+        sort_order: 5,
       });
 
     expect(res.status).toBe(201);
     expect(res.body.sort_order).toBe(5);
+  });
+
+  it('creates a rule with property_ids', async () => {
+    await seedProperty();
+
+    const res = await request(app)
+      .post('/api/rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_RULE, property_ids: [PROPERTY_ID] });
+
+    expect(res.status).toBe(201);
+    expect(res.body.property_ids).toEqual([PROPERTY_ID]);
+  });
+
+  it('returns 400 for property_id not in workspace', async () => {
+    const res = await request(app)
+      .post('/api/rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        ...VALID_RULE,
+        property_ids: ['00000000-0000-0000-0000-000000000099'],
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/property_id/);
   });
 
   it('returns 400 when required keyword is missing', async () => {
@@ -126,27 +151,11 @@ describe('POST /api/rules', () => {
       const res = await request(app)
         .post('/api/rules')
         .set('Authorization', `Bearer ${token}`)
-        .send({
-          keyword: `test ${category}`,
-          category,
-        });
+        .send({ keyword: `test ${category}`, category });
 
       expect(res.status).toBe(201);
       expect(res.body.category).toBe(category);
     }
-  });
-
-  it('returns 400 for property_id that does not exist in workspace', async () => {
-    const res = await request(app)
-      .post('/api/rules')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        ...VALID_RULE,
-        property_id: '00000000-0000-0000-0000-000000000099',
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/property_id/);
   });
 
   it('returns 401 without a token', async () => {
@@ -183,27 +192,24 @@ describe('GET /api/rules', () => {
     expect(res.body[1].keyword).toBe('first');    // sort_order 2 comes second
   });
 
-  it('filters by bank_profile', async () => {
-    await request(app)
-      .post('/api/rules')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ keyword: 'jyske', category: 'rent', bank_profile: 'jyske_bank' });
+  it('returns property_ids arrays on each rule', async () => {
+    await seedProperty();
 
     await request(app)
       .post('/api/rules')
       .set('Authorization', `Bearer ${token}`)
-      .send({ keyword: 'nordea', category: 'insurance', bank_profile: 'nordea_dk' });
+      .send({ ...VALID_RULE, property_ids: [PROPERTY_ID] });
 
     const res = await request(app)
-      .get('/api/rules?bank_profile=jyske_bank')
+      .get('/api/rules')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
-    expect(res.body[0].bank_profile).toBe('jyske_bank');
+    expect(res.body[0].property_ids).toEqual([PROPERTY_ID]);
   });
 
-  it('includes rules with null bank_profile in unfiltered results', async () => {
+  it('returns empty property_ids for rules with no property scope', async () => {
     await request(app)
       .post('/api/rules')
       .set('Authorization', `Bearer ${token}`)
@@ -215,7 +221,7 @@ describe('GET /api/rules', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
-    expect(res.body[0].bank_profile).toBeNull();
+    expect(res.body[0].property_ids).toEqual([]);
   });
 
   it('returns 401 without a token', async () => {
@@ -318,6 +324,86 @@ describe('PATCH /api/rules/:id', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/No valid fields/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/rules/:id/properties
+// ---------------------------------------------------------------------------
+describe('PUT /api/rules/:id/properties', () => {
+  it('sets property associations', async () => {
+    await seedProperty();
+
+    const created = await request(app)
+      .post('/api/rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send(VALID_RULE);
+
+    const res = await request(app)
+      .put(`/api/rules/${created.body.id}/properties`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ property_ids: [PROPERTY_ID] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.property_ids).toEqual([PROPERTY_ID]);
+  });
+
+  it('replaces existing property associations', async () => {
+    await seedProperty();
+
+    const created = await request(app)
+      .post('/api/rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_RULE, property_ids: [PROPERTY_ID] });
+
+    const res = await request(app)
+      .put(`/api/rules/${created.body.id}/properties`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ property_ids: [] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.property_ids).toEqual([]);
+  });
+
+  it('clears all property associations with empty array', async () => {
+    await seedProperty();
+
+    const created = await request(app)
+      .post('/api/rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...VALID_RULE, property_ids: [PROPERTY_ID] });
+
+    const res = await request(app)
+      .put(`/api/rules/${created.body.id}/properties`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ property_ids: [] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.property_ids).toEqual([]);
+  });
+
+  it('returns 400 for non-workspace property_id', async () => {
+    const created = await request(app)
+      .post('/api/rules')
+      .set('Authorization', `Bearer ${token}`)
+      .send(VALID_RULE);
+
+    const res = await request(app)
+      .put(`/api/rules/${created.body.id}/properties`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ property_ids: ['00000000-0000-0000-0000-000000000099'] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/property_id/);
+  });
+
+  it('returns 404 for unknown rule', async () => {
+    const res = await request(app)
+      .put('/api/rules/00000000-0000-0000-0000-000000000099/properties')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ property_ids: [] });
+
+    expect(res.status).toBe(404);
   });
 });
 
