@@ -8,36 +8,29 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: feature
-- Epic: E5 Integrations & Data Import / E6 Rules
-- ID: F5-16
-- Title: Rules rework + import profile removal
-- Short summary: Replace bank-profile-scoped rules with property-scoped rules (junction table). Remove all import profiles (BANK_PROFILES, localStorage presets, save/load UI). Rules now match by keyword + optional property list. **Complete — committed.**
+- Type: bug
+- Epic: E5 Integrations & Data Import
+- ID: B5-1
+- Title: Import bugfixes — category type resolution + mapping confirmation property
+- Short summary: Two bugs found during import testing. (1) `parseCSV` called `categoryToType` without `apiCategories`, so custom categories always fell back to 'expense' type → invalid category errors. (2) Mapping confirmation screen showed only description + category; now includes a property dropdown (defaulting to the row's property, "All properties" option for no restriction).
 
 ---
 
 ## Previous focus
 
 - Type: feature
-- Epic: E3 Transaction Management
-- ID: F3-15
-- Title: Multi-select filters for Property, Category, and Type
-- Short summary: Done — DataTable multi-select filter type, backend multi-value params, frontend wiring.
+- Epic: E5 Integrations & Data Import / E6 Rules
+- ID: F5-16
+- Title: Rules rework + import profile removal
+- Short summary: Complete — committed (23cd157).
 - State: done
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: Migration 025 — create rule_properties table, migrate property_id, drop bank_profile + property_id from rules
-- [x] S2: Backend rules.js — property_ids arrays in GET/POST, remove bank_profile, new PUT /:id/properties endpoint
-- [x] S3: Backend app.js — remove description-mappings route; delete description-mappings route/test files
-- [x] S4: Tests — rewrite rules.test.js (no bank_profile, add property_ids + PUT /properties tests); update globalSetup.js
-- [x] S5: Frontend importer.js — applyRules uses propertyId not profileKey; parseCSV removes profileKey param; source hardcoded to 'import'; add applyRulesToRow
-- [x] S6: Frontend app.js — remove BANK_PROFILES, descMappings, profile functions, localStorage mapping fns, loadDefaultRules; update txRow, initRulesTable, saveRuleModal, onRowFieldChange re-evaluation
-- [x] S7: Frontend api.js — remove getDescMappings/saveDescMapping/deleteDescMapping; add setRuleProperties; clean up getRules
-- [x] S8: Frontend index.html — remove profile dropdown, saved mappings row, save mapping UI, loadDefaultRules card; update rule modal to property checklist
-- [x] S9: Run migration + tests (300/300 passing); add maxWorkers:1 to jest config to fix pre-existing parallel test isolation race
+- [x] S1: Fix categoryToType called without apiCategories in parseCSV (importer.js + app.js)
+- [x] S2: Add property dropdown to mapping confirmation screen (app.js + strings.js)
 
 ---
 
@@ -64,7 +57,7 @@ Relevant epic docs:
 
 ## Next step
 
-Pick the next feature from `docs/roadmap.md` — top MVP candidates are F3-8, F3-12, F3-13, F5-7. Read the epic doc for the chosen item, propose a task breakdown, and confirm with user before starting.
+Test both fixes manually: (1) import a CSV with a custom-category rule and confirm no "not valid for type" errors; (2) check the mapping confirmation screen shows a property dropdown with correct default and "All properties" option. Then commit.
 
 ---
 
@@ -72,39 +65,27 @@ Pick the next feature from `docs/roadmap.md` — top MVP candidates are F3-8, F3
 
 - Commands to run:
   - `cd /Users/kimgalant/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
-  - Manual: import page (no profile dropdown), rules page (property checklist in modal), import row property change triggers rule re-eval
+  - Manual: import with custom-category rule (no type errors); mapping confirmation shows property dropdown
 
 - Last result:
   - Date/time: 2026-05-27
-  - Outcome: 300/300 tests passing (serial, via maxWorkers:1 in jest config).
+  - Outcome: 300/300 tests passing (serial, via maxWorkers:1 in jest config). Manual re-test pending for these fixes.
 
 ---
 
 ## Files touched this session
 
-- `backend/src/db/migrations/025_rules_rework.js` (new)
-- `backend/src/routes/rules.js`
-- `backend/src/app.js`
-- `backend/src/routes/description-mappings.js` (deleted)
-- `backend/tests/rules.test.js`
-- `backend/tests/globalSetup.js`
-- `backend/tests/description-mappings.test.js` (deleted)
-- `backend/package.json`
-- `frontend/config.js`
 - `frontend/js/importer.js`
 - `frontend/js/app.js`
-- `frontend/js/api.js`
-- `frontend/index.html`
-- `frontend/version.json`
+- `frontend/js/strings.js`
 - `AI_STATE.md`
-- `docs/ai_state_archive.json`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-27 [F5-16 complete — 300/300 tests passing]
+- 2026-05-29 [B5-1 import bugfixes — category type + mapping confirmation property]
   - branch: main
-  - last_commit: eee850a
-  - changed_files: backend/src/db/migrations/025_rules_rework.js, backend/src/routes/rules.js, backend/src/app.js, backend/tests/rules.test.js, backend/tests/globalSetup.js, backend/package.json, frontend/config.js, frontend/js/importer.js, frontend/js/app.js, frontend/js/api.js, frontend/index.html, frontend/version.json, AI_STATE.md, docs/ai_state_archive.json
-  - git_status: all changes staged, ready to commit
+  - last_commit: 23cd157
+  - changed_files: frontend/js/importer.js, frontend/js/app.js, frontend/js/strings.js, AI_STATE.md
+  - git_status: M frontend/js/importer.js, M frontend/js/app.js, M frontend/js/strings.js, M AI_STATE.md

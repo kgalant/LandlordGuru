@@ -188,7 +188,7 @@ export const Importer = (() => {
    *                                       currency, skip_rows }
    * @returns {Object} { rows, errors, currency }
    */
-  function parseCSV(csvText, propertyId, rules, colMap) {
+  function parseCSV(csvText, propertyId, rules, colMap, apiCategories) {
     const delimiter     = colMap?.delimiter      ?? ',';
     const dateFormat    = colMap?.date_format    ?? 'YYYY-MM-DD';
     const amountDecimal = colMap?.amount_decimal ?? '.';
@@ -232,7 +232,7 @@ export const Importer = (() => {
         autoCategory = amount > 0 ? 'rent' : 'other_expense';
       }
 
-      const type = categoryToType(autoCategory);
+      const type = categoryToType(autoCategory, apiCategories);
 
       // Transfers and deposits keep their original sign so that paired
       // transactions (debit in one account, credit in another) net to zero

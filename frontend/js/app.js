@@ -1100,6 +1100,8 @@ async function deleteTxWithConfirm(txId) {
 
 // ── Import ────────────────────────────────────────────────
 
+let _pendingMappingItems = null; // { adds, updates } built by goToMappingConfirmOrImport
+
 // ── Save rules from "Remember this mapping" checkboxes ────
 
 async function saveRulesMappingsForRows(rows) {
@@ -1111,7 +1113,9 @@ async function saveRulesMappingsForRows(rows) {
       await Api.createRule({
         keyword,
         category:     row.category,
-        property_ids: row.property_id ? [row.property_id] : [],
+        property_ids: row._mappingPropertyId !== undefined
+          ? (row._mappingPropertyId ? [row._mappingPropertyId] : [])
+          : (row.property_id ? [row.property_id] : []),
       });
     } catch (_) {
       // Silently skip duplicates or validation failures — the import should not be blocked
@@ -1722,7 +1726,7 @@ async function runImportPreview() {
 
   let result;
   try {
-    result = Importer.parseCSV(csv, propId, State.rules, colMap);
+    result = Importer.parseCSV(csv, propId, State.rules, colMap, State.transactionCategories);
   } catch(e) {
     toast(t('import.toast.parseError', { error: e.message }), 'error');
     return;
@@ -1885,22 +1889,37 @@ function goToMappingConfirmOrImport() {
 
   if (!toStore.length) { doImport(false); return; }
 
-  // Build rule confirmation lists (compare against existing State.rules)
-  const existing = State.rules;
-  const toAdd    = [];
-  const toUpdate = [];
+  // Build rule confirmation lists — one entry per unique keyword
+  const existing    = State.rules;
+  const seenKeywords = new Set();
+  const toAdd       = [];
+  const toUpdate    = [];
 
   toStore.forEach(row => {
     const keyword = (row.raw_description || row.description || '').trim();
-    const found   = existing.find(r => r.keyword.toLowerCase() === keyword.toLowerCase());
+    const keyLc   = keyword.toLowerCase();
+    if (seenKeywords.has(keyLc)) return;
+    seenKeywords.add(keyLc);
+
+    const found = existing.find(r => r.keyword.toLowerCase() === keyLc);
     if (found) {
       if (found.category !== row.category)
-        toUpdate.push({ keyword, oldCat: found.category, newCat: row.category });
-      // same category → no change, skip
+        toUpdate.push({ keyword, oldCat: found.category, newCat: row.category, property_id: row.property_id || '' });
     } else {
-      toAdd.push({ keyword, category: row.category });
+      toAdd.push({ keyword, category: row.category, property_id: row.property_id || '' });
     }
   });
+
+  _pendingMappingItems = { adds: toAdd, updates: toUpdate };
+
+  const allPropLabel = t('import.mappingConfirm.allProperties');
+  function propDropdown(id, defaultVal) {
+    const opts = `<option value=""${!defaultVal ? ' selected' : ''}>${allPropLabel}</option>` +
+      State.properties.map(p =>
+        `<option value="${p.id}"${p.id === defaultVal ? ' selected' : ''}>${p.name}</option>`
+      ).join('');
+    return `<select id="${id}" style="font-size:11px;padding:2px 4px">${opts}</select>`;
+  }
 
   const th = s => `<th style="text-align:left;padding:3px 8px;font-size:11px">${s}</th>`;
   const td = s => `<td style="padding:3px 8px;font-size:11px">${s}</td>`;
@@ -1909,18 +1928,24 @@ function goToMappingConfirmOrImport() {
   if (toAdd.length) {
     html += `<p style="font-size:13px;font-weight:500;margin-bottom:0.4rem">${t('import.mappingConfirm.newLabel', { count: toAdd.length })}</p>
       <div class="table-wrap" style="margin-bottom:1rem"><table><thead><tr>
-        ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colCat'))}
+        ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colProperty'))}${th(t('import.mappingConfirm.colCat'))}
       </tr></thead><tbody>
-        ${toAdd.map(m => `<tr>${td(m.keyword)}<td style="padding:3px 8px"><span class="tag">${catLabel(m.category)}</span></td></tr>`).join('')}
+        ${toAdd.map((m, i) => `<tr>
+          ${td(m.keyword)}
+          <td style="padding:3px 8px">${propDropdown('map-add-prop-' + i, m.property_id)}</td>
+          <td style="padding:3px 8px"><span class="tag">${catLabel(m.category)}</span></td>
+        </tr>`).join('')}
       </tbody></table></div>`;
   }
 
   if (toUpdate.length) {
     html += `<p style="font-size:13px;font-weight:500;margin-bottom:0.4rem">${t('import.mappingConfirm.updateLabel', { count: toUpdate.length })}</p>
       <div class="table-wrap"><table><thead><tr>
-        ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colWas'))}${th(t('import.mappingConfirm.colNow'))}
+        ${th(t('import.mappingConfirm.colDesc'))}${th(t('import.mappingConfirm.colProperty'))}${th(t('import.mappingConfirm.colWas'))}${th(t('import.mappingConfirm.colNow'))}
       </tr></thead><tbody>
-        ${toUpdate.map(m => `<tr>${td(m.keyword)}
+        ${toUpdate.map((m, i) => `<tr>
+          ${td(m.keyword)}
+          <td style="padding:3px 8px">${propDropdown('map-upd-prop-' + i, m.property_id)}</td>
           <td style="padding:3px 8px"><span class="tag">${catLabel(m.oldCat)}</span></td>
           <td style="padding:3px 8px"><span class="tag">${catLabel(m.newCat)}</span></td>
         </tr>`).join('')}
@@ -1952,6 +1977,25 @@ async function doImport(saveMappings) {
   const missing = activeRows.filter(r => !r.property_id);
   if (missing.length) {
     if (!confirm(t('import.confirmMissing', { count: missing.length }))) return;
+  }
+
+  // If proceeding from the mapping confirmation screen, read property dropdown
+  // values and stamp _mappingPropertyId onto each row before saving rules.
+  if (saveMappings && _pendingMappingItems) {
+    const allItems = [
+      ..._pendingMappingItems.adds.map((m, i) => ({ ...m, _dropId: 'map-add-prop-' + i })),
+      ..._pendingMappingItems.updates.map((m, i) => ({ ...m, _dropId: 'map-upd-prop-' + i })),
+    ];
+    allItems.forEach(item => {
+      const sel = document.getElementById(item._dropId);
+      if (sel) item._selectedPropertyId = sel.value;
+    });
+    activeRows.forEach(row => {
+      if (!row._storeMapping) return;
+      const keyword = (row.raw_description || row.description || '').trim();
+      const match   = allItems.find(m => m.keyword.toLowerCase() === keyword.toLowerCase());
+      if (match && match._selectedPropertyId !== undefined) row._mappingPropertyId = match._selectedPropertyId;
+    });
   }
 
   setLoading(true, t('status.importing'));
