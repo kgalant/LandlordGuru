@@ -75,17 +75,16 @@ Test both fixes manually: (1) import a CSV with a custom-category rule and confi
 
 ## Files touched this session
 
-- `frontend/js/importer.js`
-- `frontend/js/app.js`
-- `frontend/js/strings.js`
+- `docs/SETUP.md`
+- `README.md`
 - `AI_STATE.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-05-29 [B5-1 import bugfixes — category type + mapping confirmation property]
+- 2026-06-06 [chore: rewrite SETUP.md and README.md for current architecture]
   - branch: main
-  - last_commit: 23cd157
-  - changed_files: frontend/js/importer.js, frontend/js/app.js, frontend/js/strings.js, AI_STATE.md
-  - git_status: M frontend/js/importer.js, M frontend/js/app.js, M frontend/js/strings.js, M AI_STATE.md
+  - last_commit: 523b8d2
+  - changed_files: docs/SETUP.md, README.md, AI_STATE.md
+  - git_status: M docs/SETUP.md, M README.md, M AI_STATE.md
