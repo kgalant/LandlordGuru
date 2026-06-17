@@ -12,7 +12,7 @@ All databases live on `homedev`. Local machines connect via SSH tunnel.
 |-------------|----------|----------|------|
 | Local dev | Your machine | `landlordguru_dev` | 3000 |
 | Test | `homedev:~/dev/landlordguru-test` | `landlordguru_test` | 3001 |
-| Production | `homedev:~/dev/landlordguru` | `landlordguru_prod` | 3000 |
+| Production | `homedev:~/dev/landlordguru` | `landlordguru_prod` | 3002 |
 
 ---
 
@@ -135,7 +135,7 @@ bash scripts/tunnel.sh
 6. Add **authorized redirect URIs**:
    - `http://localhost:3000/auth/google/callback` (local dev)
    - `http://homedev:3001/auth/google/callback` (test server)
-   - `http://homedev:3000/auth/google/callback` (production)
+   - `http://homedev:3002/auth/google/callback` (production)
 7. Click **Create** — you'll see your Client ID and Client Secret
 8. Copy both into your `.env` file:
    ```
@@ -175,17 +175,14 @@ node backend/scripts/create-workspace.js
 
 ## Step 8 — Test an API endpoint
 
-The backend is middleware-ready but routes are in progress. Currently only `/api/health` is fully wired:
-
 ```bash
 curl http://localhost:3000/api/health
-# Response: {"status":"ok"}
+# Response: {"status":"ok","version":"..."}
 ```
 
-Once properties API is available (Milestone 4), test with:
+Test any authenticated endpoint with a valid JWT token from a logged-in session:
 
 ```bash
-# Requires a valid JWT token from login
 curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/properties
 ```
 
@@ -277,7 +274,7 @@ ssh kim@homedev
 bash ~/dev/landlordguru/scripts/prod-deploy.sh
 ```
 
-Pulls from origin, runs migrations, restarts PM2 (`landlordguru`, port 3000).
+Pulls from origin, runs migrations, restarts PM2 (`landlordguru`, port 3002).
 
 ### First-time server setup on homedev
 
@@ -294,7 +291,7 @@ createdb -U kim landlordguru_prod   # for production
 
 # Set up PM2 processes
 PORT=3001 pm2 start ~/dev/landlordguru-test/backend/src/index.js --name landlordguru-test
-PORT=3000 pm2 start ~/dev/landlordguru/backend/src/index.js --name landlordguru
+PORT=3002 pm2 start ~/dev/landlordguru/backend/src/index.js --name landlordguru
 
 # Persist and enable restart-on-boot
 pm2 save
@@ -303,7 +300,7 @@ pm2 startup   # run the printed command to enable autostart
 
 Create `.env` files manually on homedev (never committed to git):
 - `~/dev/landlordguru-test/backend/.env` — `DATABASE_URL` → `landlordguru_test`, `PORT=3001`
-- `~/dev/landlordguru/backend/.env` — `DATABASE_URL` → `landlordguru_prod`, `PORT=3000`
+- `~/dev/landlordguru/backend/.env` — `DATABASE_URL` → `landlordguru_prod`, `PORT=3002`
 
 ---
 

@@ -22,8 +22,8 @@ Automated scripts to push code, pull on the server, run migrations, and restart 
 
 ---
 
-### F6-2 Database migration discipline `[Planned]`
-**Status:** Planned
+### F6-2 Database migration discipline `[Done]`
+**Status:** Done
 
 Ensure all schema changes are captured as numbered Knex migrations and applied consistently across environments.
 

@@ -127,10 +127,9 @@ Workspaces can contain properties and transactions in multiple currencies. The s
 
 ## Next Steps
 
-- Create structured backlog files in the repository
-- Flesh out each epic with specific features and acceptance criteria
-- Identify dependencies and blockers
-- Begin work on MVP features while keeping extensibility in mind
+The MVP has been delivered. The structured backlog lives in `docs/epics/` (E1–E7), organized by epic with acceptance criteria, dependencies, and status per feature. The roadmap and current focus are tracked in `docs/roadmap.md` and `AI_STATE.md`.
+
+Post-MVP feature development continues against those epic docs.
 
 ## Design Principles
 
@@ -142,6 +141,6 @@ Workspaces can contain properties and transactions in multiple currencies. The s
 
 ---
 
-**Date**: April 2026  
+**Date**: April 2026 (original design); last reviewed June 2026  
 **Project**: Landlord Guru  
-**Status**: Design planning phase (MVP definition)
+**Status**: MVP delivered — design decisions remain current; see `docs/epics/` for post-MVP backlog

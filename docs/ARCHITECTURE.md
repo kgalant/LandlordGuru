@@ -33,59 +33,49 @@ Google Sheet (acts as database)
 
 ---
 
-## Current state (v2 — backend in development)
+## Current state (v2 — shipped)
 
 ```
 Browser
-  └── frontend/                   (vanilla JS, served by Express)
-        ├── js/strings.js         (unchanged — i18n layer)
-        ├── js/importer.js        (unchanged — pure CSV logic)
-        ├── js/reports.js         (unchanged — pure aggregation logic)
-        ├── js/auth.js            (Google OAuth login, JWT token management, logout)
-        └── js/api.js             (REST client calling backend /api/* routes)
+  └── frontend/                       (vanilla JS, no build step; served by Express)
+        ├── js/app.js                 Main UI logic, event handlers, page state (~3,900 LOC)
+        ├── js/datatable.js           Table rendering, sorting, filtering, pagination
+        ├── js/api.js                 REST client wrapper for /api/* routes
+        ├── js/importer.js            CSV parsing, bank format auto-detection, categorization
+        ├── js/reports.js             P&L calculations and aggregations
+        ├── js/auth.js                Google OAuth login, JWT token management, logout
+        ├── js/strings.js             UI text constants and label overrides
+        ├── js/version-badge.js       Version display widget + debug panel
+        └── js/debug.js               Development utilities
               ↕  HTTPS (landlordguru.galant.info)
 backend/ (Node.js + Express)
-  ├── src/index.js              Express app, session + passport setup, static frontend serving
+  ├── src/index.js                Express app, session + passport setup, static frontend serving
   ├── src/lib/
-  │   └── logger.js             Structured logger — injected as req.logger by auth middleware
+  │   └── logger.js               Structured logger — injected as req.logger by auth middleware
   ├── src/routes/
-  │   ├── auth.js               GET /auth/google, /auth/google/callback, POST /logout
-  │   ├── health.js             GET /api/health (for monitoring)
-  │   ├── properties.js         GET/POST/PATCH/DELETE /api/properties ✅
-  │   ├── transactions.js       GET/POST/PATCH/DELETE /api/transactions ✅
-  │   └── rules.js              GET/POST/PATCH/DELETE /api/rules ✅
+  │   ├── auth.js                 GET /auth/google, /auth/google/callback, POST /logout
+  │   ├── properties.js           GET/POST/PATCH/DELETE /api/properties
+  │   ├── transactions.js         GET/POST/PATCH/DELETE /api/transactions (incl. split management)
+  │   ├── rules.js                GET/POST/PATCH/DELETE /api/rules (property-scoped)
+  │   ├── split-rules.js          GET/POST/PATCH/DELETE /api/split-rules
+  │   ├── accounts.js             GET/POST/PATCH/DELETE /api/accounts (hierarchy)
+  │   ├── workspace.js            GET/PATCH /api/workspace (settings, users, roles)
+  │   ├── currency-rates.js       GET/PATCH /api/currency-rates
+  │   ├── reports.js              GET /api/reports (P&L, category breakdown, transfers)
+  │   └── version.js              GET /api/version (health + version info)
   ├── src/middleware/
-  │   ├── auth.js               JWT verification, req.user + workspace_id + req.logger injection
-  │   └── errors.js             Error handler (todo)
-  └── src/db/migrations/         Knex.js schema migrations (001-012)
+  │   ├── auth.js                 JWT verification; injects req.user, workspace_id, req.logger
+  │   └── telemetry.js            Request telemetry
+  └── src/db/migrations/          Knex.js schema migrations (001–025)
               ↕  PostgreSQL
-        9 tables: workspaces, users, workspace_users, properties, accounts,
-                  account_properties, transactions, rules, fx_log, strings, activity_log
+        Core: workspaces, users, workspace_users
+        Data: properties, accounts, transactions, transaction_splits
+        Rules: rules, split_rules
+        Reference: fx_log, currency_rates, strings, workspace_enum_values
+        Audit: activity_log, workspace_settings
 ```
 
-**What's done (Milestones 1-5.5):**
-- ✅ Express skeleton + Knex + PostgreSQL connected
-- ✅ All tables created with UUID PKs, workspace_id isolation, audit fields
-- ✅ Google OAuth flow (Passport.js) — login redirects to Google, JWT issued on callback
-- ✅ Auth middleware injects `req.user`, `workspace_id`, and `req.logger` from JWT
-- ✅ Auto-workspace creation on first login (user gets one default workspace)
-- ✅ Frontend login screen + token management (storage in httpOnly cookie, logout)
-- ✅ Admin scripts for workspace/user management
-- ✅ Properties API — full CRUD, workspace-scoped, auto-creates account on property creation
-- ✅ Transactions API — full CRUD, workspace-scoped, with date/type/category validation
-- ✅ Logging & Telemetry Foundation (migrations 010-012, logger utility, retrofit existing APIs)
-- ✅ Rules API — full CRUD, workspace-scoped, with category/property validation and hard delete
-
-**What's next (Milestone 7+):**
-- Replace frontend's `sheets.js` with `api.js` calling backend
-- Retire Google Sheets credential from frontend
-
-**Backlog and epics:** See [`docs/epics/`](epics/00-index.md) for the full feature backlog organised by epic, including acceptance criteria, dependencies, and MVP vs future tags.
-
-**What stays the same:**
-- The transaction data model and category taxonomy (see data-model.md)
-- The bank import profiles and column mapping system (client-side)
-- All frontend UI logic not related to data persistence
+**Backlog and epics:** See [`docs/epics/`](epics/00-index.md) for the full feature backlog organised by epic, including acceptance criteria, dependencies, and status.
 
 ---
 
@@ -94,13 +84,13 @@ backend/ (Node.js + Express)
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Static frontend + Google Sheets on Synology NAS | ✅ Done |
-| 2 | Add backend/ with Node + Express + PostgreSQL | ✅ Done (M1-M3) |
-| 3 | Add authentication (Google OAuth → JWT) | ✅ Done (M3) |
-| 4 | Build API routes (properties, transactions) | ✅ Done (M4-M5) |
-| 4.5 | Logging & Telemetry Foundation | ✅ Done (M5.5) |
-| 5 | Rules API + logging from day 1 | ✅ Done (M6) |
-| 6 | Replace sheets.js + data.js with api.js | ⏳ Pending (M7) |
-| 7 | Retire Google Sheets credential, test e2e | ⏳ Pending (post-M7) |
+| 2 | Add backend/ with Node + Express + PostgreSQL | ✅ Done |
+| 3 | Add authentication (Google OAuth → JWT) | ✅ Done |
+| 4 | Build API routes (properties, transactions) | ✅ Done |
+| 4.5 | Logging & Telemetry Foundation | ✅ Done |
+| 5 | Rules API + logging from day 1 | ✅ Done |
+| 6 | Replace sheets.js + data.js with api.js | ✅ Done |
+| 7 | Retire Google Sheets credential, test e2e | ✅ Done |
 | 8 | Optional: move to managed hosting / separate domain | ⏳ Future |
 
 ---
@@ -121,14 +111,18 @@ backend/ (Node.js + Express)
   - Global default: `error` (least verbose); levels: `error`, `info`, `debug`
   - See `docs/LOGGING.md` for full reference
 - **Deployment:** No Docker required
-  - Dev: `npm start` on laptop, port 3000
-  - Prod: `pm2 start backend/src/index.js` on Linux server, port 3001
+  - Dev: `npm run start:local` on laptop, port 3000 (opens SSH tunnel + starts server)
+  - Test: PM2 process `landlordguru-test` on homedev, port 3001
+  - Prod: PM2 process `landlordguru` on homedev, port 3002
 
-**Database schema** (see `docs/data-model.md` for full field reference):
-- `workspaces` — portfolio containers; one per user (auto-created on first login)
-- `users` — Google OAuth identities; one per email
-- `workspace_users` — role assignment (owner, editor, viewer, member)
-- `properties`, `transactions`, `rules`, `fx_log`, `strings` — all workspace-scoped
+**Database schema** (25 migrations; see `docs/data-model.md` for full field reference):
+- `workspaces`, `users`, `workspace_users` — auth and multi-tenancy
+- `properties`, `accounts` — portfolio structure; accounts form a parent-child hierarchy
+- `transactions`, `transaction_splits` — core ledger; splits link to a parent transaction
+- `rules` — property-scoped auto-categorization; `split_rules` — automated split templates
+- `currency_rates`, `fx_log` — exchange rates, workspace-scoped
+- `strings`, `workspace_enum_values` — workspace-level label overrides
+- `activity_log`, `workspace_settings` — audit trail and per-workspace configuration
 
 **Environment variables** (see `backend/.env.example`):
 - `PORT` — Express listen port (default 3000)
