@@ -12,6 +12,8 @@ export const Importer = (() => {
 
   // ── Date parsing ──────────────────────────────────────────
 
+  // Returns ISO YYYY-MM-DD, or null if any date part is missing.
+  // Separator is auto-detected (., /, -). Two-digit years are assumed 20xx.
   function parseDate(str, format) {
     str = (str || '').trim().replace(/"/g, '');
     const sep = str.includes('.') ? '.' : str.includes('/') ? '/' : '-';
@@ -37,6 +39,8 @@ export const Importer = (() => {
 
   // ── Amount parsing ────────────────────────────────────────
 
+  // Strips quotes and thousands separators, returns a float or null.
+  // Pass decimalChar=',' for European notation: "1.234,56" → 1234.56.
   function parseAmount(str, decimalChar) {
     if (!str) return null;
     str = str.replace(/"/g, '').trim();
@@ -51,6 +55,8 @@ export const Importer = (() => {
 
   // ── CSV split (respects quoted fields) ───────────────────
 
+  // Splits one CSV line into fields. Quoted fields may contain the delimiter;
+  // quote characters are consumed but not included in the returned values.
   function splitCSVLine(line, delimiter) {
     const result = [];
     let cur = '';
@@ -72,6 +78,8 @@ export const Importer = (() => {
 
   // ── Delimiter detection ───────────────────────────────────
 
+  // Counts occurrences of each candidate delimiter outside quoted regions
+  // and returns whichever appears most often.
   function detectDelimiter(line) {
     const candidates = [';', ',', '\t', '|'];
     const counts = {};
@@ -109,6 +117,10 @@ export const Importer = (() => {
     ],
   };
 
+  // Maps header strings to the date/description/amount column roles.
+  // Two-pass: exact/prefix match first, then looser substring match.
+  // `hints` seeds the result with any previously confirmed mappings so they
+  // survive re-detection when the user changes a setting.
   function detectColumns(headers, hints) {
     const result = { date_col: -1, description_col: -1, amount_col: -1 };
 
@@ -151,6 +163,9 @@ export const Importer = (() => {
 
   // ── Rule matching ─────────────────────────────────────────
 
+  // Returns the first rule whose keyword appears in description and whose
+  // property scope matches propertyId (or has no scope restriction), sorted
+  // by sort_order ascending. Returns null if nothing matches.
   function applyRules(description, propertyId, rules) {
     if (!rules || !rules.length) return null;
     const desc = description.toLowerCase();
@@ -189,6 +204,7 @@ export const Importer = (() => {
    * @returns {Object} { rows, errors, currency }
    */
   function parseCSV(csvText, propertyId, rules, colMap, apiCategories) {
+    // Extract column mapping settings, falling back to sensible defaults.
     const delimiter     = colMap?.delimiter      ?? ',';
     const dateFormat    = colMap?.date_format    ?? 'YYYY-MM-DD';
     const amountDecimal = colMap?.amount_decimal ?? '.';
@@ -198,6 +214,7 @@ export const Importer = (() => {
     const descCol       = colMap?.description_col ?? 1;
     const amtCol        = colMap?.amount_col     ?? 2;
 
+    // Split into lines and drop the header rows.
     const lines    = csvText.split(/\r?\n/).filter(l => l.trim());
     const dataRows = lines.slice(skipRows);
 
@@ -215,6 +232,7 @@ export const Importer = (() => {
       const date   = parseDate(rawDate, dateFormat);
       const amount = parseAmount(rawAmount, amountDecimal);
 
+      // Skip rows where date or amount can't be parsed; record them as errors.
       if (!date) {
         errors.push({ line: lineIdx + 1 + skipRows, reason: 'Could not parse date: ' + rawDate, raw: line });
         return;
@@ -224,6 +242,7 @@ export const Importer = (() => {
         return;
       }
 
+      // Auto-categorise: try rules first, then fall back to amount sign.
       const match = applyRules(rawDesc, propertyId, rules);
 
       let autoCategory = match ? match.category : '';
@@ -242,6 +261,7 @@ export const Importer = (() => {
         ? amount
         : Math.abs(amount);
 
+      // Assemble the output row.
       rows.push({
         date,
         property_id:     propertyId || '',
@@ -267,6 +287,9 @@ export const Importer = (() => {
 
   // ── Helpers ───────────────────────────────────────────────
 
+  // Resolves a category value to its parent type bucket (income/expense/transfer/deposit).
+  // Checks workspace-level apiCategories first, then falls back to the static
+  // CATEGORIES config, then defaults to 'expense' if the category is unrecognised.
   function categoryToType(category, apiCategories) {
     if (apiCategories) {
       for (const [bucket, items] of Object.entries(apiCategories)) {
@@ -281,6 +304,9 @@ export const Importer = (() => {
 
   const BUCKET_ORDER = ['income', 'expense', 'deposit', 'transfer'];
 
+  // Builds the <option>/<optgroup> HTML for a category <select>.
+  // Uses workspace apiCategories when available; falls back to static CATEGORIES.
+  // Always appends a "＋ New category…" option at the end.
   function buildCategoryOptions(selectedCategory, apiCategories) {
     let html = '';
     if (apiCategories && Object.keys(apiCategories).length > 0) {

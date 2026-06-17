@@ -8,29 +8,30 @@ Complete v2 backend + frontend, retire v1 code paths, and pass E2E testing with 
 
 ## Current focus
 
-- Type: bug
+- Type: chore
 - Epic: E5 Integrations & Data Import
-- ID: B5-1
-- Title: Import bugfixes — category type resolution + mapping confirmation property
-- Short summary: Two bugs found during import testing. (1) `parseCSV` called `categoryToType` without `apiCategories`, so custom categories always fell back to 'expense' type → invalid category errors. (2) Mapping confirmation screen showed only description + category; now includes a property dropdown (defaulting to the row's property, "All properties" option for no restriction).
+- ID: —
+- Title: Add comments to importer.js
+- Short summary: Walk through frontend/js/importer.js and add function-level comments to all helpers, plus interval comments inside the main parseCSV body.
 
 ---
 
 ## Previous focus
 
-- Type: feature
-- Epic: E5 Integrations & Data Import / E6 Rules
-- ID: F5-16
-- Title: Rules rework + import profile removal
-- Short summary: Complete — committed (23cd157).
+- Type: bug
+- Epic: E5 Integrations & Data Import
+- ID: B5-1
+- Title: Import bugfixes — category type resolution + mapping confirmation property
+- Short summary: Fixed categoryToType called without apiCategories; added property dropdown to mapping confirmation screen.
 - State: done
+- Return point: n/a — fully committed (e81b1f9).
 
 ---
 
 ## Task breakdown (current focus)
 
-- [x] S1: Fix categoryToType called without apiCategories in parseCSV (importer.js + app.js)
-- [x] S2: Add property dropdown to mapping confirmation screen (app.js + strings.js)
+- [x] S1: Add function-level comments to all helpers (parseDate, parseAmount, splitCSVLine, detectDelimiter, detectColumns, applyRules, categoryToType, buildCategoryOptions)
+- [x] S2: Add interval comments inside the parseCSV body
 
 ---
 
@@ -57,7 +58,7 @@ Relevant epic docs:
 
 ## Next step
 
-Test both fixes manually: (1) import a CSV with a custom-category rule and confirm no "not valid for type" errors; (2) check the mapping confirmation screen shows a property dropdown with correct default and "All properties" option. Then commit.
+Commit the importer.js commenting pass.
 
 ---
 
@@ -65,26 +66,25 @@ Test both fixes manually: (1) import a CSV with a custom-category rule and confi
 
 - Commands to run:
   - `cd /Users/kimgalant/dev/landlordguru/backend && node_modules/.bin/jest --forceExit`
-  - Manual: import with custom-category rule (no type errors); mapping confirmation shows property dropdown
+  - Manual: verify import still works after commenting pass
 
 - Last result:
   - Date/time: 2026-05-27
-  - Outcome: 300/300 tests passing (serial, via maxWorkers:1 in jest config). Manual re-test pending for these fixes.
+  - Outcome: 300/300 tests passing.
 
 ---
 
 ## Files touched this session
 
-- `docs/SETUP.md`
-- `README.md`
+- `frontend/js/importer.js`
 - `AI_STATE.md`
 
 ---
 
 ## Automation log (latest only)
 
-- 2026-06-06 [chore: rewrite SETUP.md and README.md for current architecture]
+- 2026-06-17 [chore: add comments to importer.js — session start]
   - branch: main
-  - last_commit: 523b8d2
-  - changed_files: docs/SETUP.md, README.md, AI_STATE.md
-  - git_status: M docs/SETUP.md, M README.md, M AI_STATE.md
+  - last_commit: c8e4a27
+  - changed_files: AI_STATE.md
+  - git_status: M AI_STATE.md
